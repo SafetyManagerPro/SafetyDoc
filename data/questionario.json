@@ -1,0 +1,343 @@
+{
+  "versione": "0.3.0",
+  "aggiornato": "2026-11-23",
+  "domande": [
+    {
+      "id": "nome_impresa",
+      "tipo": "testo",
+      "testo": "Come si chiama la tua impresa?",
+      "aiuto": "Serve solo per riconoscere i tuoi dati. Puoi cambiarlo quando vuoi."
+    },
+    {
+      "id": "attivita",
+      "tipo": "scelta",
+      "testo": "Che lavoro fa la tua impresa?",
+      "aiuto": "Scegli l'attività principale. Il codice ATECO preciso lo trovi nella visura camerale: lo controlliamo dopo.",
+      "opzioni": [
+        {
+          "valore": "edilizia",
+          "etichetta": "Costruzioni e ristrutturazioni (muratore, carpentiere, pittore edile)",
+          "classeRischio": "alto"
+        },
+        {
+          "valore": "impianti",
+          "etichetta": "Impianti (elettricista, idraulico, termoidraulico, climatizzazione)",
+          "classeRischio": "alto",
+          "regolamentata": true
+        },
+        {
+          "valore": "metalmeccanica",
+          "etichetta": "Lavorazione dei metalli, fabbro, carpenteria metallica",
+          "classeRischio": "alto"
+        },
+        {
+          "valore": "legno",
+          "etichetta": "Falegnameria e lavorazione del legno",
+          "classeRischio": "alto"
+        },
+        {
+          "valore": "alimentare_produzione",
+          "etichetta": "Produzione alimentare (panificio, pasticceria, laboratorio)",
+          "classeRischio": "alto",
+          "regolamentata": true
+        },
+        {
+          "valore": "autoriparazione",
+          "etichetta": "Officina, carrozzeria, gommista",
+          "classeRischio": "da_verificare",
+          "regolamentata": true
+        },
+        {
+          "valore": "ristorazione",
+          "etichetta": "Bar, ristorante, pizzeria",
+          "classeRischio": "basso",
+          "regolamentata": true
+        },
+        {
+          "valore": "acconciatura_estetica",
+          "etichetta": "Acconciatore, estetista, tatuatore",
+          "classeRischio": "basso",
+          "regolamentata": true
+        },
+        {
+          "valore": "pulizie",
+          "etichetta": "Pulizie, disinfestazione, sanificazione",
+          "classeRischio": "da_verificare",
+          "regolamentata": true
+        },
+        {
+          "valore": "trasporto",
+          "etichetta": "Trasporto merci, facchinaggio, magazzino",
+          "classeRischio": "medio",
+          "regolamentata": true
+        },
+        {
+          "valore": "agricoltura",
+          "etichetta": "Agricoltura, giardinaggio, cura del verde",
+          "classeRischio": "medio"
+        },
+        {
+          "valore": "commercio_ufficio",
+          "etichetta": "Negozio, ufficio, altri servizi",
+          "classeRischio": "basso"
+        },
+        {
+          "valore": "altro",
+          "etichetta": "Altro",
+          "classeRischio": "da_verificare"
+        }
+      ]
+    },
+    {
+      "id": "forma_giuridica",
+      "tipo": "scelta",
+      "testo": "Che tipo di impresa è?",
+      "aiuto": "Se non sei sicuro, guarda la visura camerale o chiedi al tuo commercialista.",
+      "opzioni": [
+        {
+          "valore": "individuale",
+          "etichetta": "Ditta individuale"
+        },
+        {
+          "valore": "societa_persone",
+          "etichetta": "Società di persone (snc, sas)"
+        },
+        {
+          "valore": "societa_capitali",
+          "etichetta": "Società di capitali (srl, srls, spa, cooperativa)"
+        }
+      ]
+    },
+    {
+      "id": "artigiano",
+      "tipo": "sino",
+      "testo": "Sei iscritto all'Albo delle imprese artigiane?",
+      "aiuto": "Di solito sì se sei tu stesso a lavorare in prima persona nella tua impresa artigiana."
+    },
+    {
+      "id": "composizione",
+      "tipo": "scelta",
+      "testo": "Chi lavora nella tua impresa?",
+      "aiuto": "Conta anche apprendisti, tirocinanti e soci che lavorano come dipendenti.",
+      "opzioni": [
+        {
+          "valore": "solo",
+          "etichetta": "Lavoro da solo"
+        },
+        {
+          "valore": "familiari_soci",
+          "etichetta": "Solo io con familiari o soci, senza dipendenti"
+        },
+        {
+          "valore": "dipendenti",
+          "etichetta": "Ho almeno un dipendente o apprendista"
+        }
+      ]
+    },
+    {
+      "id": "numero_lavoratori",
+      "tipo": "numero",
+      "testo": "Quanti lavoratori hai, contando apprendisti e tirocinanti?",
+      "aiuto": "Un numero approssimativo va bene. Alcuni obblighi cambiano sopra 10, 15 e 50 lavoratori.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      },
+      "minimo": 1
+    },
+    {
+      "id": "dl_rspp",
+      "tipo": "sino",
+      "testo": "Sei tu a occuparti della sicurezza come responsabile (RSPP)?",
+      "aiuto": "Nelle piccole imprese spesso il titolare fa da RSPP. Se hai incaricato un consulente esterno, rispondi No.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      }
+    },
+    {
+      "id": "tutele_particolari",
+      "tipo": "sino",
+      "testo": "Hai lavoratori minorenni o lavoratrici in gravidanza o allattamento?",
+      "aiuto": "Per loro servono valutazioni e tutele in più.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      }
+    },
+    {
+      "id": "appalti_in_sede",
+      "tipo": "sino",
+      "testo": "Fai lavorare altre ditte o autonomi nella tua sede (manutenzioni, pulizie, lavori)?",
+      "aiuto": "Per esempio chi viene a riparare un macchinario o a fare le pulizie.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      }
+    },
+    {
+      "id": "sede",
+      "tipo": "sino",
+      "testo": "Hai un locale dove lavori (laboratorio, negozio, ufficio, capannone)?",
+      "aiuto": "Rispondi No se lavori solo presso i clienti o nei cantieri."
+    },
+    {
+      "id": "pubblico_50",
+      "tipo": "sino",
+      "testo": "Nel tuo locale possono esserci più di 50 persone insieme, contando clienti e lavoratori?",
+      "aiuto": "Per esempio un ristorante, una sala o un negozio molto frequentato.",
+      "mostraSe": {
+        "q": "sede",
+        "eq": true
+      }
+    },
+    {
+      "id": "rischio_incendio",
+      "tipo": "scelta",
+      "testo": "Nel tuo locale c'è uno di questi: tanto legno, carta o vernici in deposito, gasolio o GPL, una caldaia o un generatore grande, un'officina o un'autorimessa sopra i 300 m²?",
+      "aiuto": "Sono attività per cui può servire il Certificato di prevenzione incendi dei Vigili del Fuoco. Se non sei sicuro, rispondi Non lo so.",
+      "mostraSe": {
+        "q": "sede",
+        "eq": true
+      },
+      "opzioni": [
+        {
+          "valore": "si",
+          "etichetta": "Sì"
+        },
+        {
+          "valore": "no",
+          "etichetta": "No"
+        },
+        {
+          "valore": "non_so",
+          "etichetta": "Non lo so"
+        }
+      ]
+    },
+    {
+      "id": "emissioni",
+      "tipo": "sino",
+      "testo": "Dal tuo locale escono all'esterno fumi, vapori o polveri (camini, aspiratori, cabine di verniciatura, forni)?",
+      "aiuto": "Non conta la normale caldaia per il riscaldamento.",
+      "mostraSe": {
+        "q": "sede",
+        "eq": true
+      }
+    },
+    {
+      "id": "videosorveglianza",
+      "tipo": "sino",
+      "testo": "Hai telecamere nel tuo locale o nel cantiere?",
+      "aiuto": "Anche se servono solo contro i furti.",
+      "mostraSe": {
+        "q": "sede",
+        "eq": true
+      }
+    },
+    {
+      "id": "gps",
+      "tipo": "sino",
+      "testo": "Hai localizzatori GPS su furgoni, auto o telefoni dati ai lavoratori?",
+      "aiuto": "Anche quelli installati dall'assicurazione o dal noleggio.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      }
+    },
+    {
+      "id": "cantiere",
+      "tipo": "sino",
+      "testo": "Lavori nei cantieri, anche solo come installatore o impiantista?",
+      "aiuto": "Vale per qualsiasi cantiere edile o di ingegneria civile, anche piccolo."
+    },
+    {
+      "id": "quota",
+      "tipo": "sino",
+      "testo": "Lavori sopra i 2 metri di altezza (scale, ponteggi, tetti, piattaforme)?",
+      "aiuto": "Anche se succede solo ogni tanto."
+    },
+    {
+      "id": "attrezzature_abilitazione",
+      "tipo": "sino",
+      "testo": "Usi piattaforme aeree, gru, carrelli elevatori (muletti), escavatori o trattori?",
+      "aiuto": "Per guidarli serve un patentino specifico."
+    },
+    {
+      "id": "elettrico",
+      "tipo": "sino",
+      "testo": "Lavori su impianti o quadri elettrici?",
+      "aiuto": "Anche solo per manutenzione o collegamenti."
+    },
+    {
+      "id": "confinati",
+      "tipo": "sino",
+      "testo": "Entri in cisterne, pozzi, fognature, silos, vasche o cunicoli?",
+      "aiuto": "Sono luoghi chiusi dove l'aria può diventare pericolosa."
+    },
+    {
+      "id": "chimici",
+      "tipo": "sino",
+      "testo": "Usi vernici, solventi, colle, detergenti professionali o altri prodotti chimici? Produci polveri o fumi?",
+      "aiuto": "Guarda le etichette: se c'è un simbolo di pericolo (rombo rosso), rispondi Sì."
+    },
+    {
+      "id": "rumore_vibrazioni",
+      "tipo": "sino",
+      "testo": "Usi macchine rumorose o utensili che vibrano (flessibili, martelli, seghe)?",
+      "aiuto": "Se per parlare con un collega a un metro devi alzare la voce, rispondi Sì."
+    },
+    {
+      "id": "carichi",
+      "tipo": "sino",
+      "testo": "Sollevi o sposti pesi a mano, o fai sempre gli stessi movimenti?",
+      "aiuto": "Per esempio sacchi, cassette, materiali, pazienti o clienti."
+    },
+    {
+      "id": "videoterminali",
+      "tipo": "sino",
+      "testo": "Qualcuno lavora al computer per 20 ore a settimana o più?",
+      "aiuto": "Conta il tempo davanti allo schermo, pause escluse.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      }
+    },
+    {
+      "id": "notte_guida",
+      "tipo": "sino",
+      "testo": "Qualcuno lavora di notte o guida mezzi per lavoro?",
+      "aiuto": "Vale anche per furgoni e mezzi da cantiere.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      }
+    },
+    {
+      "id": "fgas",
+      "tipo": "sino",
+      "testo": "Installi o ripari impianti di climatizzazione o refrigerazione?",
+      "aiuto": "Condizionatori, celle frigorifere, pompe di calore."
+    },
+    {
+      "id": "rifiuti_pericolosi",
+      "tipo": "scelta",
+      "testo": "Produci rifiuti come oli usati, filtri, batterie, solventi, stracci sporchi di olio o vernice?",
+      "aiuto": "Sono rifiuti pericolosi e hanno regole speciali, anche se sei da solo.",
+      "opzioni": [
+        {
+          "valore": "si",
+          "etichetta": "Sì"
+        },
+        {
+          "valore": "no",
+          "etichetta": "No"
+        },
+        {
+          "valore": "non_so",
+          "etichetta": "Non lo so"
+        }
+      ]
+    }
+  ]
+}

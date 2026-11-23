@@ -1,0 +1,1266 @@
+{
+  "versione": "0.3.0",
+  "aggiornato": "2026-11-23",
+  "avvertenza": "Bozza da validare da un esperto prima dell'uso reale. Le voci con 'daVerificare' richiedono un controllo sulla norma vigente.",
+  "categorie": {
+    "impresa": "La tua impresa",
+    "sicurezza": "Sicurezza di base",
+    "lavorazioni": "Le tue lavorazioni",
+    "ambiente": "Rifiuti e ambiente",
+    "privacy": "Privacy e dati"
+  },
+  "schede": [
+    {
+      "id": "iscrizioni-base",
+      "categoria": "impresa",
+      "titolo": "Iscrizioni di base dell'impresa",
+      "cosaE": "Partita IVA, iscrizione al Registro delle imprese della Camera di Commercio e all'INPS. Sono i documenti che dicono che la tua impresa esiste.",
+      "perche": "Senza queste iscrizioni non puoi lavorare in regola.",
+      "riferimento": "DPR 633/1972; art. 2188 c.c.; L. 580/1993",
+      "come": [
+        "Chiedi la visura camerale aggiornata (anche online o tramite CNA).",
+        "Controlla che attività e codice ATECO corrispondano a quello che fai davvero.",
+        "Se qualcosa non corrisponde, fai la variazione con il tuo consulente."
+      ],
+      "chi": "Tu, con il commercialista o l'associazione di categoria.",
+      "quando": "All'avvio. Poi a ogni cambiamento (sede, attività, soci).",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "sempre": true
+      },
+      "priorita": 3
+    },
+    {
+      "id": "pec-impresa",
+      "categoria": "impresa",
+      "titolo": "PEC dell'impresa attiva",
+      "cosaE": "La PEC è l'indirizzo di posta certificata dell'impresa. È il tuo domicilio digitale: lì arrivano comunicazioni ufficiali.",
+      "perche": "È obbligatoria e deve essere sempre attiva. Se scade, la Camera di Commercio può intervenire d'ufficio.",
+      "riferimento": "DL 185/2008 art. 16; DL 179/2012 art. 5",
+      "come": [
+        "Controlla quando scade il tuo contratto PEC.",
+        "Rinnovalo prima della scadenza.",
+        "Leggi la PEC almeno una volta a settimana."
+      ],
+      "chi": "Tu.",
+      "quando": "Rinnovo di solito ogni anno.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "sempre": true
+      },
+      "priorita": 3
+    },
+    {
+      "id": "pec-amministratori",
+      "categoria": "impresa",
+      "titolo": "PEC personale dell'amministratore",
+      "cosaE": "Nelle società di capitali l'amministratore unico, l'amministratore delegato o il presidente del CdA deve avere una PEC personale iscritta al Registro imprese.",
+      "perche": "È un obbligo recente e la PEC personale non può essere la stessa della società.",
+      "riferimento": "L. 207/2024 art. 1 c. 860; DL 159/2025 art. 13",
+      "come": [
+        "Attiva una PEC intestata alla persona dell'amministratore.",
+        "Comunicala al Registro imprese tramite il tuo consulente.",
+        "Ripeti la comunicazione a ogni nuova nomina o rinnovo."
+      ],
+      "chi": "L'amministratore, con il commercialista.",
+      "quando": "Alla nomina o al rinnovo della carica.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "forma_giuridica",
+        "eq": "societa_capitali"
+      },
+      "priorita": 2
+    },
+    {
+      "id": "albo-artigiani",
+      "categoria": "impresa",
+      "titolo": "Iscrizione all'Albo delle imprese artigiane",
+      "cosaE": "Registro delle imprese artigiane. Dà diritto alla qualifica di artigiano e alle relative agevolazioni.",
+      "perche": "Serve per essere riconosciuto come impresa artigiana.",
+      "riferimento": "L. 443/1985; leggi regionali",
+      "come": [
+        "Verifica nella visura che risulti l'annotazione come impresa artigiana.",
+        "Segnala ogni variazione (soci, attività) entro i termini."
+      ],
+      "chi": "Tu, con l'associazione di categoria.",
+      "quando": "All'avvio e a ogni variazione.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "artigiano",
+        "eq": true
+      },
+      "priorita": 3
+    },
+    {
+      "id": "inail",
+      "categoria": "impresa",
+      "titolo": "Assicurazione INAIL",
+      "cosaE": "L'assicurazione obbligatoria contro gli infortuni sul lavoro e le malattie professionali.",
+      "perche": "Copre te (se artigiano) e i tuoi lavoratori in caso di infortunio.",
+      "riferimento": "DPR 1124/1965",
+      "come": [
+        "Controlla di avere la posizione INAIL attiva.",
+        "Paga il premio annuale (autoliquidazione) nei termini.",
+        "Comunica all'INAIL i cambi di attività o di lavorazioni."
+      ],
+      "chi": "Tu, con il consulente del lavoro o il commercialista.",
+      "quando": "Ogni anno.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "any": [
+          {
+            "fatto": "haDipendenti"
+          },
+          {
+            "q": "artigiano",
+            "eq": true
+          }
+        ]
+      },
+      "priorita": 3
+    },
+    {
+      "id": "polizza-catastrofale",
+      "categoria": "impresa",
+      "titolo": "Polizza contro le catastrofi naturali",
+      "cosaE": "Assicurazione obbligatoria per terremoto, alluvione, frana, inondazione ed esondazione su terreni, fabbricati, impianti e macchinari.",
+      "perche": "È obbligatoria per tutte le imprese. Senza, perdi l'accesso a contributi e agevolazioni pubbliche.",
+      "riferimento": "L. 213/2023 art. 1 c. 101 e seguenti",
+      "come": [
+        "Chiedi un preventivo al tuo assicuratore indicando i beni dell'impresa.",
+        "Stipula la polizza e conserva il contratto.",
+        "Rinnovala alla scadenza."
+      ],
+      "chi": "Tu, con il tuo assicuratore.",
+      "quando": "Per micro e piccole imprese obbligatoria dal 1° gennaio 2026 (bar, ristoranti e turismo dal 31 marzo 2026). Poi a ogni rinnovo.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "sempre": true
+      },
+      "daVerificare": [
+        "Scadenza per pesca e acquacoltura: fonti discordanti."
+      ],
+      "priorita": 2
+    },
+    {
+      "id": "requisiti-professionali",
+      "categoria": "impresa",
+      "titolo": "Requisiti professionali per la tua attività",
+      "cosaE": "Alcune attività si possono svolgere solo se il titolare o un responsabile tecnico ha un titolo o un'esperienza specifica (impiantisti, autoriparatori, acconciatori, estetisti, pulizie, alimentari, trasporto).",
+      "perche": "Senza il requisito l'attività non è in regola, anche se sei iscritto alla Camera di Commercio.",
+      "riferimento": "DM 37/2008; L. 122/1992; L. 174/2005; L. 1/1990; L. 82/1994; Reg. CE 852/2004; Reg. CE 1071/2009",
+      "come": [
+        "Verifica nella visura che sia indicato il responsabile tecnico o il requisito professionale.",
+        "Conserva una copia del titolo o dell'attestato.",
+        "Se il responsabile tecnico lascia l'impresa, nominane un altro e comunicalo subito."
+      ],
+      "chi": "Tu, con l'associazione di categoria.",
+      "quando": "Prima di iniziare e a ogni cambio del responsabile tecnico.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "fatto": "attivitaRegolamentata"
+      },
+      "priorita": 2
+    },
+    {
+      "id": "art21-autonomo",
+      "categoria": "sicurezza",
+      "titolo": "Sicurezza per chi lavora senza dipendenti",
+      "cosaE": "Chi lavora da solo, in impresa familiare o con soci senza dipendenti non deve fare il DVR, ma ha comunque degli obblighi.",
+      "perche": "Lo prevede l'art. 21 del Testo unico sulla sicurezza.",
+      "riferimento": "D.Lgs. 81/2008 art. 21",
+      "come": [
+        "Usa solo attrezzature conformi (marcatura CE) e in buono stato.",
+        "Usa i dispositivi di protezione adatti al lavoro (scarpe, guanti, occhiali, imbracatura).",
+        "Quando lavori in appalto o subappalto, porta la tessera di riconoscimento con foto.",
+        "Formazione e visite mediche sono facoltative, ma alcune lavorazioni le rendono obbligatorie (vedi le schede delle lavorazioni)."
+      ],
+      "chi": "Tu.",
+      "quando": "Sempre. Se assumi il primo dipendente, safetyDoc ti mostrerà gli obblighi completi.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "not": {
+          "fatto": "haDipendenti"
+        }
+      },
+      "priorita": 1
+    },
+    {
+      "id": "dvr",
+      "categoria": "sicurezza",
+      "titolo": "Valutazione dei rischi (DVR)",
+      "cosaE": "Il DVR è il documento in cui scrivi quali pericoli ci sono nel tuo lavoro e cosa fai per evitarli.",
+      "perche": "È il primo obbligo di chi ha anche un solo lavoratore e non si può delegare.",
+      "riferimento": "D.Lgs. 81/2008 artt. 17, 28, 29; DM 30/11/2012 (procedure standardizzate)",
+      "come": [
+        "Elenca i luoghi, le attrezzature e le lavorazioni.",
+        "Per ognuno scrivi i pericoli e le misure di protezione.",
+        "Fino a 50 lavoratori puoi usare il modello delle procedure standardizzate.",
+        "Firmalo con RSPP, medico competente (se nominato) e RLS, e dagli una data certa."
+      ],
+      "chi": "Tu come datore di lavoro, con il tuo RSPP.",
+      "quando": "Se l'impresa è nuova, entro 90 giorni. Da aggiornare a ogni cambiamento importante o dopo un infortunio grave.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "notaScadenza": "Controllo annuale consigliato: la legge chiede l'aggiornamento a ogni cambiamento, non a data fissa.",
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 1
+    },
+    {
+      "id": "rspp",
+      "categoria": "sicurezza",
+      "titolo": "Responsabile della sicurezza (RSPP)",
+      "cosaE": "L'RSPP è la persona che ti aiuta a valutare i rischi e organizzare la sicurezza.",
+      "perche": "Ogni datore di lavoro deve averlo. Nelle piccole imprese puoi esserlo tu stesso.",
+      "riferimento": "D.Lgs. 81/2008 artt. 31-34 e Allegato II",
+      "come": [
+        "Decidi se farlo tu (possibile per imprese artigiane fino a 30 lavoratori) o incaricare un consulente.",
+        "Se lo fai tu: frequenta il corso per datore di lavoro RSPP.",
+        "Se incarichi un esterno: fai una nomina scritta e conservala."
+      ],
+      "chi": "Tu.",
+      "quando": "Subito, prima o insieme al DVR.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 1
+    },
+    {
+      "id": "formazione-datore",
+      "categoria": "sicurezza",
+      "titolo": "Corso di formazione per il datore di lavoro",
+      "cosaE": "Corso obbligatorio per tutti i datori di lavoro, anche se non fanno da RSPP.",
+      "perche": "Lo prevede il nuovo Accordo Stato-Regioni del 2025.",
+      "riferimento": "Accordo Stato-Regioni n. 59/2025",
+      "come": [
+        "Iscriviti a un corso di almeno 16 ore presso un ente formatore (per esempio CNA).",
+        "Se la tua impresa lavora in cantiere come affidataria, aggiungi il modulo cantieri di 6 ore.",
+        "Conserva l'attestato e caricalo qui."
+      ],
+      "chi": "Tu.",
+      "quando": "Aggiornamento ogni 5 anni, almeno 6 ore.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 2
+    },
+    {
+      "id": "formazione-dl-rspp",
+      "categoria": "sicurezza",
+      "titolo": "Corso per datore di lavoro che fa da RSPP",
+      "cosaE": "Se sei tu il responsabile della sicurezza, ti serve anche il corso specifico per datore di lavoro RSPP.",
+      "perche": "Senza il corso non puoi svolgere tu il ruolo di RSPP.",
+      "riferimento": "D.Lgs. 81/2008 art. 34; Accordo Stato-Regioni n. 59/2025",
+      "come": [
+        "Iscriviti al corso per datore di lavoro RSPP (la parte iniziale non è ammessa in e-learning).",
+        "Conserva l'attestato.",
+        "Fai l'aggiornamento prima della scadenza."
+      ],
+      "chi": "Tu.",
+      "quando": "Aggiornamento ogni 5 anni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "attivaSe": {
+        "all": [
+          {
+            "fatto": "haDipendenti"
+          },
+          {
+            "q": "dl_rspp",
+            "eq": true
+          }
+        ]
+      },
+      "daVerificare": [
+        "Durata dell'aggiornamento secondo l'ASR 59/2025."
+      ],
+      "priorita": 2
+    },
+    {
+      "id": "formazione-lavoratori",
+      "categoria": "sicurezza",
+      "titolo": "Formazione dei lavoratori",
+      "cosaE": "Ogni lavoratore deve ricevere una formazione generale e una specifica sui rischi del suo lavoro.",
+      "perche": "Un lavoratore non formato non può iniziare a lavorare.",
+      "riferimento": "D.Lgs. 81/2008 art. 37; Accordo Stato-Regioni n. 59/2025",
+      "come": [
+        "Formazione generale di 4 ore, uguale per tutti.",
+        "Formazione specifica di 4, 8 o 12 ore secondo la classe di rischio della tua attività (basso, medio, alto).",
+        "Falla prima o insieme all'assunzione.",
+        "Conserva gli attestati di ogni lavoratore."
+      ],
+      "chi": "Un ente formatore oppure tu, se hai i requisiti.",
+      "quando": "All'assunzione e a ogni cambio di mansione. Aggiornamento ogni 5 anni, almeno 6 ore.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 1
+    },
+    {
+      "id": "preposto",
+      "categoria": "sicurezza",
+      "titolo": "Preposto",
+      "cosaE": "Il preposto è chi controlla che il lavoro si svolga in sicurezza (per esempio il caposquadra).",
+      "perche": "Individuarlo è obbligatorio, e deve essere formato.",
+      "riferimento": "D.Lgs. 81/2008 art. 18 c. 1 lett. b-bis; Accordo Stato-Regioni n. 59/2025",
+      "come": [
+        "Scegli chi sorveglia il lavoro degli altri (puoi essere anche tu).",
+        "Fai una nomina scritta.",
+        "Fagli frequentare il corso di 12 ore in presenza o in videoconferenza."
+      ],
+      "chi": "Tu.",
+      "quando": "Aggiornamento ogni 2 anni, almeno 6 ore.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 24,
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 2
+    },
+    {
+      "id": "rls",
+      "categoria": "sicurezza",
+      "titolo": "Rappresentante dei lavoratori per la sicurezza (RLS)",
+      "cosaE": "L'RLS è il lavoratore che rappresenta i colleghi sui temi della sicurezza.",
+      "perche": "Ogni impresa deve avere un RLS interno o fare riferimento a quello territoriale (RLST).",
+      "riferimento": "D.Lgs. 81/2008 artt. 47-50",
+      "come": [
+        "Chiedi ai lavoratori di eleggere un RLS.",
+        "Se non lo eleggono, rivolgiti all'RLST del tuo settore (tramite l'associazione o l'ente bilaterale).",
+        "L'RLS eletto deve fare un corso di 32 ore."
+      ],
+      "chi": "I lavoratori lo eleggono, tu organizzi.",
+      "quando": "Aggiornamento ogni anno: 4 ore sotto i 50 lavoratori, 8 ore da 50 in su.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 2
+    },
+    {
+      "id": "medico-competente",
+      "categoria": "sicurezza",
+      "titolo": "Medico competente e visite mediche",
+      "cosaE": "Il medico competente visita i lavoratori e dice se sono idonei alla loro mansione.",
+      "perche": "È obbligatorio quando il lavoro espone a rischi come rumore, pesi, prodotti chimici, computer, lavoro notturno o in quota.",
+      "riferimento": "D.Lgs. 81/2008 artt. 18, 25, 41",
+      "come": [
+        "Nomina per iscritto un medico competente.",
+        "Fai fare la visita prima che il lavoratore inizi la mansione.",
+        "Segui le scadenze delle visite periodiche indicate dal medico.",
+        "Conserva solo il giudizio di idoneità: la cartella sanitaria la tiene il medico."
+      ],
+      "chi": "Tu nomini il medico; il medico fa le visite.",
+      "quando": "Visita preventiva e poi periodica secondo il protocollo del medico (di solito ogni anno).",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "all": [
+          {
+            "fatto": "haDipendenti"
+          },
+          {
+            "fatto": "rischiConSorveglianza"
+          }
+        ]
+      },
+      "priorita": 1
+    },
+    {
+      "id": "primo-soccorso",
+      "categoria": "sicurezza",
+      "titolo": "Primo soccorso",
+      "cosaE": "Devi avere lavoratori formati per il primo soccorso e una cassetta o un pacchetto di medicazione.",
+      "perche": "In caso di malore o infortunio qualcuno deve sapere cosa fare.",
+      "riferimento": "D.Lgs. 81/2008 art. 45; DM 388/2003",
+      "come": [
+        "Designa per iscritto gli addetti al primo soccorso.",
+        "Mandali al corso previsto per il gruppo della tua impresa (A, B o C).",
+        "Tieni la cassetta completa e controlla le scadenze dei materiali."
+      ],
+      "chi": "Tu designi; un ente formatore fa il corso.",
+      "quando": "Aggiornamento ogni 3 anni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 36,
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "daVerificare": [
+        "Durata dei corsi per gruppo A, B e C."
+      ],
+      "priorita": 2
+    },
+    {
+      "id": "antincendio",
+      "categoria": "sicurezza",
+      "titolo": "Addetti antincendio",
+      "cosaE": "Devi avere lavoratori formati per spegnere un principio di incendio e far uscire tutti in sicurezza.",
+      "perche": "Lo prevedono le norme sulla gestione della sicurezza antincendio nei luoghi di lavoro.",
+      "riferimento": "D.Lgs. 81/2008 artt. 43, 46; DM 2 settembre 2021",
+      "come": [
+        "Designa per iscritto gli addetti antincendio (puoi essere anche tu).",
+        "Mandali al corso di livello 1, 2 o 3 secondo il rischio del tuo locale.",
+        "Scrivi nel DVR cosa fare in caso di emergenza e chi chiama i soccorsi.",
+        "Conserva gli attestati."
+      ],
+      "chi": "Tu designi; un ente formatore fa il corso.",
+      "quando": "Aggiornamento della formazione ogni 5 anni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 2
+    },
+    {
+      "id": "presidi-antincendio",
+      "categoria": "sicurezza",
+      "titolo": "Controllo di estintori, uscite e luci di emergenza",
+      "priorita": 2,
+      "cosaE": "Estintori, idranti, porte antipanico e luci di emergenza devono essere controllati e funzionare sempre.",
+      "perche": "Lo prevede il decreto sui controlli antincendio: un estintore scarico non serve a niente.",
+      "riferimento": "DM 1 settembre 2021",
+      "come": [
+        "Fai controllare estintori e impianti antincendio da una ditta qualificata.",
+        "Tieni un registro dei controlli e delle manutenzioni.",
+        "Ogni giorno: uscite libere, porte che si aprono, estintori al loro posto e visibili.",
+        "Sostituisci subito le luci di emergenza che non si accendono."
+      ],
+      "chi": "Una ditta qualificata per i controlli; tu per le verifiche di ogni giorno.",
+      "quando": "Controllo degli estintori ogni 6 mesi.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 6,
+      "attivaSe": {
+        "all": [
+          {
+            "q": "sede",
+            "eq": true
+          },
+          {
+            "any": [
+              {
+                "fatto": "haDipendenti"
+              },
+              {
+                "q": "pubblico_50",
+                "eq": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "piano-emergenza",
+      "categoria": "sicurezza",
+      "titolo": "Piano di emergenza ed evacuazione",
+      "priorita": 1,
+      "cosaE": "Un documento che dice cosa fa ognuno in caso di incendio o altra emergenza, con la planimetria delle vie di uscita, e una prova pratica di evacuazione.",
+      "perche": "È obbligatorio con 10 o più lavoratori, nei locali con più di 50 persone presenti insieme e nelle attività con Certificato di prevenzione incendi.",
+      "riferimento": "DM 2 settembre 2021",
+      "come": [
+        "Scrivi il piano con il tuo RSPP: chi dà l'allarme, chi chiama i soccorsi, chi aiuta le persone in difficoltà.",
+        "Appendi le planimetrie con vie di uscita, estintori e punto di raccolta.",
+        "Spiega il piano a tutti i lavoratori.",
+        "Fai una prova di evacuazione e scrivi un breve verbale."
+      ],
+      "chi": "Tu, con il tuo RSPP e gli addetti antincendio.",
+      "quando": "Prova di evacuazione almeno una volta all'anno. Aggiorna il piano quando cambia il locale o l'organizzazione.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "all": [
+          {
+            "fatto": "haDipendenti"
+          },
+          {
+            "any": [
+              {
+                "q": "numero_lavoratori",
+                "gte": 10
+              },
+              {
+                "q": "pubblico_50",
+                "eq": true
+              },
+              {
+                "q": "rischio_incendio",
+                "eq": "si"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "verifica-cpi",
+      "categoria": "sicurezza",
+      "titolo": "Capire se ti serve il Certificato di prevenzione incendi",
+      "priorita": 1,
+      "cosaE": "Non sei sicuro se la tua attività rientra tra quelle controllate dai Vigili del Fuoco.",
+      "perche": "Dipende da quantità e superfici precise: va verificato da un esperto.",
+      "riferimento": "DPR 151/2011, Allegato I",
+      "come": [
+        "Annota cosa tieni in deposito e in che quantità (legno, carta, vernici, gasolio, GPL).",
+        "Annota la superficie del locale e la potenza di caldaie e generatori.",
+        "Chiedi a un tecnico antincendio o a CNA di verificarlo.",
+        "Poi torna nel questionario e aggiorna la risposta."
+      ],
+      "chi": "Un tecnico antincendio.",
+      "quando": "Appena possibile.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "rischio_incendio",
+        "eq": "non_so"
+      }
+    },
+    {
+      "id": "prevenzione-incendi-cpi",
+      "categoria": "sicurezza",
+      "titolo": "Certificato di prevenzione incendi (SCIA antincendio)",
+      "priorita": 1,
+      "cosaE": "Alcune attività (depositi di legno, carta, vernici, combustibili, centrali termiche, officine e autorimesse grandi) devono presentare la SCIA antincendio ai Vigili del Fuoco.",
+      "perche": "Senza, l'attività non è in regola e in caso di incendio le conseguenze, anche penali e assicurative, sono gravi.",
+      "riferimento": "DPR 151/2011, Allegato I",
+      "come": [
+        "Fai verificare da un tecnico antincendio se la tua attività è nell'elenco e in quale categoria (A, B o C).",
+        "Per le categorie B e C serve prima l'approvazione del progetto dai Vigili del Fuoco.",
+        "Presenta la SCIA antincendio e conserva la ricevuta.",
+        "Rispetta le prescrizioni e rinnova l'attestazione alla scadenza."
+      ],
+      "chi": "Un tecnico abilitato in prevenzione incendi.",
+      "quando": "Prima di iniziare l'attività. Rinnovo periodico di solito ogni 5 anni (10 per alcune attività).",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "attivaSe": {
+        "q": "rischio_incendio",
+        "eq": "si"
+      },
+      "daVerificare": [
+        "Soglie dell'Allegato I per le attività artigiane più comuni."
+      ]
+    },
+    {
+      "id": "dpi",
+      "categoria": "sicurezza",
+      "titolo": "Dispositivi di protezione individuale (DPI)",
+      "cosaE": "Scarpe antinfortunistiche, guanti, occhiali, cuffie, mascherine, imbracature: proteggono il lavoratore.",
+      "perche": "Il datore di lavoro deve fornirli gratis, spiegare come si usano e sostituirli quando servono.",
+      "riferimento": "D.Lgs. 81/2008 artt. 74-79",
+      "come": [
+        "Scegli i DPI adatti ai rischi del DVR.",
+        "Consegnali con un modulo firmato dal lavoratore.",
+        "Per imbracature e maschere (III categoria) fai anche l'addestramento pratico.",
+        "Sostituiscili quando sono usurati o scaduti."
+      ],
+      "chi": "Tu.",
+      "quando": "A ogni nuovo lavoratore e a ogni sostituzione.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 2
+    },
+    {
+      "id": "messa-a-terra",
+      "categoria": "sicurezza",
+      "titolo": "Impianto di messa a terra e parafulmini",
+      "cosaE": "L'impianto di terra protegge dalle scosse elettriche. Va dichiarato all'INAIL e verificato periodicamente da un organismo abilitato, come l'eventuale impianto contro i fulmini.",
+      "perche": "Protegge dalle scosse elettriche ed è obbligatorio per chi ha lavoratori.",
+      "riferimento": "DPR 462/2001",
+      "come": [
+        "Chiedi all'installatore la dichiarazione di conformità dell'impianto di terra.",
+        "Inviala all'INAIL tramite il portale CIVA entro 30 giorni dalla messa in funzione (se non è già stato fatto).",
+        "Incarica un organismo abilitato (o l'ASL/ARPA) della verifica periodica e conserva il verbale.",
+        "Se il fabbricato ha un impianto contro i fulmini, fai verificare anche quello."
+      ],
+      "chi": "Un organismo abilitato.",
+      "quando": "Ogni 5 anni; ogni 2 anni nei cantieri e nei luoghi con pericolo di esplosione.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "periodicitaRegole": [
+        {
+          "se": {
+            "q": "cantiere",
+            "eq": true
+          },
+          "mesi": 24
+        }
+      ],
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 2,
+      "daVerificare": [
+        "Modalità attuali di invio della dichiarazione tramite CIVA."
+      ]
+    },
+    {
+      "id": "impianti-elettrici",
+      "categoria": "sicurezza",
+      "titolo": "Impianto elettrico a norma",
+      "priorita": 2,
+      "cosaE": "L'impianto elettrico del tuo locale deve essere fatto da un'impresa abilitata, con la dichiarazione di conformità, e tenuto in buono stato.",
+      "perche": "Un impianto non a norma è una delle prime cause di incendi e folgorazioni, e senza dichiarazione non puoi dimostrare che è sicuro.",
+      "riferimento": "DM 37/2008; D.Lgs. 81/2008 art. 80; norme CEI",
+      "come": [
+        "Cerca la dichiarazione di conformità (DiCo) rilasciata dall'installatore, con schema e materiali.",
+        "Se l'impianto è vecchio (prima del 2008) e la dichiarazione manca, fai fare da un professionista la dichiarazione di rispondenza (DiRi).",
+        "Fai fare ogni modifica solo a un'impresa abilitata, che rilascia una nuova dichiarazione.",
+        "Premi ogni tanto il tasto di prova degli interruttori differenziali (salvavita) e fai controllare l'impianto da un elettricista con regolarità.",
+        "Togli prese multiple a catena, cavi rovinati e prolunghe sotto il passaggio."
+      ],
+      "chi": "Tu, con un'impresa elettrica abilitata.",
+      "quando": "Subito per la dichiarazione. Poi controllo periodico, di solito ogni anno.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "sede",
+        "eq": true
+      }
+    },
+    {
+      "id": "riunione-periodica",
+      "categoria": "sicurezza",
+      "titolo": "Riunione periodica sulla sicurezza",
+      "cosaE": "Incontro tra datore di lavoro, RSPP, medico competente e RLS per fare il punto sulla sicurezza.",
+      "perche": "È obbligatoria sopra i 15 lavoratori.",
+      "riferimento": "D.Lgs. 81/2008 art. 35",
+      "come": [
+        "Convoca la riunione.",
+        "Parlate di DVR, infortuni, DPI e formazione.",
+        "Scrivi e fai firmare il verbale."
+      ],
+      "chi": "Tu, con RSPP, medico competente e RLS.",
+      "quando": "Almeno una volta all'anno.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "q": "numero_lavoratori",
+        "gt": 15
+      },
+      "priorita": 2
+    },
+    {
+      "id": "infortuni",
+      "categoria": "sicurezza",
+      "titolo": "Cosa fare in caso di infortunio",
+      "cosaE": "Se un lavoratore si fa male, devi comunicarlo all'INAIL entro tempi precisi.",
+      "perche": "La comunicazione in ritardo comporta sanzioni.",
+      "riferimento": "DPR 1124/1965; D.Lgs. 81/2008 art. 18 c. 1 lett. r",
+      "come": [
+        "Fai prestare soccorso e fai visitare il lavoratore.",
+        "Fai la denuncia telematica all'INAIL entro 2 giorni dal certificato medico, se l'assenza supera 3 giorni.",
+        "Per assenze oltre 1 giorno è prevista la comunicazione a fini statistici.",
+        "Rivedi il DVR per evitare che succeda di nuovo."
+      ],
+      "chi": "Tu, con il consulente del lavoro.",
+      "quando": "Solo quando succede un infortunio.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "priorita": 2
+    },
+    {
+      "id": "duvri",
+      "categoria": "sicurezza",
+      "titolo": "Ditte esterne nella tua sede (DUVRI)",
+      "cosaE": "Quando fai lavorare un'altra ditta nella tua sede, dovete coordinarvi sui rischi.",
+      "perche": "Il committente deve verificare la ditta e valutare i rischi delle interferenze.",
+      "riferimento": "D.Lgs. 81/2008 art. 26",
+      "come": [
+        "Chiedi alla ditta la visura e l'autocertificazione dei requisiti.",
+        "Informala sui rischi della tua sede.",
+        "Prepara il DUVRI con i costi della sicurezza, quando richiesto."
+      ],
+      "chi": "Tu.",
+      "quando": "A ogni nuovo appalto.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "all": [
+          {
+            "fatto": "haDipendenti"
+          },
+          {
+            "q": "appalti_in_sede",
+            "eq": true
+          }
+        ]
+      },
+      "priorita": 2
+    },
+    {
+      "id": "tutele-particolari",
+      "categoria": "sicurezza",
+      "titolo": "Minori, gravidanza e allattamento",
+      "cosaE": "Per minorenni e lavoratrici in gravidanza o allattamento ci sono lavori vietati e tutele aggiuntive.",
+      "perche": "Lo prevedono norme specifiche a loro tutela.",
+      "riferimento": "D.Lgs. 151/2001; L. 977/1967",
+      "come": [
+        "Aggiorna il DVR con la valutazione specifica.",
+        "Sposta la lavoratrice a mansioni compatibili quando serve.",
+        "Per i minori verifica i lavori vietati e la visita medica."
+      ],
+      "chi": "Tu, con RSPP e medico competente.",
+      "quando": "A ogni comunicazione di gravidanza o assunzione di un minore.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "q": "tutele_particolari",
+        "eq": true
+      },
+      "priorita": 2
+    },
+    {
+      "id": "patente-crediti",
+      "categoria": "lavorazioni",
+      "titolo": "Patente a crediti per i cantieri",
+      "cosaE": "Una patente a punti obbligatoria per imprese e autonomi che lavorano fisicamente nei cantieri.",
+      "perche": "Senza patente, o con meno di 15 crediti, non puoi lavorare in cantiere.",
+      "riferimento": "D.Lgs. 81/2008 art. 27; DM 132/2024",
+      "come": [
+        "Richiedila sul portale dell'Ispettorato del lavoro con SPID o CIE.",
+        "Controlla il punteggio: parte da 30 crediti.",
+        "Mantieni in regola DURC, DVR, formazione e nomine: le violazioni tolgono punti.",
+        "Sono esclusi solo chi fa forniture o lavori intellettuali e chi ha la SOA dalla III classifica in su."
+      ],
+      "chi": "Tu.",
+      "quando": "Prima di entrare in cantiere. Controllo dei crediti consigliato ogni anno (crediti aggiuntivi richiedibili a gennaio dal 2027).",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "q": "cantiere",
+        "eq": true
+      },
+      "priorita": 1
+    },
+    {
+      "id": "pos",
+      "categoria": "lavorazioni",
+      "titolo": "Piano operativo di sicurezza (POS)",
+      "cosaE": "Il POS è il documento di sicurezza che la tua impresa prepara per ogni cantiere.",
+      "perche": "Va consegnato prima di iniziare i lavori in cantiere.",
+      "riferimento": "D.Lgs. 81/2008 artt. 89, 96 e Allegato XV",
+      "come": [
+        "Prepara un POS per ogni cantiere, con lavorazioni, attrezzature e lavoratori.",
+        "Consegnalo all'impresa affidataria o al coordinatore prima di iniziare.",
+        "Porta con te in cantiere tessere di riconoscimento e attestati."
+      ],
+      "chi": "Tu, con il tuo RSPP.",
+      "quando": "A ogni nuovo cantiere.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "all": [
+          {
+            "q": "cantiere",
+            "eq": true
+          },
+          {
+            "fatto": "haDipendenti"
+          }
+        ]
+      },
+      "priorita": 2
+    },
+    {
+      "id": "lavori-quota",
+      "categoria": "lavorazioni",
+      "titolo": "Lavori in quota",
+      "cosaE": "Ogni lavoro con rischio di caduta da oltre 2 metri.",
+      "perche": "Le cadute dall'alto sono tra le prime cause di infortunio mortale.",
+      "riferimento": "D.Lgs. 81/2008 artt. 105-117",
+      "come": [
+        "Usa prima le protezioni collettive (parapetti, ponteggi, trabattelli).",
+        "Se non bastano, usa imbracatura e punti di ancoraggio sicuri.",
+        "Fai l'addestramento all'uso dei dispositivi anticaduta.",
+        "Per montare ponteggi o lavorare su funi serve un corso abilitante."
+      ],
+      "chi": "Tu e chi lavora in quota.",
+      "quando": "Prima di iniziare. Ripeti l'addestramento secondo le indicazioni del formatore.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "quota",
+        "eq": true
+      },
+      "daVerificare": [
+        "Ore e aggiornamento dei corsi ponteggi e funi secondo l'ASR 59/2025."
+      ],
+      "priorita": 1
+    },
+    {
+      "id": "attrezzature-abilitazione",
+      "categoria": "lavorazioni",
+      "titolo": "Patentini per piattaforme, gru, muletti, escavatori, trattori",
+      "cosaE": "Per usare queste macchine serve un corso abilitante specifico, e le macchine vanno verificate periodicamente.",
+      "perche": "Sono macchine pericolose: senza abilitazione non si possono usare.",
+      "riferimento": "D.Lgs. 81/2008 artt. 71 e 73; Allegato VII; Accordo Stato-Regioni n. 59/2025",
+      "come": [
+        "Fai frequentare il corso abilitante a chi usa ogni tipo di macchina.",
+        "Conserva gli attestati.",
+        "Fai fare le verifiche periodiche previste per la macchina e conserva i verbali."
+      ],
+      "chi": "Un ente formatore per i corsi; un organismo abilitato per le verifiche.",
+      "quando": "Aggiornamento del patentino ogni 5 anni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "attivaSe": {
+        "q": "attrezzature_abilitazione",
+        "eq": true
+      },
+      "priorita": 1
+    },
+    {
+      "id": "lavori-elettrici",
+      "categoria": "lavorazioni",
+      "titolo": "Lavori elettrici",
+      "cosaE": "Lavori su impianti elettrici fuori tensione, in prossimità o sotto tensione.",
+      "perche": "Solo personale formato e autorizzato può svolgerli.",
+      "riferimento": "D.Lgs. 81/2008 artt. 82-83; norma CEI 11-27",
+      "come": [
+        "Fai seguire la formazione secondo la norma CEI 11-27.",
+        "Attribuisci per iscritto le qualifiche PES (persona esperta), PAV (persona avvertita) o PEI.",
+        "Usa attrezzi isolati e DPI adatti."
+      ],
+      "chi": "Tu attribuisci le qualifiche.",
+      "quando": "Prima di iniziare e quando cambiano le persone o i lavori.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "elettrico",
+        "eq": true
+      },
+      "priorita": 1
+    },
+    {
+      "id": "ambienti-confinati",
+      "categoria": "lavorazioni",
+      "titolo": "Ambienti confinati",
+      "cosaE": "Cisterne, pozzi, fognature, silos, vasche: luoghi chiusi dove l'aria può uccidere in pochi minuti.",
+      "perche": "Per lavorarci l'impresa deve essere qualificata, e la formazione è obbligatoria anche per titolari e autonomi.",
+      "riferimento": "DPR 177/2011; Accordo Stato-Regioni n. 59/2025",
+      "come": [
+        "Verifica di avere i requisiti: almeno il 30% degli addetti con 3 anni di esperienza.",
+        "Fai frequentare il corso di 12 ore in presenza.",
+        "Prepara procedure di lavoro e di soccorso, con attrezzature di recupero.",
+        "Non entrare mai da solo."
+      ],
+      "chi": "Tu e chi entra negli ambienti.",
+      "quando": "Prima di ogni lavoro. Aggiornamento secondo l'ASR 59/2025.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "confinati",
+        "eq": true
+      },
+      "daVerificare": [
+        "Periodicità e durata dell'aggiornamento."
+      ],
+      "priorita": 1
+    },
+    {
+      "id": "rischio-chimico",
+      "categoria": "lavorazioni",
+      "titolo": "Prodotti chimici, polveri e fumi",
+      "cosaE": "Vernici, solventi, colle, detergenti, polveri di legno o di cemento, fumi di saldatura.",
+      "perche": "Possono causare malattie anche gravi, a volte dopo anni.",
+      "riferimento": "D.Lgs. 81/2008 Titolo IX; Reg. CE 1907/2006 (REACH) e 1272/2008 (CLP)",
+      "come": [
+        "Raccogli le schede di sicurezza (SDS) di tutti i prodotti.",
+        "Scrivi nel DVR la valutazione del rischio chimico.",
+        "Usa aspirazione, aerazione e DPI adatti (maschere, guanti).",
+        "Per polveri di legno duro o silice serve anche il registro degli esposti."
+      ],
+      "chi": "Tu, con il tuo RSPP.",
+      "quando": "A ogni nuovo prodotto. Controllo delle schede consigliato ogni anno.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "q": "chimici",
+        "eq": true
+      },
+      "priorita": 2
+    },
+    {
+      "id": "rumore-vibrazioni",
+      "categoria": "lavorazioni",
+      "titolo": "Rumore e vibrazioni",
+      "cosaE": "Macchine rumorose e utensili che vibrano possono danneggiare udito, mani e schiena.",
+      "perche": "La valutazione è obbligatoria e va ripetuta.",
+      "riferimento": "D.Lgs. 81/2008 Titolo VIII capi II e III",
+      "come": [
+        "Fai misurare o stimare rumore e vibrazioni.",
+        "Fornisci cuffie o tappi sopra 80 dB(A), e falli usare sopra 85.",
+        "Scegli utensili meno rumorosi e a basse vibrazioni."
+      ],
+      "chi": "Tu, con un tecnico qualificato.",
+      "quando": "Valutazione da aggiornare almeno ogni 4 anni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 48,
+      "attivaSe": {
+        "all": [
+          {
+            "q": "rumore_vibrazioni",
+            "eq": true
+          },
+          {
+            "fatto": "haDipendenti"
+          }
+        ]
+      },
+      "priorita": 2
+    },
+    {
+      "id": "movimentazione-carichi",
+      "categoria": "lavorazioni",
+      "titolo": "Sollevamento di pesi e movimenti ripetitivi",
+      "cosaE": "Spostare pesi a mano o ripetere sempre gli stessi movimenti affatica schiena e articolazioni.",
+      "perche": "È una delle prime cause di malattia professionale.",
+      "riferimento": "D.Lgs. 81/2008 Titolo VI; norme ISO 11228",
+      "come": [
+        "Valuta i carichi nel DVR.",
+        "Usa carrelli, sollevatori e organizza il lavoro per ridurre gli sforzi.",
+        "Insegna ai lavoratori come sollevare correttamente."
+      ],
+      "chi": "Tu, con il tuo RSPP.",
+      "quando": "Quando cambiano lavorazioni o carichi.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "all": [
+          {
+            "q": "carichi",
+            "eq": true
+          },
+          {
+            "fatto": "haDipendenti"
+          }
+        ]
+      },
+      "priorita": 2
+    },
+    {
+      "id": "videoterminali",
+      "categoria": "lavorazioni",
+      "titolo": "Lavoro al computer",
+      "cosaE": "Chi usa il computer per almeno 20 ore a settimana è un videoterminalista.",
+      "perche": "Ha diritto a una postazione corretta, a pause e alle visite agli occhi.",
+      "riferimento": "D.Lgs. 81/2008 Titolo VII",
+      "come": [
+        "Sistema sedia, schermo e luce secondo le regole di ergonomia.",
+        "Prevedi pause di 15 minuti ogni 2 ore.",
+        "Fai fare la visita dal medico competente."
+      ],
+      "chi": "Tu e il medico competente.",
+      "quando": "Visita ogni 5 anni; ogni 2 sopra i 50 anni o con prescrizioni.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "all": [
+          {
+            "q": "videoterminali",
+            "eq": true
+          },
+          {
+            "fatto": "haDipendenti"
+          }
+        ]
+      },
+      "priorita": 2
+    },
+    {
+      "id": "notturno-guida",
+      "categoria": "lavorazioni",
+      "titolo": "Lavoro notturno, guida, alcol e droghe",
+      "cosaE": "Chi lavora di notte o guida mezzi ha tutele e controlli specifici.",
+      "perche": "Stanchezza, alcol e droghe aumentano molto il rischio di incidenti.",
+      "riferimento": "D.Lgs. 66/2003; D.Lgs. 81/2008 art. 41",
+      "come": [
+        "Per il lavoro notturno: visita prima dell'inizio e almeno ogni 2 anni.",
+        "Per la guida e le mansioni a rischio: vieta alcol sul lavoro e organizza i controlli previsti con il medico.",
+        "Verifica patenti e qualifiche di chi guida."
+      ],
+      "chi": "Tu e il medico competente.",
+      "quando": "Secondo il protocollo del medico.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "all": [
+          {
+            "q": "notte_guida",
+            "eq": true
+          },
+          {
+            "fatto": "haDipendenti"
+          }
+        ]
+      },
+      "priorita": 2
+    },
+    {
+      "id": "fgas",
+      "categoria": "lavorazioni",
+      "titolo": "Gas fluorurati (frigoristi e climatizzazione)",
+      "cosaE": "Per installare o riparare impianti con gas refrigeranti servono certificazione della persona e dell'impresa.",
+      "perche": "Senza certificazione F-gas non puoi lavorare su questi impianti.",
+      "riferimento": "Reg. UE 2024/573; DPR 146/2018",
+      "come": [
+        "Iscrivi persone e impresa al Registro F-gas tramite la Camera di Commercio.",
+        "Ottieni la certificazione da un organismo accreditato.",
+        "Comunica ogni intervento alla Banca dati F-gas.",
+        "Adegua i certificati ai nuovi programmi entro il 12 marzo 2027."
+      ],
+      "chi": "Tu e i tecnici che intervengono.",
+      "quando": "Prima di iniziare. Adeguamento certificati entro il 12 marzo 2027.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "fgas",
+        "eq": true
+      },
+      "priorita": 2
+    },
+    {
+      "id": "rentri",
+      "categoria": "ambiente",
+      "titolo": "Rifiuti pericolosi: RENTRI, registro e formulari",
+      "cosaE": "Chi produce rifiuti pericolosi (oli, filtri, batterie, solventi, stracci contaminati) deve iscriversi al RENTRI e tenere il registro.",
+      "perche": "È obbligatorio anche con un solo addetto. Dal 13 febbraio 2026 il formulario per i rifiuti pericolosi è digitale.",
+      "riferimento": "D.Lgs. 152/2006 artt. 188-bis e 190; DM 59/2023",
+      "come": [
+        "Iscriviti al RENTRI (anche tramite associazione o consulente delegato).",
+        "Paga il contributo annuale.",
+        "Compila il registro di carico e scarico.",
+        "Affida i rifiuti solo a trasportatori autorizzati, con formulario digitale."
+      ],
+      "chi": "Tu, o un delegato.",
+      "quando": "Contributo e controlli ogni anno.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "q": "rifiuti_pericolosi",
+        "eq": "si"
+      },
+      "priorita": 1
+    },
+    {
+      "id": "rifiuti-verifica",
+      "categoria": "ambiente",
+      "titolo": "Capire che rifiuti produci",
+      "cosaE": "Non sei sicuro se i tuoi rifiuti sono pericolosi.",
+      "perche": "Da questo dipende se devi iscriverti al RENTRI e tenere il registro.",
+      "riferimento": "D.Lgs. 152/2006",
+      "come": [
+        "Fai un elenco dei rifiuti che produci.",
+        "Chiedi a chi li ritira (o all'associazione) il codice EER di ciascuno.",
+        "Se un codice ha l'asterisco, il rifiuto è pericoloso: torna nel questionario e rispondi Sì."
+      ],
+      "chi": "Tu, con chi ritira i rifiuti.",
+      "quando": "Appena possibile.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "rifiuti_pericolosi",
+        "eq": "non_so"
+      },
+      "daVerificare": [
+        "Serve l'aiuto di un esperto."
+      ],
+      "priorita": 2
+    },
+    {
+      "id": "emissioni-atmosfera",
+      "categoria": "ambiente",
+      "titolo": "Emissioni in atmosfera (fumi, vapori, polveri)",
+      "priorita": 2,
+      "cosaE": "Se dal tuo locale escono all'esterno fumi, vapori o polveri, l'impianto può aver bisogno di un'autorizzazione alle emissioni.",
+      "perche": "Emettere senza autorizzazione, o senza rispettarne le prescrizioni, è un reato.",
+      "riferimento": "D.Lgs. 152/2006 artt. 269, 272 e 279; DPR 59/2013 (AUA)",
+      "come": [
+        "Fai verificare in quale caso rientri: attività con emissioni scarsamente rilevanti (nessuna autorizzazione), attività artigiane con autorizzazione generale (si aderisce tramite SUAP), oppure autorizzazione vera e propria o AUA.",
+        "Molte attività artigiane (verniciatura, carrozzeria, falegnameria, saldatura) usano l'adesione all'autorizzazione generale.",
+        "Conserva l'autorizzazione e rispettane le prescrizioni: manutenzione dei filtri, registro delle manutenzioni, analisi se richieste.",
+        "Prima di cambiare impianti o prodotti, verifica se serve aggiornare l'autorizzazione."
+      ],
+      "chi": "Tu, con un consulente ambientale e il SUAP.",
+      "quando": "Prima di avviare l'impianto. Poi secondo le scadenze dell'autorizzazione (analisi, rinnovo).",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "emissioni",
+        "eq": true
+      },
+      "daVerificare": [
+        "Autorizzazioni generali e procedure vigenti in Regione Campania."
+      ]
+    },
+    {
+      "id": "reati-ambientali",
+      "categoria": "ambiente",
+      "titolo": "Reati ambientali: cosa non fare mai",
+      "priorita": 1,
+      "cosaE": "Con la legge del 2025 sulla Terra dei Fuochi le pene per chi abbandona, brucia o gestisce male i rifiuti sono diventate molto più pesanti.",
+      "perche": "Molti comportamenti, prima puniti con una multa, oggi sono reati con il carcere e la confisca dei mezzi. Per le società scatta anche la responsabilità dell'impresa.",
+      "riferimento": "D.Lgs. 152/2006 artt. 255, 255-bis, 255-ter, 256, 256-bis, 259, 279; L. 68/2015; DL 116/2025 conv. L. 147/2025; D.Lgs. 231/2001",
+      "come": [
+        "Non abbandonare mai rifiuti, neanche pochi sacchi: ammenda fino a 18.000 euro e, se usi un veicolo, sospensione della patente da 4 a 6 mesi. Per i rifiuti pericolosi e i casi più gravi è un delitto fino a 6 anni e 6 mesi.",
+        "Non bruciare mai rifiuti, neanche in cantiere o in campagna: è un delitto punito fino a 7 anni.",
+        "Consegna i rifiuti solo a ditte iscritte all'Albo gestori ambientali e conserva il formulario: affidarli a chi non è autorizzato è gestione illecita, con confisca di veicoli e aree.",
+        "Se trasporti da solo i tuoi rifiuti, devi essere iscritto all'Albo gestori (iscrizione semplificata).",
+        "Non scaricare acque di lavorazione in fogna, nei fossi o sul terreno senza autorizzazione.",
+        "Non far uscire fumi o polveri dall'impianto senza autorizzazione alle emissioni."
+      ],
+      "chi": "Tu e chiunque lavori con te: spiegalo anche ai dipendenti.",
+      "quando": "Sempre. Ogni anno controlla che chi ritira i tuoi rifiuti sia ancora iscritto all'Albo gestori.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "sempre": true
+      }
+    },
+    {
+      "id": "privacy",
+      "categoria": "privacy",
+      "titolo": "Privacy: le regole di base",
+      "cosaE": "Le regole per trattare correttamente i dati personali di clienti, fornitori e collaboratori (nomi, telefoni, indirizzi, documenti).",
+      "perche": "Lo impone il GDPR a tutte le imprese, anche le più piccole.",
+      "riferimento": "Reg. UE 2016/679 (GDPR); D.Lgs. 196/2003",
+      "come": [
+        "Prepara l'informativa per i clienti e mettila a disposizione (in negozio, sul sito, nei preventivi).",
+        "Raccogli solo i dati che ti servono davvero e tienili al sicuro: armadio chiuso per la carta, password sul computer e sul telefono.",
+        "Nomina per iscritto come responsabili esterni chi tratta dati per te: commercialista, consulente del lavoro, fornitori di software o di assistenza informatica.",
+        "Se usi un sito o i social per raccogliere contatti, controlla informativa e banner dei cookie."
+      ],
+      "chi": "Tu, con un consulente privacy se serve.",
+      "quando": "All'avvio. Revisione consigliata ogni anno.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "sempre": true
+      },
+      "priorita": 3
+    },
+    {
+      "id": "privacy-lavoratori",
+      "categoria": "privacy",
+      "titolo": "Privacy dei lavoratori e dati sanitari",
+      "priorita": 2,
+      "cosaE": "Con i dipendenti tratti molti dati personali, anche delicati come certificati e idoneità mediche.",
+      "perche": "I dati dei lavoratori sono tra i più controllati dal Garante, e quelli sulla salute hanno regole molto rigide.",
+      "riferimento": "Reg. UE 2016/679 artt. 9, 13, 30; D.Lgs. 196/2003; D.Lgs. 81/2008 artt. 25, 41",
+      "come": [
+        "Consegna a ogni lavoratore l'informativa privacy e conserva la firma di ricevuta.",
+        "Compila il registro dei trattamenti: chi ha dipendenti lo deve tenere.",
+        "Dai un'autorizzazione scritta a chi in azienda usa i dati dei colleghi (per esempio chi segue paghe e presenze).",
+        "Dal medico competente ricevi solo il giudizio di idoneità: diagnosi e cartella sanitaria restano a lui.",
+        "I certificati di malattia non devono contenere la diagnosi: se te la mandano, non conservarla e non farla circolare.",
+        "Conserva i documenti del personale in un luogo chiuso e cancellali quando non servono più."
+      ],
+      "chi": "Tu, con il consulente del lavoro.",
+      "quando": "All'assunzione di ogni lavoratore. Controllo del registro ogni anno.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      }
+    },
+    {
+      "id": "videosorveglianza",
+      "categoria": "privacy",
+      "titolo": "Telecamere e videosorveglianza",
+      "priorita": 1,
+      "cosaE": "Le telecamere riprendono persone: servono regole precise, e con i dipendenti anche un'autorizzazione prima di installarle.",
+      "perche": "Installare telecamere che possono riprendere i lavoratori senza accordo o autorizzazione è vietato e punito, anche penalmente.",
+      "riferimento": "L. 300/1970 (Statuto dei lavoratori) art. 4; Reg. UE 2016/679; provvedimenti del Garante privacy",
+      "come": [
+        "Se hai dipendenti: prima di installare serve un accordo con le rappresentanze sindacali (RSA o RSU) o, se non ci sono, l'autorizzazione dell'Ispettorato del lavoro.",
+        "Le telecamere possono servire solo per sicurezza, tutela dei beni o esigenze organizzative, mai per controllare come lavorano le persone.",
+        "Metti il cartello di area videosorvegliata prima del campo ripreso, e tieni l'informativa completa a disposizione.",
+        "Conserva le registrazioni solo per pochi giorni (di regola 24-72 ore, salvo esigenze motivate) e proteggi l'accesso con password.",
+        "Non riprendere bagni, spogliatoi, aree di riposo, né la strada pubblica oltre il necessario."
+      ],
+      "chi": "Tu, con l'installatore e il consulente del lavoro.",
+      "quando": "Prima di installare o spostare le telecamere.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "videosorveglianza",
+        "eq": true
+      },
+      "daVerificare": [
+        "Tempi di conservazione indicati dalle linee guida più recenti del Garante."
+      ]
+    },
+    {
+      "id": "gps-strumenti",
+      "categoria": "privacy",
+      "titolo": "GPS sui mezzi e controllo degli strumenti di lavoro",
+      "priorita": 2,
+      "cosaE": "Localizzatori su furgoni e telefoni, e strumenti come email o tablet aziendali, possono permettere di controllare i lavoratori a distanza.",
+      "perche": "Il controllo a distanza dei lavoratori è consentito solo in casi precisi e con le garanzie previste dalla legge.",
+      "riferimento": "L. 300/1970 art. 4; Reg. UE 2016/679",
+      "come": [
+        "Se il GPS serve per sicurezza, assicurazione o organizzazione, serve l'accordo sindacale o l'autorizzazione dell'Ispettorato, come per le telecamere.",
+        "Informa per iscritto i lavoratori su cosa viene registrato, perché e per quanto tempo.",
+        "Adotta un regolamento aziendale semplice sull'uso di telefono, email e computer di lavoro.",
+        "Non usare i dati del GPS per scopi diversi da quelli dichiarati."
+      ],
+      "chi": "Tu, con il consulente del lavoro.",
+      "quando": "Prima di installare i localizzatori o consegnare gli strumenti.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "all": [
+          {
+            "fatto": "haDipendenti"
+          },
+          {
+            "q": "gps",
+            "eq": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "data-breach",
+      "categoria": "privacy",
+      "titolo": "Se perdi dati o subisci un attacco informatico",
+      "priorita": 2,
+      "cosaE": "Furto del computer o del telefono, email finita alla persona sbagliata, virus che blocca i file: sono violazioni di dati personali.",
+      "perche": "In molti casi vanno notificate al Garante entro 72 ore, e a volte bisogna avvisare anche le persone coinvolte.",
+      "riferimento": "Reg. UE 2016/679 artt. 33, 34",
+      "come": [
+        "Cerca subito di limitare il danno: cambia le password, scollega il computer infetto, chiedi di cancellare l'email sbagliata.",
+        "Annota cosa è successo, quando e quali dati sono coinvolti.",
+        "Valuta con un esperto se serve la notifica al Garante, da fare online entro 72 ore.",
+        "Tieni un registro delle violazioni, anche di quelle che non vanno notificate."
+      ],
+      "chi": "Tu, con il tuo consulente privacy o informatico.",
+      "quando": "Solo quando succede.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "sempre": true
+      }
+    },
+    {
+      "id": "whistleblowing",
+      "categoria": "privacy",
+      "titolo": "Canale per le segnalazioni (whistleblowing)",
+      "priorita": 2,
+      "cosaE": "Un canale riservato con cui chi lavora con te può segnalare illeciti, senza subire ritorsioni.",
+      "perche": "È obbligatorio per le imprese con almeno 50 lavoratori e per quelle che hanno adottato un modello 231.",
+      "riferimento": "D.Lgs. 24/2023",
+      "come": [
+        "Attiva un canale riservato (piattaforma online o altro mezzo che garantisca la riservatezza).",
+        "Affida la gestione a una persona o a un ufficio formato.",
+        "Informa lavoratori e collaboratori su come usarlo.",
+        "Rispondi alle segnalazioni nei tempi previsti e proteggi chi segnala."
+      ],
+      "chi": "Tu, con un consulente.",
+      "quando": "Una volta attivato, da mantenere sempre funzionante.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "numero_lavoratori",
+        "gte": 50
+      }
+    }
+  ]
+}

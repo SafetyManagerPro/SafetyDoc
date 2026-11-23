@@ -1,0 +1,11 @@
+{
+  "name": "safetydoc",
+  "version": "0.3.0",
+  "private": true,
+  "description": "safetyDoc: cosa fare, come e quando per la sicurezza sul lavoro nelle piccole imprese.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "npx --yes serve -l 3000 ."
+  }
+}
