@@ -155,7 +155,7 @@ label { display: block; margin-top: 14px; font-weight: 600; }
 label small { font-weight: 400; color: var(--testo-2); }
 
 /* Scheda */
-.indietro { display: inline-block; padding: 8px 0; text-decoration: none; font-weight: 600; }
+.indietro { display: block; width: fit-content; padding: 8px 0; text-decoration: none; font-weight: 600; }
 .pill { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 0.9rem; font-weight: 600; }
 .pill--rosso { background: var(--rosso-sfondo); color: var(--rosso); }
 .pill--giallo { background: var(--giallo-sfondo); color: var(--giallo); }
