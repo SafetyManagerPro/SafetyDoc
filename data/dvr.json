@@ -1,0 +1,372 @@
+{
+  "versione": "0.5.0",
+  "aggiornato": "2026-11-24",
+  "riferimento": "Procedure standardizzate per la valutazione dei rischi (DM 30 novembre 2012), art. 29 c. 5 del D.Lgs. 81/2008",
+  "pericoli": [
+    {
+      "id": "luoghi",
+      "famiglia": "Luoghi di lavoro",
+      "pericolo": "Pavimenti, passaggi, scale fisse, uscite, illuminazione, microclima e servizi igienici",
+      "presenteSe": {
+        "q": "sede",
+        "eq": true
+      },
+      "misure": [
+        "Passaggi e uscite sempre liberi e segnalati",
+        "Pavimenti integri e non scivolosi, scale con corrimano",
+        "Illuminazione adeguata, anche di emergenza",
+        "Servizi igienici, spogliatoi e acqua potabile"
+      ]
+    },
+    {
+      "id": "lavoro-esterno",
+      "famiglia": "Luoghi di lavoro",
+      "pericolo": "Lavoro presso clienti, cantieri o all'aperto (intemperie, caldo, freddo)",
+      "presenteSe": {
+        "any": [
+          {
+            "q": "cantiere",
+            "eq": true
+          },
+          {
+            "q": "sede",
+            "eq": false
+          }
+        ]
+      },
+      "misure": [
+        "Informarsi sui rischi del luogo prima di iniziare",
+        "Indumenti adatti al clima, pause e acqua nelle giornate calde",
+        "Coordinamento con il committente (DUVRI o POS)"
+      ],
+      "schedaId": "pos"
+    },
+    {
+      "id": "attrezzature",
+      "famiglia": "Attrezzature di lavoro",
+      "pericolo": "Macchine, utensili elettrici e manuali",
+      "presenteSe": {
+        "sempre": true
+      },
+      "misure": [
+        "Solo attrezzature marcate CE o adeguate all'Allegato V",
+        "Protezioni e dispositivi di arresto presenti e funzionanti",
+        "Manutenzione secondo il libretto e registrata",
+        "Informazione e formazione sull'uso"
+      ],
+      "schedaId": "dvr"
+    },
+    {
+      "id": "attrezzature-abilitazione",
+      "famiglia": "Attrezzature di lavoro",
+      "pericolo": "Piattaforme, gru, carrelli elevatori, escavatori, trattori",
+      "presenteSe": {
+        "q": "attrezzature_abilitazione",
+        "eq": true
+      },
+      "misure": [
+        "Operatori con patentino valido",
+        "Verifiche periodiche dell'Allegato VII",
+        "Controlli prima dell'uso"
+      ],
+      "schedaId": "attrezzature-abilitazione"
+    },
+    {
+      "id": "elettrico-impianto",
+      "famiglia": "Impianti",
+      "pericolo": "Impianto elettrico e di messa a terra",
+      "presenteSe": {
+        "q": "sede",
+        "eq": true
+      },
+      "misure": [
+        "Dichiarazione di conformità dell'impianto",
+        "Verifica periodica della messa a terra (DPR 462/2001)",
+        "Interruttori differenziali provati periodicamente"
+      ],
+      "schedaId": "impianti-elettrici"
+    },
+    {
+      "id": "lavori-elettrici",
+      "famiglia": "Impianti",
+      "pericolo": "Lavori su impianti elettrici",
+      "presenteSe": {
+        "q": "elettrico",
+        "eq": true
+      },
+      "misure": [
+        "Formazione CEI 11-27 e qualifiche PES/PAV per iscritto",
+        "Lavori fuori tensione con procedure di sezionamento",
+        "Attrezzi isolati e DPI adatti"
+      ],
+      "schedaId": "lavori-elettrici"
+    },
+    {
+      "id": "quota",
+      "famiglia": "Lavori in quota",
+      "pericolo": "Cadute dall'alto oltre 2 metri",
+      "presenteSe": {
+        "q": "quota",
+        "eq": true
+      },
+      "misure": [
+        "Protezioni collettive prima di tutto (parapetti, ponteggi, trabattelli)",
+        "Imbracatura e ancoraggi quando le protezioni collettive non bastano",
+        "Addestramento ai DPI anticaduta"
+      ],
+      "schedaId": "lavori-quota"
+    },
+    {
+      "id": "confinati",
+      "famiglia": "Ambienti confinati",
+      "pericolo": "Cisterne, pozzi, fognature, silos, vasche",
+      "presenteSe": {
+        "q": "confinati",
+        "eq": true
+      },
+      "misure": [
+        "Impresa qualificata secondo il DPR 177/2011",
+        "Procedura di lavoro e di recupero scritta",
+        "Misurazione dell'aria prima e durante l'ingresso",
+        "Mai entrare da soli"
+      ],
+      "schedaId": "ambienti-confinati"
+    },
+    {
+      "id": "incendio",
+      "famiglia": "Incendio ed esplosione",
+      "pericolo": "Incendio e gestione delle emergenze",
+      "presenteSe": {
+        "sempre": true
+      },
+      "misure": [
+        "Estintori adeguati e controllati ogni 6 mesi",
+        "Addetti antincendio formati",
+        "Istruzioni di emergenza e numeri utili esposti"
+      ],
+      "schedaId": "antincendio"
+    },
+    {
+      "id": "atex",
+      "famiglia": "Incendio ed esplosione",
+      "pericolo": "Atmosfere esplosive (polveri, vapori, gas)",
+      "presenteSe": {
+        "q": "atex",
+        "eq": true
+      },
+      "misure": [
+        "Valutazione ATEX e documento sulla protezione contro le esplosioni",
+        "Pulizia dagli accumuli di polvere, ventilazione",
+        "Impianti adatti alle zone classificate"
+      ],
+      "schedaId": "atex"
+    },
+    {
+      "id": "rumore",
+      "famiglia": "Agenti fisici",
+      "pericolo": "Rumore",
+      "presenteSe": {
+        "q": "rumore_vibrazioni",
+        "eq": true
+      },
+      "misure": [
+        "Valutazione del rumore (misure o dati del costruttore)",
+        "Scelta di macchine meno rumorose",
+        "Cuffie o tappi sopra 80 dB(A)"
+      ],
+      "schedaId": "rumore-vibrazioni"
+    },
+    {
+      "id": "vibrazioni",
+      "famiglia": "Agenti fisici",
+      "pericolo": "Vibrazioni al sistema mano-braccio e al corpo intero",
+      "presenteSe": {
+        "q": "rumore_vibrazioni",
+        "eq": true
+      },
+      "misure": [
+        "Valutazione con banche dati o misure",
+        "Utensili a basse vibrazioni e manutenuti",
+        "Turnazione e pause"
+      ],
+      "schedaId": "rumore-vibrazioni"
+    },
+    {
+      "id": "chimico",
+      "famiglia": "Sostanze pericolose",
+      "pericolo": "Agenti chimici (vernici, solventi, colle, detergenti)",
+      "presenteSe": {
+        "q": "chimici",
+        "eq": true
+      },
+      "misure": [
+        "Schede di sicurezza raccolte e lette",
+        "Aspirazione e aerazione",
+        "Guanti, maschere e occhiali adatti",
+        "Conservazione corretta dei prodotti"
+      ],
+      "schedaId": "rischio-chimico"
+    },
+    {
+      "id": "cancerogeni",
+      "famiglia": "Sostanze pericolose",
+      "pericolo": "Polveri cancerogene (legno duro, silice cristallina)",
+      "presenteSe": {
+        "q": "polveri_cancerogene",
+        "eq": true
+      },
+      "misure": [
+        "Aspirazione localizzata o lavorazione a umido",
+        "Pulizia con aspiratore, mai con aria compressa",
+        "Maschere FFP3, registro degli esposti"
+      ],
+      "schedaId": "cancerogeni"
+    },
+    {
+      "id": "amianto",
+      "famiglia": "Sostanze pericolose",
+      "pericolo": "Materiali contenenti amianto",
+      "presenteSe": {
+        "q": "amianto",
+        "eq": true
+      },
+      "misure": [
+        "Verifica della presenza prima dei lavori",
+        "Interventi solo da imprese iscritte all'Albo cat. 10",
+        "Piano di lavoro all'ASL"
+      ],
+      "schedaId": "amianto"
+    },
+    {
+      "id": "biologici",
+      "famiglia": "Agenti biologici",
+      "pericolo": "Virus, batteri e funghi",
+      "presenteSe": {
+        "q": "biologici",
+        "eq": true
+      },
+      "misure": [
+        "Valutazione del rischio biologico",
+        "Guanti e DPI, strumenti sterili o monouso",
+        "Vaccinazioni consigliate dal medico competente"
+      ],
+      "schedaId": "agenti-biologici"
+    },
+    {
+      "id": "mmc",
+      "famiglia": "Ergonomia",
+      "pericolo": "Movimentazione manuale dei carichi e movimenti ripetitivi",
+      "presenteSe": {
+        "q": "carichi",
+        "eq": true
+      },
+      "misure": [
+        "Valutazione con i metodi ISO 11228",
+        "Carrelli e ausili per i pesi",
+        "Formazione sul sollevamento corretto"
+      ],
+      "schedaId": "movimentazione-carichi"
+    },
+    {
+      "id": "vdt",
+      "famiglia": "Ergonomia",
+      "pericolo": "Lavoro al videoterminale",
+      "presenteSe": {
+        "q": "videoterminali",
+        "eq": true
+      },
+      "misure": [
+        "Postazione ergonomica (sedia, schermo, luce)",
+        "Pause di 15 minuti ogni 2 ore",
+        "Sorveglianza sanitaria"
+      ],
+      "schedaId": "videoterminali"
+    },
+    {
+      "id": "stress",
+      "famiglia": "Organizzazione del lavoro",
+      "pericolo": "Stress lavoro-correlato",
+      "presenteSe": {
+        "fatto": "haDipendenti"
+      },
+      "misure": [
+        "Valutazione preliminare con gli indicatori oggettivi (metodo INAIL)",
+        "Coinvolgimento dei lavoratori o dell'RLS",
+        "Misure organizzative se emergono criticità"
+      ],
+      "schedaId": "stress-lavoro-correlato"
+    },
+    {
+      "id": "notturno",
+      "famiglia": "Organizzazione del lavoro",
+      "pericolo": "Lavoro notturno, guida di mezzi, alcol e droghe",
+      "presenteSe": {
+        "q": "notte_guida",
+        "eq": true
+      },
+      "misure": [
+        "Visite mediche periodiche",
+        "Divieto di alcol sul lavoro",
+        "Organizzazione dei turni e delle pause"
+      ],
+      "schedaId": "notturno-guida"
+    },
+    {
+      "id": "strada",
+      "famiglia": "Organizzazione del lavoro",
+      "pericolo": "Lavori su strada aperta al traffico",
+      "presenteSe": {
+        "q": "strada",
+        "eq": true
+      },
+      "misure": [
+        "Segnaletica secondo il DI 22 gennaio 2019",
+        "Indumenti ad alta visibilità",
+        "Formazione specifica"
+      ],
+      "schedaId": "lavori-stradali"
+    },
+    {
+      "id": "interferenze",
+      "famiglia": "Organizzazione del lavoro",
+      "pericolo": "Interferenze con altre ditte nella sede",
+      "presenteSe": {
+        "q": "appalti_in_sede",
+        "eq": true
+      },
+      "misure": [
+        "Verifica dell'idoneità delle ditte",
+        "Informazione sui rischi della sede",
+        "DUVRI quando previsto"
+      ],
+      "schedaId": "duvri"
+    },
+    {
+      "id": "tutele",
+      "famiglia": "Gruppi di lavoratori",
+      "pericolo": "Lavoratrici in gravidanza o allattamento, minori",
+      "presenteSe": {
+        "q": "tutele_particolari",
+        "eq": true
+      },
+      "misure": [
+        "Valutazione specifica e lavori vietati",
+        "Spostamento a mansioni compatibili",
+        "Visita medica per i minori"
+      ],
+      "schedaId": "tutele-particolari"
+    },
+    {
+      "id": "differenze",
+      "famiglia": "Gruppi di lavoratori",
+      "pericolo": "Differenze di genere, età, provenienza da altri Paesi, tipo di contratto",
+      "presenteSe": {
+        "fatto": "haDipendenti"
+      },
+      "misure": [
+        "Informazione e formazione comprensibili (anche in altre lingue se serve)",
+        "Attenzione a lavoratori nuovi, giovani o con contratti brevi"
+      ]
+    }
+  ]
+}

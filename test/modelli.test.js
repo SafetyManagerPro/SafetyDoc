@@ -44,3 +44,15 @@ test('modelli proposti secondo le risposte e i ruoli', () => {
   assert.ok(!modelloPerLavoratore(preposto, { ruoli: [] }));
   for (const r of defLav.requisiti.filter((x) => x.modello)) assert.ok(MODELLI.some((m) => m.id === r.modello), `${r.id}: modello inesistente`);
 });
+
+test('bozza di DVR: pericoli presenti dalle risposte, mansioni dai lavoratori', () => {
+  const dvr = JSON.parse(readFileSync(new URL('../data/dvr.json', import.meta.url)));
+  const catalogo = JSON.parse(readFileSync(new URL('../data/catalogo.json', import.meta.url)));
+  for (const p of dvr.pericoli) if (p.schedaId) assert.ok(catalogo.schede.some((s) => s.id === p.schedaId), `${p.id}: scheda ${p.schedaId} inesistente`);
+  const ctx = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 3, sede: true, rumore_vibrazioni: true, quota: true, dl_rspp: true }, questionario);
+  const html = generaDocumento('dvr-bozza', { anagrafica, oggi: '2026-11-24', dvr, ctx, lavoratori: [{ mansione: 'Falegname' }, { mansione: 'Falegname' }, { mansione: 'Magazziniere' }], attivita: 'Falegnameria' }).html;
+  for (const x of ['Modulo 1.1', 'Modulo 2', 'Modulo 3', 'Falegname', 'Magazziniere', 'Rumore', 'Cadute dall', 'Stress lavoro-correlato', 'Luca Rossi (datore di lavoro)']) assert.ok(html.includes(x), `manca ${x}`);
+  assert.equal(html.split('Falegname<br>').length, 2, 'le mansioni non si ripetono');
+  const mod3 = html.split('Modulo 3')[1];
+  assert.ok(!mod3.includes('Atmosfere esplosive'), 'i pericoli assenti non vanno nel modulo 3');
+});
