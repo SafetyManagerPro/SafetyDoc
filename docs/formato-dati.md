@@ -54,8 +54,15 @@ Collezioni:
 - `controlli`: una registrazione per manutenzione, controllo o verifica: `attrezzaturaId`, `controlloId`, `data`,
   `scadenzaManuale`, `esito` (`positivo`, `con_interventi`, `negativo`), `note`. La periodicità delle verifiche
   dipende da tipo, settore (edilizia, estrazione, siderurgia, porti) ed età della macchina (oltre 10 anni).
+- `prodotti`: prodotti chimici: `nome`, `fornitore`, `uso`, `pittogrammi` (codici CLP `GHS01`…`GHS09`), `frasiH`,
+  `dpi`, `dataSds`, `dismesso`. Rosso se manca la scheda di sicurezza (né data né allegato); giallo se le frasi H
+  indicano cancerogeni, mutageni o tossici per la riproduzione (H340, H350, H360).
+- `eventi`: infortuni, medicazioni e quasi incidenti: `tipo` (`infortunio`, `medicazione`, `quasi_incidente`), `data`,
+  `luogo`, `lavoratoreId`, `descrizione`, `causa`, `giorniPrognosi`, `dataCertificato`, `dataDenuncia`, `misure`,
+  `misureFatte`. Nessuna diagnosi: solo i giorni di prognosi che servono per le scadenze INAIL (oltre 3 giorni
+  denuncia, da 1 a 3 comunicazione statistica, entro 2 giorni dal certificato).
 - `allegati`: foto e PDF collegati a un'altra voce: `collegatoTipo` (`adempimento`, `registro`, `controllo`,
-  `attrezzatura`), `collegatoId`, `nome`, `tipo` (MIME), `dimensione`, `file` (Blob). Nel file di backup il
+  `attrezzatura`, `prodotto`, `evento`), `collegatoId`, `nome`, `tipo` (MIME), `dimensione`, `file` (Blob). Nel file di backup il
   contenuto diventa `datiBase64`; si può scegliere di non includerlo.
 
 ## File di backup
@@ -63,11 +70,11 @@ Collezioni:
 ```json
 {
   "formato": "safetydoc-export",
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "versioneApp": "0.1.0",
   "esportatoIl": "2026-11-23T18:00:00.000Z",
   "deviceId": "…",
-  "collezioni": { "profilo": [], "adempimenti": [], "lavoratori": [], "registri": [], "attrezzature": [], "controlli": [], "allegati": [] }
+  "collezioni": { "profilo": [], "adempimenti": [], "lavoratori": [], "registri": [], "attrezzature": [], "controlli": [], "prodotti": [], "eventi": [], "allegati": [] }
 }
 ```
 
@@ -78,7 +85,7 @@ con AES-GCM a 256 bit e chiave derivata con PBKDF2-SHA256 (310.000 iterazioni).
 maggiore, così due postazioni arrivano allo stesso risultato. Le cancellazioni sono record anch'esse, quindi un
 file vecchio non fa riapparire dati eliminati. Se `schemaVersion` è più alta di quella supportata, l'import viene
 rifiutato; i file più vecchi passano da `migra()` in `js/merge.js` (le collezioni che mancano nei file
-delle versioni 1 e 2 vengono create vuote).
+delle versioni precedenti vengono create vuote).
 
 ## Passaggio a un database
 

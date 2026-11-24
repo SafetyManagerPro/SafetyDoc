@@ -207,6 +207,12 @@ label small { font-weight: 400; color: var(--testo-2); }
 .spunta__box { flex: none; width: 26px; height: 26px; border: 2px solid var(--testo-2); border-radius: 6px; display: grid; place-items: center; margin-top: 1px; }
 .spunta__testo { display: grid; gap: 2px; }
 .spunta__testo small { color: var(--testo-2); font-size: 0.85rem; }
+fieldset.spunte, fieldset.scelte-radio { border: 0; padding: 0; min-width: 0; }
+fieldset.scelte-radio { display: grid; gap: 8px; margin: 0 0 16px; }
+fieldset legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
+label.spunta { font-weight: 400; min-height: 48px; padding: 12px; }
+label.spunta input { flex: none; width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--primario); }
+label.spunta:has(input:checked) { border-color: var(--primario); }
 .spunta--attiva { border-color: var(--primario); box-shadow: inset 0 0 0 1px var(--primario); }
 .spunta--attiva .spunta__box { background: var(--primario); border-color: var(--primario); }
 .spunta--attiva .spunta__box::after { content: "✓"; color: var(--primario-testo); font-weight: 700; }

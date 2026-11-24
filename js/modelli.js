@@ -35,6 +35,51 @@ function luogoData(a, oggi) {
 
 const titolare = (a) => a.titolare || '';
 
+/** I pericoli del DVR presenti per l'impresa, secondo le risposte. */
+function pericoliPresenti(dvr, ctx) {
+  return (dvr?.pericoli || []).filter((x) => ctx && valuta(x.presenteSe, ctx));
+}
+
+/** I 14 allergeni dell'Allegato II del Reg. UE 1169/2011. */
+export const ALLERGENI = [
+  'Cereali contenenti glutine (grano, segale, orzo, avena, farro, kamut)',
+  'Crostacei',
+  'Uova',
+  'Pesce',
+  'Arachidi',
+  'Soia',
+  'Latte e derivati (compreso il lattosio)',
+  'Frutta a guscio (mandorle, nocciole, noci, anacardi, pistacchi e altre)',
+  'Sedano',
+  'Senape',
+  'Semi di sesamo',
+  'Anidride solforosa e solfiti (oltre 10 mg/kg o 10 mg/l)',
+  'Lupini',
+  'Molluschi'
+];
+
+/**
+ * Rischi per gravidanza e allattamento, collegati ai pericoli del DVR (D.Lgs. 151/2001, artt. 7 e 53, Allegati A, B e C).
+ * Le righe senza pericolo valgono sempre. Indicazioni da confermare con il medico competente.
+ */
+export const RISCHI_MATERNITA = [
+  { rischio: "Lavoro in piedi per più di metà dell'orario", indicazione: 'Vietato in gravidanza', misura: 'Mansione con possibilità di sedersi' },
+  { pericolo: 'mmc', rischio: 'Sollevamento e trasporto di pesi', indicazione: 'Vietato in gravidanza e fino a 7 mesi dopo il parto', misura: 'Spostamento a mansione senza movimentazione di carichi' },
+  { pericolo: 'quota', rischio: 'Lavori su scale, ponteggi e impalcature', indicazione: 'Vietato in gravidanza e fino a 7 mesi dopo il parto', misura: 'Esclusione dai lavori in quota' },
+  { pericolo: 'vibrazioni', rischio: 'Utensili o macchine che trasmettono intense vibrazioni', indicazione: 'Vietato in gravidanza', misura: "Esclusione dall'uso di questi utensili" },
+  { pericolo: 'rumore', rischio: 'Rumore', indicazione: 'Da valutare con il medico competente (vietato con esposizione elevata)', misura: 'Spostamento in zona non rumorosa' },
+  { pericolo: 'chimico', rischio: 'Prodotti chimici pericolosi', indicazione: 'Vietati quelli tossici per la salute o la riproduzione (verificare le frasi H nelle schede di sicurezza)', misura: "Esclusione dall'uso dei prodotti indicati dal medico" },
+  { pericolo: 'cancerogeni', rischio: 'Agenti cancerogeni e mutageni', indicazione: 'Vietato in gravidanza e fino a 7 mesi dopo il parto', misura: 'Spostamento a mansione non esposta' },
+  { pericolo: 'amianto', rischio: 'Amianto', indicazione: 'Vietato in gravidanza e fino a 7 mesi dopo il parto', misura: 'Esclusione dai lavori' },
+  { pericolo: 'biologici', rischio: 'Agenti biologici (per esempio toxoplasma, rosolia)', indicazione: 'Vietato se non immunizzata; da valutare con il medico competente', misura: "Verifica dell'immunità ed esclusione dai contatti a rischio" },
+  { pericolo: 'notturno', rischio: 'Lavoro notturno', indicazione: "Vietato dalle 24 alle 6 dall'inizio della gravidanza fino a un anno di età del bambino", misura: 'Solo turni diurni' },
+  { pericolo: 'strada', rischio: 'Lavori su mezzi di trasporto in movimento', indicazione: 'Vietato in gravidanza', misura: 'Esclusione dalla guida e dal lavoro a bordo di mezzi' },
+  { pericolo: 'confinati', rischio: 'Ambienti confinati', indicazione: 'Da escludere (lavoro pericoloso)', misura: 'Esclusione dai lavori' },
+  { pericolo: 'lavori-elettrici', rischio: 'Lavori elettrici', indicazione: 'Da escludere (lavoro pericoloso)', misura: 'Esclusione dai lavori' },
+  { pericolo: 'vdt', rischio: 'Lavoro al computer', indicazione: 'Consentito, con pause e cambi di posizione più frequenti', misura: 'Pause e postazione regolabile' },
+  { pericolo: 'stress', rischio: 'Ritmi e carichi di lavoro', indicazione: 'Da valutare', misura: 'Riduzione di ritmi, straordinari e reperibilità' }
+];
+
 // ---------- definizioni ----------
 
 export const MODELLI = [
@@ -439,6 +484,347 @@ export const MODELLI = [
       </ol>
       ${luogoData(a, oggi)}
       ${firme(['Il titolare del trattamento', titolare(a)], ['Il responsabile, per accettazione', ''])}`
+  },
+  {
+    id: 'info-rischi-ditte',
+    titolo: 'Informazioni sui rischi per le ditte esterne',
+    descrizione: 'Da consegnare a ogni ditta o lavoratore autonomo che lavora nella tua sede: rischi presenti, regole ed emergenze.',
+    ambito: 'impresa',
+    attivaSe: { q: 'appalti_in_sede', eq: true },
+    genera: ({ anagrafica: a, oggi, dvr, ctx, lavoratori, ruoli }) => {
+      const presenti = pericoliPresenti(dvr, ctx);
+      const addetti = (ruolo) => (lavoratori || []).filter((l) => (l.ruoli || []).includes(ruolo)).map(nomeCompleto).join(', ');
+      return `${intestazione(a)}
+        <h1>Informazioni sui rischi presenti nella sede e sulle misure di emergenza</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 26 c. 1 lett. b</p>
+        <p>Alla ditta ${v('', 30)} incaricata di ${v('', 30)} nella sede di ${v([a.sede, a.comune].filter(Boolean).join(', '), 30)}.</p>
+        <h2>Rischi presenti nella sede</h2>
+        <ul>${presenti.map((x) => `<li>${esc(x.pericolo)}</li>`).join('') || '<li>&nbsp;</li>'}</ul>
+        <h2>Regole da rispettare</h2>
+        <ul>
+          <li>Prima di iniziare, presentarsi al referente e concordare orari e zone di lavoro.</li>
+          <li>Non usare macchine, attrezzature o prodotti dell'impresa senza autorizzazione.</li>
+          <li>Delimitare e segnalare la propria area di lavoro; non lasciare materiali lungo i passaggi e le uscite.</li>
+          <li>Comunicare in anticipo lavori rumorosi, polverosi, con fiamme libere o con prodotti pericolosi.</li>
+          <li>Esporre la tessera di riconoscimento con fotografia.</li>
+        </ul>
+        <h2>Emergenze</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Referente dell'impresa</th><td>${esc(titolare(a))} ${a.contatto ? `· ${esc(a.contatto)}` : ''}</td></tr>
+          <tr><th>Addetti al primo soccorso</th><td>${esc(addetti('primo_soccorso'))}</td></tr>
+          <tr><th>Addetti antincendio</th><td>${esc(addetti('antincendio'))}</td></tr>
+          <tr><th>Cassetta di primo soccorso</th><td></td></tr>
+          <tr><th>Estintori e uscite di emergenza</th><td></td></tr>
+          <tr><th>Punto di raccolta</th><td></td></tr>
+          <tr><th>Numero unico di emergenza</th><td>112</td></tr>
+        </tbody></table>
+        ${luogoData(a, oggi)}
+        ${firme(['Il committente', titolare(a)], ['Per ricevuta, la ditta esterna', ''])}`;
+    }
+  },
+  {
+    id: 'duvri-bozza',
+    titolo: 'Bozza di DUVRI (rischi da interferenze)',
+    descrizione: 'Documento di valutazione dei rischi da interferenze con la ditta esterna, con i costi della sicurezza. Da completare per ogni appalto.',
+    ambito: 'impresa',
+    attivaSe: { all: [{ fatto: 'haDipendenti' }, { q: 'appalti_in_sede', eq: true }] },
+    genera: ({ anagrafica: a, oggi, dvr, ctx }) => {
+      const presenti = pericoliPresenti(dvr, ctx);
+      const righe = (n) => Array.from({ length: n }, () => '<tr><td style="height:2.2em"></td><td></td><td></td><td></td></tr>').join('');
+      return `${intestazione(a)}
+        <h1>Documento unico di valutazione dei rischi da interferenze (DUVRI)</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 26 c. 3 · BOZZA da completare per ogni appalto</p>
+        <h2>1 · Dati dell'appalto</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Committente</th><td>${esc(a.ragioneSociale || '')} · datore di lavoro ${esc(titolare(a))}</td></tr>
+          <tr><th>Luogo dei lavori</th><td>${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
+          <tr><th>Ditta appaltatrice / lavoratore autonomo</th><td></td></tr>
+          <tr><th>Oggetto dell'appalto</th><td></td></tr>
+          <tr><th>Durata prevista (date e uomini-giorno)</th><td></td></tr>
+          <tr><th>Referenti per il coordinamento</th><td></td></tr>
+        </tbody></table>
+        <h2>2 · Verifica dell'idoneità tecnico-professionale</h2>
+        <p>☐ Visura camerale &nbsp; ☐ Autocertificazione dei requisiti &nbsp; ☐ DURC regolare &nbsp; ☐ Per lavori edili: documenti dell'Allegato XVII</p>
+        <h2>3 · Rischi della sede del committente</h2>
+        <ul>${presenti.map((x) => `<li>${esc(x.pericolo)}</li>`).join('') || '<li>&nbsp;</li>'}</ul>
+        <h2>4 · Rischi da interferenze e misure</h2>
+        <table class="doc__tabella"><thead><tr><th>Attività o fase</th><th>Interferenza (chi e cosa)</th><th>Misure per eliminarla o ridurla</th><th>A cura di</th></tr></thead><tbody>
+          <tr><td>Accesso e transito di persone e mezzi</td><td>Presenza contemporanea di lavoratori, clienti e personale esterno</td><td>Orari concordati, percorsi separati, area delimitata e segnalata</td><td>Entrambi</td></tr>
+          <tr><td>Uso di attrezzature e prodotti</td><td>Rumore, polveri, prodotti chimici, cavi a terra</td><td>Avviso preventivo, aerazione, nessun materiale lungo le vie di uscita</td><td>Appaltatore</td></tr>
+          <tr><td>Emergenze</td><td>Personale esterno che non conosce il locale</td><td>Informazione su uscite, estintori, punto di raccolta e addetti</td><td>Committente</td></tr>
+          ${righe(3)}
+        </tbody></table>
+        <h2>5 · Costi della sicurezza per le interferenze</h2>
+        <table class="doc__tabella"><thead><tr><th>Voce (delimitazioni, segnaletica, riunioni, DPI specifici…)</th><th>Importo (€)</th></tr></thead><tbody>
+          <tr><td style="height:2.2em"></td><td></td></tr><tr><td style="height:2.2em"></td><td></td></tr><tr><th>Totale (non soggetto a ribasso)</th><td></td></tr>
+        </tbody></table>
+        <h2>6 · Riunione di coordinamento</h2>
+        <p>Data ${v('', 12)} · Presenti ${v('', 40)}</p>
+        <p class="doc__nota">Il DUVRI non è richiesto per servizi intellettuali, mere forniture di materiali o attrezzature e lavori o servizi fino a 5 uomini-giorno, salvo rischi particolari (art. 26 c. 3-bis). Va allegato al contratto.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il committente', titolare(a)], ['L\'appaltatore', ''])}`;
+    }
+  },
+  {
+    id: 'autocertificazione-idoneita',
+    titolo: 'Autocertificazione di idoneità tecnico-professionale',
+    descrizione: 'Da consegnare ai clienti o all\'impresa affidataria quando lavori presso di loro o in cantiere.',
+    ambito: 'impresa',
+    attivaSe: { any: [{ q: 'lavori_presso_clienti', eq: true }, { q: 'cantiere', eq: true }] },
+    genera: ({ anagrafica: a, oggi, ctx, lavoratori, attrezzature }) => {
+      const dip = ctx?.fatti?.haDipendenti;
+      return `${intestazione(a)}
+        <h1>Dichiarazione sostitutiva di idoneità tecnico-professionale</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 26 c. 1 lett. a e Allegato XVII · DPR 445/2000 artt. 46 e 47</p>
+        <p>Il sottoscritto ${v(titolare(a), 24)}, legale rappresentante dell'impresa ${v(a.ragioneSociale, 28)}, con sede in ${v([a.sede, a.comune].filter(Boolean).join(', '), 28)},
+        P.IVA ${v(a.piva, 14)}, consapevole delle sanzioni penali previste per le dichiarazioni false (art. 76 DPR 445/2000),</p>
+        <p style="text-align:center"><strong>DICHIARA</strong></p>
+        <ul>
+          <li>che l'impresa è iscritta alla Camera di commercio per attività coerenti con i lavori affidati (codice ATECO ${v(ctx?.fatti?.ateco?.codice, 8)});</li>
+          <li>di essere in regola con i versamenti contributivi e assicurativi (DURC);</li>
+          ${
+            dip
+              ? `<li>di aver redatto il documento di valutazione dei rischi;</li>
+          <li>di aver nominato l'RSPP (${v(ctx?.risposte?.dl_rspp ? `${titolare(a)}, datore di lavoro` : a.rspp, 20)})${a.medico ? ` e il medico competente (${esc(a.medico)})` : ', e il medico competente quando previsto'};</li>
+          <li>di aver designato gli addetti al primo soccorso e alla prevenzione incendi;</li>
+          <li>che i lavoratori (${(lavoratori || []).length}) sono formati, informati e, quando previsto, sottoposti a sorveglianza sanitaria, e dispongono dei DPI necessari;</li>`
+              : `<li>di lavorare senza dipendenti e di rispettare gli obblighi dell'art. 21 del D.Lgs. 81/2008 (attrezzature conformi, DPI, tessera di riconoscimento);</li>`
+          }
+          <li>che le attrezzature usate sono conformi al Titolo III del D.Lgs. 81/2008${(attrezzature || []).length ? `: ${(attrezzature || []).map((x) => esc(x.nome)).join(', ')}` : ''};</li>
+          <li>di non essere destinatario di provvedimenti di sospensione o interdittivi (art. 14 D.Lgs. 81/2008).</li>
+        </ul>
+        <p>Si allegano: visura camerale, DURC${dip ? ', elenco dei lavoratori con attestati di formazione e idoneità sanitaria' : ''}, documento d'identità.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il legale rappresentante', titolare(a)])}`;
+    }
+  },
+  {
+    id: 'pos-bozza',
+    titolo: 'Bozza di Piano operativo di sicurezza (POS)',
+    descrizione: 'Schema con i contenuti minimi dell\'Allegato XV, già compilato con impresa, lavoratori, attrezzature e prodotti. Da completare per ogni cantiere.',
+    ambito: 'impresa',
+    attivaSe: { all: [{ q: 'cantiere', eq: true }, { fatto: 'haDipendenti' }] },
+    genera: ({ anagrafica: a, oggi, ctx, lavoratori, attrezzature, prodotti, ruoli }) => {
+      const etichetta = (r) => (ruoli && ruoli[r]) || r;
+      const conRuolo = (r) => (lavoratori || []).filter((l) => (l.ruoli || []).includes(r)).map(nomeCompleto).join(', ');
+      return `${intestazione(a)}
+        <h1>Piano operativo di sicurezza</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 89 c. 1 lett. h e Allegato XV punto 3.2.1 · BOZZA da completare per ogni cantiere</p>
+        <h2>Cantiere</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Indirizzo del cantiere</th><td></td></tr><tr><th>Committente</th><td></td></tr>
+          <tr><th>Impresa affidataria</th><td></td></tr><tr><th>Coordinatore per l'esecuzione</th><td></td></tr>
+          <tr><th>Lavori affidati all'impresa</th><td></td></tr><tr><th>Inizio e durata prevista</th><td></td></tr>
+        </tbody></table>
+        <h2>a) Dati dell'impresa esecutrice</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Impresa</th><td>${esc(a.ragioneSociale || '')} · ${esc([a.sede, a.comune].filter(Boolean).join(', '))} · P.IVA ${esc(a.piva || '')}</td></tr>
+          <tr><th>Datore di lavoro</th><td>${esc(titolare(a))}</td></tr>
+          <tr><th>RSPP</th><td>${esc(ctx?.risposte?.dl_rspp ? `${titolare(a)} (datore di lavoro)` : a.rspp || '')}</td></tr>
+          <tr><th>Medico competente</th><td>${esc(a.medico || '')}</td></tr>
+          <tr><th>RLS / RLST</th><td>${esc(a.rls || '')}</td></tr>
+          <tr><th>Preposto / capocantiere</th><td>${esc(conRuolo('preposto'))}</td></tr>
+          <tr><th>Addetti al primo soccorso</th><td>${esc(conRuolo('primo_soccorso'))}</td></tr>
+          <tr><th>Addetti antincendio ed emergenze</th><td>${esc(conRuolo('antincendio'))}</td></tr>
+        </tbody></table>
+        <h2>b) Lavoratori presenti in cantiere e incarichi</h2>
+        <table class="doc__tabella"><thead><tr><th>Lavoratore</th><th>Mansione</th><th>Incarichi per la sicurezza</th><th>In cantiere</th></tr></thead><tbody>
+          ${(lavoratori || [])
+            .map((l) => `<tr><td>${esc(nomeCompleto(l))}</td><td>${esc(l.mansione || '')}</td><td>${esc((l.ruoli || []).map(etichetta).join(', '))}</td><td>☐</td></tr>`)
+            .join('')}
+        </tbody></table>
+        <h2>c) Attività di cantiere, organizzazione e turni</h2>
+        <p style="min-height:5em">&nbsp;</p>
+        <h2>d) Opere provvisionali, macchine e impianti</h2>
+        <ul>${(attrezzature || []).map((x) => `<li>${esc(x.nome)}${x.tipo ? ` (${esc(x.tipo)})` : ''} ☐</li>`).join('') || '<li>&nbsp;</li>'}</ul>
+        <h2>e) Sostanze e miscele pericolose (con schede di sicurezza)</h2>
+        <ul>${(prodotti || []).map((p) => `<li>${esc(p.nome)}${p.pittogrammi?.length ? ` · ${esc(p.pittogrammi.join(', '))}` : ''} ☐</li>`).join('') || '<li>&nbsp;</li>'}</ul>
+        <h2>f) Esito della valutazione del rumore</h2>
+        <p>Livello di esposizione per mansione: ${v('', 40)}</p>
+        <h2>g) Misure di prevenzione integrative rispetto al PSC</h2>
+        <p style="min-height:4em">&nbsp;</p>
+        <h2>h) Procedure richieste dal PSC</h2>
+        <p style="min-height:3em">&nbsp;</p>
+        <h2>i) DPI forniti ai lavoratori</h2>
+        <p>☐ Elmetto &nbsp; ☐ Scarpe antinfortunistiche &nbsp; ☐ Guanti &nbsp; ☐ Occhiali &nbsp; ☐ Otoprotettori &nbsp; ☐ Mascherine &nbsp; ☐ Imbracatura anticaduta &nbsp; ☐ Indumenti alta visibilità</p>
+        <h2>l) Informazione e formazione dei lavoratori</h2>
+        <p>Gli attestati di formazione generale, specifica e per gli incarichi sono allegati. Registro: vedi «Registro della formazione».</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['Per presa visione, l\'RLS', a.rls])}`;
+    }
+  },
+  {
+    id: 'stress-preliminare',
+    titolo: 'Valutazione preliminare dello stress lavoro-correlato',
+    descrizione: 'Scheda per raccogliere gli eventi sentinella degli ultimi 3 anni (infortuni già compilati dal registro) e i fattori di contenuto e contesto del lavoro.',
+    ambito: 'impresa',
+    attivaSe: { fatto: 'haDipendenti' },
+    genera: ({ anagrafica: a, oggi, perAnno }) => {
+      const anni = Object.keys(perAnno || {}).sort();
+      const riga = (titolo, valori) => `<tr><td>${esc(titolo)}</td>${anni.map((y) => `<td>${valori ? esc(String(valori[y])) : ''}</td>`).join('')}</tr>`;
+      const inf = Object.fromEntries(anni.map((y) => [y, perAnno[y].infortunio]));
+      const area = (titolo, voci) => `<tr><th colspan="2">${esc(titolo)}</th></tr>${voci.map((x) => `<tr><td>${esc(x)}</td><td style="width:45%"></td></tr>`).join('')}`;
+      return `${intestazione(a)}
+        <h1>Valutazione preliminare del rischio stress lavoro-correlato</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 28 c. 1-bis · indicazioni della Commissione consultiva del 17/11/2010 · BOZZA</p>
+        <p>Valutazione condotta da ${v(titolare(a), 20)} con ${v(a.rspp, 18)} e ${v(a.medico, 18)}, sentiti i lavoratori o l'RLS ${v(a.rls, 16)}.</p>
+        <h2>A · Eventi sentinella</h2>
+        <table class="doc__tabella"><thead><tr><th>Indicatore</th>${anni.map((y) => `<th>${y}</th>`).join('')}</tr></thead><tbody>
+          ${riga('Infortuni (dal registro di safetyDoc)', inf)}
+          ${['Assenze per malattia (giorni)', 'Assenze dal lavoro (permessi, ritardi)', 'Ferie non godute', 'Trasferimenti interni richiesti', 'Cessazioni e dimissioni (turnover)', 'Procedimenti e sanzioni disciplinari', 'Richieste di visite mediche straordinarie', 'Segnalazioni scritte del medico competente', 'Lamentele formali dei lavoratori'].map((t) => riga(t)).join('')}
+        </tbody></table>
+        <h2>B · Contenuto e contesto del lavoro</h2>
+        <table class="doc__tabella"><thead><tr><th>Fattore</th><th>Osservazioni (criticità rilevate)</th></tr></thead><tbody>
+          ${area('Contenuto del lavoro', ['Ambiente di lavoro e attrezzature', 'Pianificazione dei compiti', 'Carico e ritmo di lavoro', 'Orario di lavoro e turni'])}
+          ${area('Contesto del lavoro', ['Organizzazione e comunicazione', 'Ruoli e responsabilità chiari', 'Possibilità di crescita professionale', 'Autonomia nelle decisioni', 'Rapporti tra colleghi e con i responsabili', 'Conciliazione tra lavoro e famiglia'])}
+        </tbody></table>
+        <h2>C · Esito</h2>
+        <p>☐ Non emergono elementi di rischio: la valutazione si conclude e sarà ripetuta periodicamente o al cambiare dell'organizzazione.</p>
+        <p>☐ Emergono elementi di rischio: si adottano le misure correttive sotto indicate e se ne verifica l'efficacia; se non efficaci si passa alla valutazione approfondita.</p>
+        <p style="min-height:4em">Misure: </p>
+        <p class="doc__nota">Per l'analisi dettagliata si può usare la lista di controllo della metodologia INAIL.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['L\'RLS, per consultazione', a.rls])}`;
+    }
+  },
+  {
+    id: 'informativa-lavoratrici-madri',
+    titolo: 'Informativa per le lavoratrici: gravidanza e allattamento',
+    descrizione: 'Esito della valutazione dei rischi per gravidanza e allattamento, da consegnare a tutte le lavoratrici e all\'RLS. Le indicazioni vanno confermate con il medico competente.',
+    ambito: 'impresa',
+    attivaSe: { fatto: 'haDipendenti' },
+    genera: ({ anagrafica: a, oggi, dvr, ctx, lavoratori }) => {
+      const presenti = new Set(pericoliPresenti(dvr, ctx).map((x) => x.id));
+      const righe = RISCHI_MATERNITA.filter((r) => !r.pericolo || presenti.has(r.pericolo));
+      const mansioni = [...new Set((lavoratori || []).map((l) => (l.mansione || '').trim()).filter(Boolean))];
+      return `${intestazione(a)}
+        <h1>Informativa alle lavoratrici sui rischi per la gravidanza e l'allattamento</h1>
+        <p class="doc__rif">D.Lgs. 151/2001 artt. 7, 11, 12 e 53; Allegati A, B e C</p>
+        <p>Gentile lavoratrice, l'impresa ha valutato i rischi delle mansioni ${mansioni.length ? `(${mansioni.map(esc).join(', ')})` : ''} per le lavoratrici in gravidanza e fino a 7 mesi dopo il parto. Ti informiamo dei risultati.</p>
+        <table class="doc__tabella"><thead><tr><th>Rischio presente</th><th>Indicazione</th><th>Misura che adotteremo</th></tr></thead><tbody>
+          ${righe.map((r) => `<tr><td>${esc(r.rischio)}</td><td>${esc(r.indicazione)}</td><td>${esc(r.misura)}</td></tr>`).join('')}
+        </tbody></table>
+        <h2>Cosa fare</h2>
+        <ul>
+          <li>Comunica la gravidanza il prima possibile, con il certificato medico: solo così possiamo proteggerti e spostarti a un lavoro compatibile.</li>
+          <li>Lo spostamento non riduce la retribuzione. Se non c'è un lavoro compatibile, l'impresa lo comunica all'Ispettorato del lavoro per l'astensione anticipata.</li>
+          <li>Hai diritto ai permessi retribuiti per gli esami prenatali (art. 14 D.Lgs. 151/2001).</li>
+        </ul>
+        <p class="doc__nota">Indicazioni generate da safetyDoc sulla base dei rischi del DVR: vanno confermate dal medico competente e dall'RSPP per ogni mansione.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['Per ricevuta, la lavoratrice', ''], ['Per presa visione, l\'RLS', a.rls])}`;
+    }
+  },
+  {
+    id: 'informativa-minori',
+    titolo: 'Informativa per il lavoratore minorenne e la famiglia',
+    descrizione: 'Rischi della mansione, lavori vietati e orari, da consegnare al minore e ai genitori prima dell\'inizio.',
+    ambito: 'impresa',
+    attivaSe: { q: 'minori', eq: true },
+    genera: ({ anagrafica: a, oggi, dvr, ctx }) => {
+      const presenti = pericoliPresenti(dvr, ctx);
+      return `${intestazione(a)}
+        <h1>Informativa sui rischi per il lavoratore minorenne e per chi ne ha la responsabilità</h1>
+        <p class="doc__rif">L. 977/1967 artt. 6, 7, 8, 18 e Allegato I (come modificata dai D.Lgs. 345/1999 e 262/2000)</p>
+        <p>Lavoratore: ${v('', 26)} nato il ${v('', 10)} · mansione: ${v('', 22)} · tutore aziendale o preposto: ${v('', 20)}</p>
+        <h2>Rischi della mansione e misure</h2>
+        <table class="doc__tabella"><thead><tr><th>Rischio</th><th>Misure e limitazioni per il minore</th></tr></thead><tbody>
+          ${presenti.map((x) => `<tr><td>${esc(x.pericolo)}</td><td style="width:55%"></td></tr>`).join('') || '<tr><td style="height:2em"></td><td></td></tr>'}
+        </tbody></table>
+        <h2>Lavori che il minore non svolgerà</h2>
+        <p>Quelli elencati nell'Allegato I della L. 977/1967 (per esempio con agenti chimici, biologici o cancerogeni pericolosi, rumore elevato, macchine e lavorazioni pericolose), salvo le eccezioni previste per la formazione, sotto la sorveglianza di un formatore esperto e nel rispetto della sicurezza.</p>
+        <h2>Orari e tutele</h2>
+        <ul>
+          <li>Non più di 8 ore al giorno e 40 a settimana, con le pause previste; nessun lavoro notturno.</li>
+          <li>Visita medica prima dell'inizio e poi periodica secondo il medico competente.</li>
+          <li>Formazione e addestramento specifici prima di usare attrezzature.</li>
+        </ul>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['Il lavoratore', ''], ['Il genitore o tutore', ''])}`;
+    }
+  },
+  {
+    id: 'elenco-prodotti-chimici',
+    titolo: 'Elenco dei prodotti chimici e delle schede di sicurezza',
+    descrizione: 'Tutti i prodotti inseriti in safetyDoc con pericoli, data della scheda di sicurezza e DPI. Da allegare al DVR e tenere a disposizione dei lavoratori.',
+    ambito: 'impresa',
+    attivaSe: { q: 'chimici', eq: true },
+    genera: ({ anagrafica: a, oggi, prodotti }) => `${intestazione(a)}
+        <h1>Elenco dei prodotti chimici e delle schede di sicurezza</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 artt. 223 e 227; Reg. CE 1907/2006 art. 31</p>
+        <table class="doc__tabella"><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Uso</th><th>Pericoli</th><th>Scheda del</th><th>DPI</th></tr></thead><tbody>
+          ${
+            (prodotti || [])
+              .map(
+                (p) => `<tr><td>${esc(p.nome)}</td><td>${esc(p.fornitore || '')}</td><td>${esc(p.uso || '')}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${esc(data(p.dataSds))}</td><td>${esc(p.dpi || '')}</td></tr>`
+              )
+              .join('') || '<tr><td colspan="6" style="height:2em"></td></tr>'
+          }
+        </tbody></table>
+        <p class="doc__nota">Le schede di sicurezza complete sono conservate in ${v('', 24)} e consultabili dai lavoratori.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)])}`
+  },
+  {
+    id: 'registro-eventi',
+    titolo: 'Registro di infortuni e quasi incidenti',
+    descrizione: 'Elenco degli eventi registrati in safetyDoc con cause, comunicazioni all\'INAIL e misure adottate.',
+    ambito: 'impresa',
+    attivaSe: { fatto: 'haDipendenti' },
+    genera: ({ anagrafica: a, oggi, eventi, lavoratori }) => {
+      const nome = (id) => {
+        const l = (lavoratori || []).find((x) => x.id === id);
+        return l ? nomeCompleto(l) : '';
+      };
+      const TIPI = { infortunio: 'Infortunio', medicazione: 'Medicazione', quasi_incidente: 'Quasi incidente' };
+      return `${intestazione(a)}
+        <h1>Registro di infortuni e quasi incidenti</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 artt. 18 c. 1 lett. r e 29 c. 3 · registro interno di prevenzione</p>
+        <table class="doc__tabella"><thead><tr><th>Data</th><th>Tipo</th><th>Lavoratore</th><th>Cosa è successo e perché</th><th>Prognosi / INAIL</th><th>Misura adottata</th></tr></thead><tbody>
+          ${
+            (eventi || [])
+              .map(
+                (e) => `<tr><td>${esc(data(e.data))}</td><td>${esc(TIPI[e.tipo] || '')}</td><td>${esc(nome(e.lavoratoreId))}</td><td>${esc([e.luogo, e.descrizione, e.causa ? `Causa: ${e.causa}` : ''].filter(Boolean).join(' · '))}</td><td>${
+                  e.tipo === 'infortunio' ? esc([e.giorniPrognosi !== null && e.giorniPrognosi !== undefined && e.giorniPrognosi !== '' ? `${e.giorniPrognosi} gg` : '', e.dataDenuncia ? `comunicato il ${data(e.dataDenuncia)}` : ''].filter(Boolean).join(' · ')) : '—'
+                }</td><td>${esc(e.misure || '')}${e.misureFatte ? ' ✓' : ''}</td></tr>`
+              )
+              .join('') || '<tr><td colspan="6" style="height:2em"></td></tr>'
+          }
+        </tbody></table>
+        <p class="doc__nota">Non vengono registrate diagnosi o informazioni sanitarie: solo i giorni di prognosi necessari per le comunicazioni all'INAIL.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)])}`;
+    }
+  },
+  {
+    id: 'registro-temperature',
+    titolo: 'Registro delle temperature (frigoriferi e congelatori)',
+    descrizione: 'Scheda mensile da stampare e appendere vicino ai frigoriferi, come previsto dal piano HACCP.',
+    ambito: 'impresa',
+    attivaSe: { q: 'alimenti', eq: true },
+    genera: ({ anagrafica: a, oggi }) => `${intestazione(a)}
+        <h1>Registro delle temperature</h1>
+        <p>Mese ${v('', 12)} · Anno ${v(oggi.slice(0, 4), 6)}</p>
+        <table class="doc__tabella"><thead><tr><th>Giorno</th><th>Frigo 1 (°C)</th><th>Frigo 2 (°C)</th><th>Congelatore (°C)</th><th>Anomalie e azioni</th><th>Firma</th></tr></thead><tbody>
+          ${Array.from({ length: 31 }, (_, i) => `<tr><td>${i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>`).join('')}
+        </tbody></table>
+        <p class="doc__nota">Limiti indicativi: frigoriferi 0/+4 °C, congelatori −18 °C o meno. Usa i limiti scritti nel tuo piano di autocontrollo.</p>`
+  },
+  {
+    id: 'cartello-allergeni',
+    titolo: 'Cartello degli allergeni',
+    descrizione: 'I 14 allergeni da indicare ai clienti, con la tabella da compilare per ogni piatto o prodotto.',
+    ambito: 'impresa',
+    attivaSe: { q: 'alimenti', eq: true },
+    genera: ({ anagrafica: a }) => `${intestazione(a)}
+        <h1>Informazioni sugli allergeni</h1>
+        <p class="doc__rif">Reg. UE 1169/2011, Allegato II · D.Lgs. 231/2017</p>
+        <p><strong>I nostri prodotti possono contenere uno o più di questi allergeni. Chiedi al personale: ti diremo quali sono presenti in ogni piatto o prodotto.</strong></p>
+        <ol class="doc__allergeni">${ALLERGENI.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>
+        <h2>Tabella per il personale</h2>
+        <table class="doc__tabella"><thead><tr><th>Piatto o prodotto</th>${ALLERGENI.map((_, i) => `<th>${i + 1}</th>`).join('')}</tr></thead><tbody>
+          ${Array.from({ length: 12 }, () => `<tr><td style="height:1.8em"></td>${ALLERGENI.map(() => '<td></td>').join('')}</tr>`).join('')}
+        </tbody></table>`
   }
 ];
 

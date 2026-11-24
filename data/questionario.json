@@ -1,5 +1,5 @@
 {
-  "versione": "0.6.0",
+  "versione": "0.7.0",
   "aggiornato": "2026-11-23",
   "domande": [
     {
@@ -162,16 +162,15 @@
       }
     },
     {
-      "id": "tutele_particolari",
+      "id": "minori",
       "tipo": "sino",
-      "testo": "Hai lavoratori minorenni o lavoratrici in gravidanza o allattamento?",
-      "aiuto": "Per loro servono valutazioni e tutele in più.",
+      "testo": "Hai lavoratori minorenni (anche apprendisti o tirocinanti)?",
       "mostraSe": {
         "q": "composizione",
         "eq": "dipendenti"
       },
       "gruppo": "personale",
-      "breve": "Lavoratori minorenni o lavoratrici in gravidanza o allattamento"
+      "breve": "Lavoratori minorenni"
     },
     {
       "id": "appalti_in_sede",
@@ -300,6 +299,13 @@
       "breve": "Ci sono telecamere"
     },
     {
+      "id": "lavori_presso_clienti",
+      "tipo": "sino",
+      "testo": "Lavori nelle sedi dei tuoi clienti (aziende, negozi, uffici, enti)?",
+      "gruppo": "lavorazioni",
+      "breve": "Lavoro presso i clienti"
+    },
+    {
       "id": "cantiere",
       "tipo": "sino",
       "testo": "Lavori nei cantieri, anche solo come installatore o impiantista?",
@@ -410,6 +416,13 @@
       "aiuto": "Condizionatori, celle frigorifere, pompe di calore.",
       "gruppo": "lavorazioni",
       "breve": "Lavoro su condizionatori, celle frigo o pompe di calore"
+    },
+    {
+      "id": "alimenti",
+      "tipo": "sino",
+      "testo": "Produci, prepari, conservi, trasporti, vendi o servi alimenti o bevande (anche solo caffè o prodotti confezionati)?",
+      "gruppo": "lavorazioni",
+      "breve": "Alimenti e bevande"
     },
     {
       "id": "rifiuti_pericolosi",
