@@ -41,34 +41,39 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.12.0';
+export const VERSIONE_APP = '0.13.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
 const SCHEDA_MODELLI = {
   rspp: ['dichiarazione-dl-rspp', 'nomina-rspp-esterno'],
   'formazione-dl-rspp': ['dichiarazione-dl-rspp'],
-  'medico-competente': ['nomina-medico'],
+  'medico-competente': ['nomina-medico', 'richiesta-visite'],
   preposto: ['nomina-preposto'],
   'primo-soccorso': ['designazione-addetti'],
   dpi: ['consegna-dpi'],
   'formazione-lavoratori': ['registro-formazione', 'informazione-art36', 'verbale-addestramento'],
   rls: ['verbale-elezione-rls'],
-  antincendio: ['designazione-addetti', 'piano-emergenza-doc'],
+  antincendio: ['designazione-addetti', 'piano-emergenza-doc', 'valutazione-incendio'],
   dvr: ['dvr-bozza'],
   'stress-lavoro-correlato': ['stress-preliminare', 'dvr-bozza'],
   'privacy-lavoratori': ['informativa-lavoratori', 'autorizzazione-trattamento'],
   privacy: ['informativa-clienti', 'nomina-responsabile-esterno'],
   'piano-emergenza': ['piano-emergenza-doc', 'verbale-evacuazione'],
-  'presidi-antincendio': ['registro-antincendio'],
   'riunione-periodica': ['verbale-riunione'],
-  duvri: ['info-rischi-ditte', 'duvri-bozza'],
+  'presidi-antincendio': ['registro-antincendio', 'valutazione-incendio'],
+  'verifica-cpi': ['valutazione-incendio'],
+  'prevenzione-incendi-cpi': ['valutazione-incendio'],
+  'rumore-vibrazioni': ['valutazione-rumore', 'valutazione-vibrazioni'],
+  'movimentazione-carichi': ['valutazione-mmc'],
+  cancerogeni: ['valutazione-chimico'],
+  duvri: ['info-rischi-ditte', 'duvri-bozza', 'permesso-lavoro-caldo'],
   'appalti-presso-clienti': ['autocertificazione-idoneita'],
   pos: ['pos-bozza', 'autocertificazione-idoneita'],
   'lavoratrici-madri': ['informativa-lavoratrici-madri'],
   'lavoratori-minori': ['informativa-minori'],
   'schede-sicurezza': ['elenco-prodotti-chimici'],
-  'rischio-chimico': ['elenco-prodotti-chimici'],
+  'rischio-chimico': ['valutazione-chimico', 'elenco-prodotti-chimici'],
   'registro-eventi': ['registro-eventi'],
   infortuni: ['registro-eventi'],
   'haccp-autocontrollo': ['registro-temperature'],
@@ -1824,6 +1829,21 @@ function campiOpzioni(defs, valori) {
         return `<label>${esc(c.etichetta)}<select class="campo" ${nome}><option value="">Scegli…</option>${(c.valori || [])
           .map((x) => `<option value="${esc(x.valore)}" ${val === x.valore ? 'selected' : ''}>${esc(x.etichetta)}</option>`)
           .join('')}</select></label>`;
+      if (c.tipo === 'tabella') {
+        const righe = Array.isArray(val) && val.length ? val : c.iniziali || [];
+        const n = Math.max(c.righe || 5, righe.length);
+        return `<fieldset class="tabella-campi"><legend>${esc(c.etichetta)}</legend>${c.aiuto ? `<p class="nota">${esc(c.aiuto)}</p>` : ''}<div class="tabella-campi__scorri"><table>
+          <thead><tr>${c.colonne.map((k) => `<th>${esc(k.etichetta)}</th>`).join('')}</tr></thead><tbody>
+          ${Array.from({ length: n }, (_, i) => `<tr>${c.colonne
+            .map((k) => {
+              const v = righe[i]?.[k.id] ?? '';
+              const nm = `name="${esc(c.id)}.${i}.${esc(k.id)}" aria-label="${esc(k.etichetta)} riga ${i + 1}"`;
+              if (k.tipo === 'scelta') return `<td><select class="campo" ${nm}>${k.valori.map((x) => `<option value="${esc(x.valore)}" ${v === x.valore ? 'selected' : ''}>${esc(x.etichetta)}</option>`).join('')}</select></td>`;
+              return `<td><input class="campo" ${nm} value="${esc(v)}" ${k.tipo === 'numero' ? 'inputmode="decimal"' : ''}></td>`;
+            })
+            .join('')}</tr>`).join('')}
+          </tbody></table></div></fieldset>`;
+      }
       if (c.tipo === 'spunte') {
         const scelti = Array.isArray(val) ? val : [];
         return `<fieldset class="spunte"><legend>${esc(c.etichetta)}</legend>${
@@ -1831,6 +1851,7 @@ function campiOpzioni(defs, valori) {
           '<p class="nota">Nessuna voce disponibile.</p>'
         }</fieldset>`;
       }
+      if (c.tipo === 'casella') return `<label class="spunta-semplice"><input type="checkbox" ${nome} ${val === true ? 'checked' : ''}> ${esc(c.etichetta)}</label>`;
       const tipo = { data: 'date', numero: 'number' }[c.tipo] || 'text';
       return `<label>${esc(c.etichetta)}<input class="campo" type="${tipo}" ${nome} value="${esc(val)}" ${ph} ${tipo === 'number' ? 'min="0" inputmode="numeric"' : ''}></label>`;
     })
@@ -1840,7 +1861,14 @@ function campiOpzioni(defs, valori) {
 function leggiOpzioni(form, defs) {
   const f = new FormData(form);
   const o = {};
-  for (const c of defs) o[c.id] = c.tipo === 'spunte' ? f.getAll(c.id) : String(f.get(c.id) ?? '').trim();
+  for (const c of defs) {
+    if (c.tipo === 'spunte') o[c.id] = f.getAll(c.id);
+    else if (c.tipo === 'tabella') {
+      const n = form.querySelectorAll(`[name^="${c.id}."][name$=".${c.colonne[0].id}"]`).length;
+      o[c.id] = Array.from({ length: n }, (_, i) => Object.fromEntries(c.colonne.map((k) => [k.id, String(f.get(`${c.id}.${i}.${k.id}`) ?? '').trim()])));
+    } else if (c.tipo === 'casella') o[c.id] = f.get(c.id) === 'on';
+    else o[c.id] = String(f.get(c.id) ?? '').trim();
+  }
   return o;
 }
 
@@ -1853,8 +1881,14 @@ async function schermataDocumento(id, lavId) {
   const registro = l && req ? storicoRegistri(l.id, req.id, stato.registri)[0] : null;
   const chiaveDoc = l ? `${id}:${l.id}` : id;
   const chiaveOpzioni = `opzioni:${chiaveDoc}`;
-  let opzioni = (await store.leggiMeta(chiaveOpzioni)) || {};
+  const salvate = await store.leggiMeta(chiaveOpzioni);
+  let opzioni = { ...(salvate || {}) };
   const defs = m.opzioni ? m.opzioni(datiDocumento(l, registro, opzioni)) : [];
+  for (const c of defs) {
+    if (opzioni[c.id] !== undefined) continue;
+    if (c.tipo === 'tabella' && c.iniziali?.length) opzioni[c.id] = c.iniziali;
+    else if (c.valore !== undefined && c.valore !== '') opzioni[c.id] = c.valore;
+  }
   const genera = () => generaDocumento(id, datiDocumento(l, registro, opzioni)).html;
 
   const firmatiReg = req && l ? storicoRegistri(l.id, req.id, stato.registri).map((r) => elencoAllegati('registro', r.id)).join('') : '';
@@ -1865,7 +1899,7 @@ async function schermataDocumento(id, lavId) {
         <a class="indietro" href="${l ? `#/lavoratore/${esc(l.id)}` : '#/documenti'}">‹ Indietro</a>
         ${
           defs.length
-            ? `<details class="opzioni-doc" ${Object.keys(opzioni).length ? '' : 'open'}><summary>Dati di questo documento</summary>
+            ? `<details class="opzioni-doc" ${salvate ? '' : 'open'}><summary>Dati di questo documento</summary>
             <p class="nota">Il documento si aggiorna mentre scrivi. I dati restano salvati su questo dispositivo.</p>
             <form id="opzioni-doc">${campiOpzioni(defs, opzioni)}</form></details>`
             : ''

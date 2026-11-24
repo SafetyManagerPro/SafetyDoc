@@ -248,6 +248,12 @@ select.campo { appearance: auto; }
 .doc__nota { font-size: 0.8rem; color: #444; }
 .doc__luogo { margin-top: 24px; }
 .opzioni-doc { margin: 12px 0 16px; padding: 12px 14px; border: 2px solid var(--primario); border-radius: var(--raggio); background: var(--superficie); }
+.tabella-campi { border: 0; padding: 0; margin: 12px 0; min-width: 0; }
+.tabella-campi__scorri { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tabella-campi table { border-collapse: collapse; min-width: 100%; }
+.tabella-campi th { font-size: 0.8rem; text-align: left; padding: 2px 4px; white-space: nowrap; }
+.tabella-campi td { padding: 2px; }
+.tabella-campi .campo { min-width: 90px; padding: 8px; margin: 0; font-size: 0.95rem; }
 .opzioni-doc summary { font-weight: 700; cursor: pointer; min-height: 32px; }
 .doc__frontespizio { margin-bottom: 18px; }
 .doc__rischio h3 { break-after: avoid; }
@@ -260,6 +266,11 @@ select.campo { appearance: auto; }
 .doc__liv--medio-alto { background: #fbd9b0; }
 .doc__liv--alto { background: #f6c1bd; }
 .doc__spunte { list-style: none; padding-left: 0; }
+.doc__esito { padding: 8px 10px; border-radius: 4px; }
+.doc__esito--verde { background: #d9f0dd; }
+.doc__esito--giallo { background: #fbf3c4; }
+.doc__esito--rosso { background: #f6c1bd; }
+.doc__esito, [class*="doc__esito--"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .doc__lingua { border-top: 1px solid #bbb; margin-top: 18px; padding-top: 4px; break-inside: avoid; }
 .doc__lingua[dir="rtl"] { text-align: right; }
 .doc__firme { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; margin-top: 28px; }
