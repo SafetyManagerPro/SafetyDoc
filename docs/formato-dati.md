@@ -40,8 +40,8 @@ Tutti i record hanno questi campi, che rendono possibile l'unione tra postazioni
 
 Collezioni:
 
-- `profilo`: un solo record con id fisso `profilo-impresa`, con le `risposte` al questionario e l'`anagrafica` (ragione sociale, titolare, sede, comune, P.IVA, contatto, RSPP, medico, RLS)
-  (usata per compilare i documenti).
+- `profilo`: un solo record con id fisso `profilo-impresa`, con le `risposte` al questionario e l'`anagrafica` (ragione sociale, titolare, sede, comune, P.IVA, contatto, RSPP, medico, RLS,
+  usata per compilare i documenti) e il `consulente` (nome, telefono, whatsapp, email di chi aiuta l'impresa).
 - `adempimenti`: `schedaId`, `fatto`, `dataFatto`, `scadenzaManuale`, `note`. Se più postazioni creano un record per
   la stessa scheda, vale il più recente non cancellato.
 - `lavoratori`: `nome`, `cognome`, `mansione`, `dataAssunzione`, `dataCessazione`, `ruoli` (id definiti in

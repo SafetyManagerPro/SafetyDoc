@@ -56,3 +56,13 @@ test('bozza di DVR: pericoli presenti dalle risposte, mansioni dai lavoratori', 
   const mod3 = html.split('Modulo 3')[1];
   assert.ok(!mod3.includes('Atmosfere esplosive'), 'i pericoli assenti non vanno nel modulo 3');
 });
+
+test('stato della sicurezza riporta voci, date e allegati', () => {
+  const piano = [
+    { scheda: { id: 'dvr', titolo: 'Valutazione dei rischi' }, colore: 'verde', motivo: 'In regola', stato: { id: 'x1', fatto: true, dataFatto: '2025-03-01' }, prossimaScadenza: null },
+    { scheda: { id: 'rspp', titolo: 'Nomina RSPP' }, colore: 'rosso', motivo: 'Da fare', stato: null },
+    { scheda: { id: 'inf', titolo: 'Infortunio' }, colore: 'info', motivo: '', stato: null }
+  ];
+  const html = generaDocumento('stato-sicurezza', { anagrafica, oggi: '2026-11-24', piano, allegati: { 'adempimento:x1': 2 } }).html;
+  for (const x of ['Valutazione dei rischi', '01/03/2025', 'Nomina RSPP', 'Da fare', '>2<', 'Infortunio', '24/11/2026']) assert.ok(html.includes(x), `manca ${x}`);
+});

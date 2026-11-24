@@ -17,8 +17,11 @@ import {
   situazioneAttrezzatura,
   urgenzeAttrezzature,
   tipoAttrezzatura,
-  storicoControlli
+  storicoControlli,
+  vociControlloIniziale,
+  dataDaMese
 } from './engine.js';
+import { linkAiuto } from './aiuto.js';
 import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport } from './allegati.js';
 import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
 import { cifra, decifra } from './cifratura.js';
@@ -26,7 +29,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.7.0';
+export const VERSIONE_APP = '0.8.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -187,6 +190,67 @@ function situazione(l) {
   return situazioneLavoratore({ lavoratore: l, defLavoratori: stato.defLav, registri: stato.registri, ctx: ctx(), oggi: oggiIso() });
 }
 
+// ---------- chiedi aiuto ----------
+
+const consulente = () => stato.profilo?.consulente || {};
+
+/** Riquadro "Chiedi aiuto": link pronti a chi aiuta l'impresa, oppure invito a inserirne il recapito. */
+function bloccoAiuto(argomento) {
+  const c = consulente();
+  const link = linkAiuto({ contatto: c, impresa: anagrafica().ragioneSociale || risposte().nome_impresa, titolare: anagrafica().titolare, argomento });
+  if (!Object.keys(link).length) {
+    return `<div class="aiuto-box"><h2>Hai un dubbio?</h2>
+      <p>Inserisci il recapito del tuo consulente o della tua associazione di categoria: da qui potrai chiamarlo o scrivergli con un tocco.</p>
+      <a class="btn btn--secondario" href="#/dati/consulente">Aggiungi chi ti aiuta</a></div>`;
+  }
+  return `<div class="aiuto-box"><h2>Hai un dubbio? Chiedi ${c.nome ? `a ${esc(c.nome)}` : 'aiuto'}</h2>
+    <div class="aiuto-box__azioni">
+      ${link.telefono ? `<a class="btn btn--secondario" href="${esc(link.telefono)}">Chiama</a>` : ''}
+      ${link.whatsapp ? `<a class="btn btn--secondario" href="${esc(link.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
+      ${link.email ? `<a class="btn btn--secondario" href="${esc(link.email)}">Email</a>` : ''}
+    </div>
+    <p class="nota">Il messaggio è già scritto e indica solo l'argomento, senza dati dei lavoratori.</p></div>`;
+}
+
+// ---------- installazione come app ----------
+
+let richiestaInstallazione = null;
+addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  richiestaInstallazione = e;
+});
+addEventListener('appinstalled', () => {
+  richiestaInstallazione = null;
+  avviso('App installata.');
+});
+const installata = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const suIphone = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+function bloccoInstallazione() {
+  if (installata()) return `<p class="riquadro">safetyDoc è installato su questo dispositivo.</p>`;
+  if (richiestaInstallazione) {
+    return `<p>Mettila tra le app del telefono o del computer: si apre con un tocco, anche senza internet.</p>
+      <button class="btn btn--primario" id="installa">Installa l'app</button>`;
+  }
+  if (suIphone()) {
+    return `<p>Su iPhone e iPad, con Safari:</p>
+      <ol class="passi"><li>Tocca il pulsante <strong>Condividi</strong> (il quadrato con la freccia in su).</li>
+      <li>Scorri e tocca <strong>Aggiungi alla schermata Home</strong>.</li><li>Tocca <strong>Aggiungi</strong>.</li></ol>`;
+  }
+  return `<p>Apri il menu del browser (i tre puntini) e scegli <strong>Installa app</strong> o <strong>Aggiungi a schermata Home</strong>.</p>`;
+}
+
+function attivaInstallazione() {
+  app.querySelector('#installa')?.addEventListener('click', async () => {
+    const r = richiestaInstallazione;
+    if (!r) return;
+    r.prompt();
+    await r.userChoice.catch(() => null);
+    richiestaInstallazione = null;
+    schermataDati();
+  });
+}
+
 function piano() {
   return generaPiano({
     catalogo: stato.catalogo,
@@ -198,7 +262,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { scheda: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
+const SEZIONE = { scheda: 'piano', 'controllo-iniziale': 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -271,8 +335,9 @@ async function schermataOggi() {
       ${
         urgenti.length
           ? `${
-              c.verde === 0 && c.giallo === 0
-                ? `<p class="lead">Molte di queste cose probabilmente le hai già fatte. Aprile una alla volta e premi <strong>Fatto</strong>: il semaforo diventerà verde.</p>`
+              c.rosso >= 3 && vociControlloIniziale(p).length >= 3 && c.verde <= c.rosso
+                ? `<div class="riquadro riquadro--invito"><p><strong>Molte di queste cose probabilmente le hai già fatte.</strong> Rispondi a qualche domanda veloce («Hai già…?») e il semaforo diventerà verde per quello che è già in regola.</p>
+                   <a class="btn btn--primario" href="#/controllo-iniziale/0">Controllo veloce</a></div>`
                 : ''
             }
              <div class="lista">${urgenti.map(cardVoce).join('')}</div>
@@ -282,6 +347,8 @@ async function schermataOggi() {
       <a class="btn btn--secondario" href="#/piano">Vedi il piano completo</a>
       ${haDipendenti() ? bloccoLavoratoriOggi() : ''}
       ${bloccoMacchineOggi()}
+      ${bloccoAiuto('la sicurezza della mia impresa')}
+      ${richiestaInstallazione && !installata() ? `<p class="nota"><a href="#/dati/installa">Installa safetyDoc sul telefono</a> per aprirlo con un tocco.</p>` : ''}
     </section>`;
 }
 
@@ -331,6 +398,8 @@ async function schermataPiano() {
         <div class="lista">${g.voci.map(cardVoce).join('')}</div>`
         )
         .join('')}
+      ${vociControlloIniziale(p).length ? `<a class="btn btn--secondario" href="#/controllo-iniziale/0">Controllo veloce: segna ciò che hai già fatto</a>` : ''}
+      <a class="btn btn--secondario" href="#/documento/stato-sicurezza">Stampa lo stato della sicurezza</a>
       <h2>Promemoria sul telefono</h2>
       <p>Aggiungi tutte le scadenze al calendario del telefono: ti avviserà 30 e 7 giorni prima.</p>
       <button class="btn btn--primario" id="calendario">Aggiungi le scadenze al calendario</button>
@@ -468,7 +537,8 @@ async function schermataDomanda(indice) {
     if (ultima) nuove.__completato = true;
     await store.salvaRisposte(nuove);
     await ricarica();
-    location.hash = ultima ? '#/' : `#/domanda/${posizione + 1}`;
+    const primaVolta = ultima && !stato.adempimenti.some((x) => !x.deleted);
+    location.hash = primaVolta ? '#/controllo-iniziale/0' : ultima ? '#/' : `#/domanda/${posizione + 1}`;
   };
 
   if (gruppo) {
@@ -586,6 +656,7 @@ async function schermataScheda(id) {
         ${st?.fatto ? `<button class="btn btn--testo" type="button" id="annulla">Segna di nuovo come da fare</button>` : ''}
       </form>`
       }
+      ${bloccoAiuto(scheda.titolo)}
     </section>`;
 
   const form = app.querySelector('#registra');
@@ -613,6 +684,118 @@ async function schermataScheda(id) {
     avviso('Segnato come da fare.');
     schermataScheda(id);
   });
+}
+
+// ---------- controllo iniziale ----------
+
+// Il giro tiene fermo l'elenco delle voci mentre l'utente risponde (le voci segnate escono dal piano).
+let giro = null;
+
+async function schermataControlloIniziale(indiceTesto) {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const i = Math.max(0, Number(indiceTesto) || 0);
+  if (!giro || i === 0) giro = { ids: vociControlloIniziale(piano()).map((v) => v.scheda.id), esiti: giro && i > 0 ? giro.esiti : {} };
+  if (i === 0) giro.esiti = {};
+  const totale = giro.ids.length;
+  if (i >= totale) return fineControlloIniziale();
+
+  const id = giro.ids[i];
+  const scheda = stato.catalogo.schede.find((x) => x.id === id);
+  const st = stato.adempimenti.find((x) => x.schedaId === id && !x.deleted);
+  const conScadenza = scheda.tipoScadenza === 'manuale' || (scheda.tipoScadenza === 'periodica' && !periodicitaPer(scheda, ctx()));
+  const mese = oggiIso().slice(0, 7);
+  const percento = Math.round((i / totale) * 100);
+  const vai = (n) => (location.hash = `#/controllo-iniziale/${n}`);
+
+  app.innerHTML = `
+    <section class="pagina domanda">
+      <div class="progresso" role="progressbar" aria-valuemin="0" aria-valuemax="${totale}" aria-valuenow="${i + 1}" aria-label="Domanda ${i + 1} di ${totale}">
+        <div style="width:${percento}%"></div>
+      </div>
+      <p class="sopratitolo">Controllo veloce · ${i + 1} di ${totale}</p>
+      <h1>Hai già fatto questo? ${esc(scheda.titolo)}</h1>
+      <p class="aiuto">${esc(scheda.cosaE)}</p>
+      <div class="scelte" id="risposte">
+        <button class="scelta" id="si"><span class="scelta__titolo">Sì, è già fatto</span></button>
+        <button class="scelta" id="no"><span class="scelta__titolo">No, non ancora</span></button>
+        <button class="scelta" id="nonso"><span class="scelta__titolo">Non lo so</span><span class="scelta__aiuto">La segniamo da controllare con chi ti aiuta</span></button>
+      </div>
+      <form id="quando" hidden>
+        <label>Quando, più o meno? <small>(mese e anno: va bene anche una data approssimativa)</small>
+          <input class="campo" type="month" name="mese" max="${mese}" value="${esc(st?.dataFatto?.slice(0, 7) || '')}" placeholder="AAAA-MM" required>
+        </label>
+        ${
+          conScadenza
+            ? `<label>Quando scade? <small>(se è scritto sull'attestato o sul documento; altrimenti lascia vuoto)</small>
+          <input class="campo" type="date" name="scadenza" value="${esc(st?.scadenzaManuale || '')}"></label>`
+            : ''
+        }
+        <button class="btn btn--primario btn--grande" type="submit">Salva e vai avanti</button>
+        <p class="nota">Potrai correggere la data esatta e allegare l'attestato aprendo la voce dal piano.</p>
+      </form>
+      <div class="azioni">
+        ${i > 0 ? `<a class="btn btn--secondario" href="#/controllo-iniziale/${i - 1}">Indietro</a>` : '<a class="btn btn--secondario" href="#/">Esci</a>'}
+        <a class="btn btn--testo" href="#/controllo-iniziale/${totale}">Salta il resto</a>
+      </div>
+    </section>`;
+
+  const form = app.querySelector('#quando');
+  app.querySelector('#si').addEventListener('click', () => {
+    app.querySelector('#risposte').hidden = true;
+    form.hidden = false;
+    form.querySelector('input').focus();
+  });
+  app.querySelector('#no').addEventListener('click', () => {
+    giro.esiti[id] = 'no';
+    vai(i + 1);
+  });
+  app.querySelector('#nonso').addEventListener('click', () => {
+    giro.esiti[id] = 'nonso';
+    vai(i + 1);
+  });
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(form);
+    const dataFatto = dataDaMese(f.get('mese'));
+    if (!dataFatto) return avviso('Scrivi mese e anno, per esempio 2024-03.');
+    if (dataFatto > oggiIso()) return avviso('La data non può essere nel futuro.');
+    await store.salvaAdempimento({
+      ...(st || {}),
+      schedaId: id,
+      fatto: true,
+      dataFatto,
+      scadenzaManuale: f.get('scadenza') || st?.scadenzaManuale || null,
+      note: st?.note || 'Data indicativa inserita nel controllo veloce.'
+    });
+    giro.esiti[id] = 'si';
+    await ricarica();
+    vai(i + 1);
+  });
+}
+
+function fineControlloIniziale() {
+  const esiti = giro?.esiti || {};
+  const quanti = (e) => Object.values(esiti).filter((x) => x === e).length;
+  const nonSo = piano().filter((v) => esiti[v.scheda.id] === 'nonso');
+  giro = null;
+  app.innerHTML = `
+    <section class="pagina">
+      <p class="sopratitolo">Controllo veloce</p>
+      <h1>Fatto, grazie!</h1>
+      <div class="contatori" role="list">
+        <span role="listitem" class="contatore contatore--verde"><strong>${quanti('si')}</strong><span>già fatte</span></span>
+        <span role="listitem" class="contatore contatore--rosso"><strong>${quanti('no')}</strong><span>da fare</span></span>
+        <span role="listitem" class="contatore contatore--giallo"><strong>${nonSo.length}</strong><span>da chiarire</span></span>
+      </div>
+      ${
+        nonSo.length
+          ? `<h2>Da chiarire</h2><p>Per queste voci non sai se sono state fatte. Cerca i documenti in ufficio, oppure chiedi al tuo consulente.</p>
+             <div class="lista">${nonSo.map(cardVoce).join('')}</div>
+             ${bloccoAiuto(`capire se ho già fatto: ${nonSo.map((v) => v.scheda.titolo).join(', ')}`)}`
+          : ''
+      }
+      <a class="btn btn--primario btn--grande" href="#/">Vai a cosa fare adesso</a>
+    </section>`;
 }
 
 // ---------- classe di rischio ----------
@@ -1134,6 +1317,13 @@ async function schermataDocumenti() {
     </section>`;
 }
 
+/** Numero di allegati per voce, con chiave "tipo:id". */
+function contaAllegati() {
+  const n = {};
+  for (const a of stato.allegati) if (!a.deleted) n[`${a.collegatoTipo}:${a.collegatoId}`] = (n[`${a.collegatoTipo}:${a.collegatoId}`] || 0) + 1;
+  return n;
+}
+
 async function schermataDocumento(id, lavId) {
   const m = MODELLI.find((x) => x.id === id);
   if (!m) return (location.hash = '#/documenti');
@@ -1153,7 +1343,15 @@ async function schermataDocumento(id, lavId) {
     ctx: ctx(),
     lavoratori: attivi(),
     attrezzature: macchine().map((a) => ({ nome: a.nome, tipo: tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta })),
-    attivita: opzioneAttivita?.etichetta || ''
+    attivita: opzioneAttivita?.etichetta || '',
+    ...(id === 'stato-sicurezza'
+      ? {
+          piano: piano(),
+          situazioni: haDipendenti() ? attivi().map(situazione) : [],
+          macchine: macchine().map(situazioneMacchina),
+          allegati: contaAllegati()
+        }
+      : {})
   });
 
   app.innerHTML = `
@@ -1169,7 +1367,14 @@ async function schermataDocumento(id, lavId) {
   app.querySelector('#stampa').addEventListener('click', () => window.print());
 }
 
-async function schermataDati() {
+const CAMPI_CONSULENTE = [
+  ['nome', 'Nome (consulente, studio o associazione)', 'text', 'organization'],
+  ['telefono', 'Telefono', 'tel', 'tel'],
+  ['whatsapp', 'WhatsApp (se diverso dal telefono)', 'tel', 'off'],
+  ['email', 'Email', 'email', 'email']
+];
+
+async function schermataDati(sezione) {
   const ultimo = await store.leggiMeta('ultimoExport');
   app.innerHTML = `
     <section class="pagina">
@@ -1211,6 +1416,18 @@ async function schermataDati() {
         <button class="btn btn--primario" type="submit">Salva i dati dell'impresa</button>
       </form>
 
+      <h2 id="consulente">Chi ti aiuta</h2>
+      <p>Il tuo consulente, l'RSPP esterno o la tua associazione di categoria. Da ogni voce potrai chiamarlo o scrivergli con un tocco.</p>
+      <form id="form-consulente">
+        ${CAMPI_CONSULENTE.map(
+          ([k, et, tipo, ac]) => `<label>${esc(et)}<input class="campo" name="${k}" type="${tipo}" autocomplete="${ac}" value="${esc(consulente()[k] || '')}"></label>`
+        ).join('')}
+        <button class="btn btn--primario" type="submit">Salva il contatto</button>
+      </form>
+
+      <h2 id="installa-app">Installa l'app</h2>
+      ${bloccoInstallazione()}
+
       <h2>Questionario</h2>
       <a class="btn btn--secondario" href="#/domanda/0">Cambia le risposte</a>
 
@@ -1226,6 +1443,18 @@ async function schermataDati() {
     await ricarica();
     avviso('Dati dell\'impresa salvati.');
   });
+  app.querySelector('#form-consulente').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const c = {};
+    for (const [k] of CAMPI_CONSULENTE) c[k] = String(f.get(k) || '').trim();
+    await store.salvaConsulente(c);
+    await ricarica();
+    avviso('Contatto salvato.');
+  });
+  attivaInstallazione();
+  const ancora = { consulente: 'consulente', installa: 'installa-app' }[sezione];
+  if (ancora) app.querySelector(`#${ancora}`)?.scrollIntoView();
   app.querySelector('#esporta').addEventListener('click', esporta);
   app.querySelector('#importa').addEventListener('change', (e) => importa(e.target.files[0]));
 }
@@ -1314,7 +1543,8 @@ async function instrada() {
   if (rotta === 'domanda') return schermataDomanda(param);
   if (rotta === 'piano') return schermataPiano();
   if (rotta === 'scheda') return schermataScheda(param || '');
-  if (rotta === 'dati') return schermataDati();
+  if (rotta === 'dati') return schermataDati(param);
+  if (rotta === 'controllo-iniziale') return schermataControlloIniziale(param);
   if (rotta === 'lavoratori') return schermataLavoratori();
   if (rotta === 'lavoratore') return schermataLavoratore(param);
   if (rotta === 'lavoratore-modifica') return schermataModificaLavoratore(param);

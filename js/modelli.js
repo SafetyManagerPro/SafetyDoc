@@ -39,6 +39,54 @@ const titolare = (a) => a.titolare || '';
 
 export const MODELLI = [
   {
+    id: 'stato-sicurezza',
+    titolo: 'Stato della sicurezza dell\'impresa',
+    descrizione: 'Riepilogo stampabile di tutti gli adempimenti, dei lavoratori e delle macchine, con date e documenti allegati. Utile per il consulente o in caso di controllo.',
+    ambito: 'impresa',
+    attivaSe: { sempre: true },
+    genera: ({ anagrafica: a, oggi, piano, situazioni, macchine, allegati }) => {
+      const n = (k) => (allegati && allegati[k]) || 0;
+      const STATO = { rosso: 'Da fare', giallo: 'In scadenza', verde: 'In regola', info: 'Quando capita' };
+      const voci = piano || [];
+      const conta = (col) => voci.filter((x) => x.colore === col).length;
+      const riga = (titolo, fatto, scade, colore, motivo, doc) =>
+        `<tr class="doc__riga--${colore}"><td>${esc(titolo)}</td><td>${fatto ? esc(data(fatto)) : '—'}</td><td>${scade ? esc(data(scade)) : '—'}</td><td>${esc(STATO[colore] || '')}${
+          motivo && colore !== 'verde' && motivo.toLowerCase() !== (STATO[colore] || '').toLowerCase() ? ` · ${esc(motivo)}` : ''
+        }</td><td>${doc || '—'}</td></tr>`;
+      const testa = '<thead><tr><th>Voce</th><th>Fatto il</th><th>Scade il</th><th>Stato</th><th>Doc.</th></tr></thead>';
+      const adempimenti = voci
+        .filter((x) => x.colore !== 'info')
+        .map((x) => riga(x.scheda.titolo, x.stato?.fatto ? x.stato.dataFatto : null, x.prossimaScadenza, x.colore, x.motivo, n(`adempimento:${x.stato?.id}`)))
+        .join('');
+      const lav = (situazioni || [])
+        .map(
+          (s) => `<tr><th colspan="5">${esc(nomeCompleto(s.lavoratore))}${s.lavoratore.mansione ? ` · ${esc(s.lavoratore.mansione)}` : ''}</th></tr>${s.voci
+            .map((x) => riga(x.requisito.titolo, x.registro?.data, x.prossimaScadenza, x.colore, x.motivo, n(`registro:${x.registro?.id}`)))
+            .join('')}`
+        )
+        .join('');
+      const mac = (macchine || [])
+        .map(
+          (s) => `<tr><th colspan="5">${esc(s.attrezzatura.nome || s.tipo?.etichetta || 'Attrezzatura')}${s.attrezzatura.matricola ? ` · matr. ${esc(s.attrezzatura.matricola)}` : ''}</th></tr>${s.voci
+            .map((x) => riga(x.controllo.titolo, x.registro?.data, x.prossimaScadenza, x.colore, x.motivo, n(`controllo:${x.registro?.id}`)))
+            .join('')}`
+        )
+        .join('');
+      const quandoCapita = voci.filter((x) => x.colore === 'info');
+      return `${intestazione(a)}
+        <h1>Stato della sicurezza dell'impresa</h1>
+        <p>Situazione al ${esc(data(oggi))}: <strong>${conta('rosso')}</strong> da fare, <strong>${conta('giallo')}</strong> in scadenza, <strong>${conta('verde')}</strong> in regola.
+        La colonna «Doc.» indica quanti documenti o foto sono allegati nell'app.</p>
+        <h2>Adempimenti dell'impresa</h2>
+        <table class="doc__tabella">${testa}<tbody>${adempimenti || '<tr><td colspan="5">Nessuna voce.</td></tr>'}</tbody></table>
+        ${lav ? `<h2>Lavoratori</h2><table class="doc__tabella">${testa}<tbody>${lav}</tbody></table>` : ''}
+        ${mac ? `<h2>Macchine e attrezzature</h2><table class="doc__tabella">${testa}<tbody>${mac}</tbody></table>` : ''}
+        ${quandoCapita.length ? `<h2>Da applicare quando capita</h2><ul>${quandoCapita.map((x) => `<li>${esc(x.scheda.titolo)}</li>`).join('')}</ul>` : ''}
+        <p class="doc__nota">Riepilogo prodotto con safetyDoc sulla base dei dati inseriti dall'impresa. Non sostituisce i documenti originali, che vanno conservati. Per le visite mediche è riportato solo il giudizio di idoneità.</p>
+        ${firme(['Il datore di lavoro', titolare(a)])}`;
+    }
+  },
+  {
     id: 'dvr-bozza',
     titolo: 'Bozza del Documento di valutazione dei rischi (DVR)',
     descrizione: 'Bozza secondo lo schema delle procedure standardizzate, già compilata con le tue risposte, i lavoratori e le misure suggerite. Da completare con il tuo RSPP.',

@@ -367,3 +367,23 @@ export function urgenzeAttrezzature({ attrezzature, defAttr, controlli, ctx, ogg
   }
   return out.sort((a, b) => ORDINE[a.colore] - ORDINE[b.colore] || (a.prossimaScadenza || '0000').localeCompare(b.prossimaScadenza || '0000'));
 }
+
+// ---------- controllo iniziale ----------
+
+/**
+ * Le voci da chiedere nel controllo iniziale: quelle ancora "da fare" che l'impresa potrebbe aver già fatto
+ * (non quelle che si fanno solo quando capita). Le più importanti per prime.
+ */
+export function vociControlloIniziale(piano) {
+  return (piano || [])
+    .filter((v) => v.colore === 'rosso' && !v.stato?.fatto && v.scheda.tipoScadenza !== 'evento')
+    .sort((a, b) => (a.scheda.priorita ?? 2) - (b.scheda.priorita ?? 2));
+}
+
+/** "2025-06" (campo mese) → "2025-06-01"; date complete restano uguali; altro → null. */
+export function dataDaMese(valore) {
+  const v = String(valore || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  if (/^\d{4}-\d{2}$/.test(v)) return `${v}-01`;
+  return null;
+}

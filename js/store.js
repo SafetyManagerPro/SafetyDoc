@@ -111,6 +111,12 @@ export async function salvaAnagrafica(anagrafica) {
   await scrivi('profilo', await timbra({ ...profilo, anagrafica, deleted: false }));
 }
 
+/** Recapito di chi aiuta l'impresa (consulente, associazione): nome, telefono, whatsapp, email. */
+export async function salvaConsulente(consulente) {
+  const profilo = await leggiProfilo();
+  await scrivi('profilo', await timbra({ ...profilo, consulente, deleted: false }));
+}
+
 export async function leggiMeta(chiave) {
   return (await leggi('meta', chiave))?.valore;
 }

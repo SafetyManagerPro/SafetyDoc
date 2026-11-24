@@ -144,6 +144,8 @@ a { color: var(--primario); }
 }
 .scelte--due .scelta { text-align: center; font-size: 1.2rem; font-weight: 600; }
 .scelta--attiva { border-color: var(--primario); box-shadow: inset 0 0 0 1px var(--primario); }
+.scelta__titolo { display: block; font-weight: 600; font-size: 1.1rem; }
+.scelta__aiuto { display: block; color: var(--testo-2); font-size: 0.9rem; margin-top: 2px; }
 .azioni { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .campo {
@@ -269,6 +271,11 @@ select.campo { appearance: auto; }
 .riquadro { background: var(--info-sfondo); border-radius: var(--raggio); padding: 12px 14px; margin: 16px 0; }
 .riquadro p { margin: 0 0 6px; }
 .riquadro p:last-child { margin-bottom: 0; }
+.riquadro--invito .btn { margin-top: 10px; }
+.aiuto-box { border-top: 1px solid var(--bordo); margin-top: 28px; padding-top: 4px; }
+.aiuto-box__azioni { display: flex; flex-wrap: wrap; gap: 8px; }
+.aiuto-box__azioni .btn { flex: 1 1 110px; }
+.doc__riga--rosso td:nth-child(4) { font-weight: 700; }
 
 /* Allegati */
 .allegati { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 6px; }
