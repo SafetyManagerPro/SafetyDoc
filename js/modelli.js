@@ -4,6 +4,7 @@
 
 import { valuta, nomeCompleto, ESITI_VISITA } from './engine.js';
 import { LINGUE, TESTI } from './lingue.js';
+import { lex8h, fasciaRumore, a8, fasciaVibrazioni, niosh, fasciaNiosh, costantePeso, pericolositaSalute, esposizioneChimica, esitoChimico, bassoRischioIncendio } from './calcoli.js';
 
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -441,20 +442,52 @@ export const MODELLI = [
   },
   {
     id: 'nomina-rspp-esterno',
-    titolo: 'Nomina del Responsabile del servizio di prevenzione e protezione (RSPP)',
-    descrizione: 'Lettera di incarico all\'RSPP esterno o interno, con accettazione.',
+    titolo: 'Incarico al Responsabile del servizio di prevenzione e protezione (RSPP)',
+    descrizione: 'Lettera di incarico all\'RSPP esterno o interno con i compiti dell\'art. 33, i requisiti dell\'art. 32, durata e accettazione.',
     ambito: 'impresa',
     attivaSe: { all: [{ fatto: 'haDipendenti' }, { not: { q: 'dl_rspp', eq: true } }] },
-    genera: ({ anagrafica: a, oggi }) => `${intestazione(a)}
-      <h1>Designazione del Responsabile del servizio di prevenzione e protezione</h1>
-      <p class="doc__rif">Artt. 17, 31, 32 e 33 del D.Lgs. 81/2008</p>
-      <p>Il/La sottoscritto/a ${v(titolare(a), 24)}, datore di lavoro dell'impresa ${v(a.ragioneSociale, 24)},</p>
-      <p class="doc__centro">DESIGNA</p>
-      <p>${v(a.rspp, 24)} quale Responsabile del servizio di prevenzione e protezione dai rischi (RSPP), avendo verificato il possesso delle capacità e dei requisiti professionali previsti dall'art. 32 del D.Lgs. 81/2008.</p>
-      <p>L'RSPP svolge i compiti dell'art. 33: individuazione e valutazione dei rischi, elaborazione delle misure di prevenzione e protezione e delle procedure di sicurezza, proposta dei programmi di informazione e formazione, partecipazione alla riunione periodica.</p>
-      <p>Il datore di lavoro si impegna a fornire all'RSPP le informazioni necessarie sull'organizzazione del lavoro, sui processi produttivi e sui lavoratori.</p>
-      ${luogoData(a, oggi)}
-      ${firme(['Il datore di lavoro', titolare(a)], ['Per accettazione, l\'RSPP', a.rspp])}`
+    opzioni: (d) => [
+      { id: 'tipo', etichetta: 'RSPP', tipo: 'scelta', valori: [{ valore: 'esterno', etichetta: 'Esterno (consulente o società)' }, { valore: 'interno', etichetta: 'Interno (dipendente)' }] },
+      { id: 'nome', etichetta: 'Nome dell\'RSPP', tipo: 'testo', valore: d.anagrafica?.rspp || '' },
+      { id: 'studio', etichetta: 'Studio o società (se esterno)', tipo: 'testo' },
+      { id: 'attestati', etichetta: 'Attestati moduli A, B e C e ultimo aggiornamento', tipo: 'area', segnaposto: 'es. Modulo A 2018, Modulo B ATECO 2022, Modulo C 2018; aggiornamento 40 ore 2024' },
+      { id: 'durata', etichetta: 'Durata dell\'incarico', tipo: 'testo', segnaposto: 'es. 12 mesi con rinnovo tacito' },
+      { id: 'accessi', etichetta: 'Sopralluoghi previsti all\'anno', tipo: 'numero' },
+      { id: 'compenso', etichetta: 'Compenso annuo (se esterno)', tipo: 'testo' }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const nome = o.nome || a.rspp || '';
+      const esterno = o.tipo !== 'interno';
+      return `${intestazione(a)}
+        <h1>Lettera di incarico del Responsabile del servizio di prevenzione e protezione</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 artt. 17 c. 1 lett. b, 31, 32 e 33</p>
+        <p>Il sottoscritto ${v(titolare(a), 24)}, datore di lavoro dell'impresa ${v(a.ragioneSociale, 24)}, con sede in ${v([a.sede, a.comune].filter(Boolean).join(', '), 24)},</p>
+        <p class="doc__centro">DESIGNA</p>
+        <p>${v(nome, 24)}${esterno && o.studio ? `, dello studio/società ${esc(o.studio)},` : ''} quale <strong>Responsabile del servizio di prevenzione e protezione dai rischi</strong> ${esterno ? 'esterno all\'impresa' : 'interno all\'impresa'}.</p>
+        <h2>Requisiti (art. 32)</h2>
+        <p>Il datore di lavoro ha verificato che l'RSPP possiede il titolo di studio e gli attestati di frequenza dei corsi previsti, con verifica dell'apprendimento, e il relativo aggiornamento periodico:</p>
+        <p style="min-height:2.5em">${o.attestati ? esc(o.attestati).replace(/\n/g, '<br>') : ''}</p>
+        <h2>Compiti (art. 33)</h2>
+        <ol>
+          <li>individuare i fattori di rischio, valutare i rischi e individuare le misure per la sicurezza e la salubrità degli ambienti di lavoro, nel rispetto della normativa e sulla base della conoscenza dell'organizzazione aziendale;</li>
+          <li>elaborare, per quanto di competenza, le misure preventive e protettive e i sistemi di controllo di tali misure;</li>
+          <li>elaborare le procedure di sicurezza per le varie attività aziendali;</li>
+          <li>proporre i programmi di informazione e formazione dei lavoratori;</li>
+          <li>partecipare alle consultazioni in materia di tutela della salute e sicurezza e alla riunione periodica;</li>
+          <li>fornire ai lavoratori le informazioni previste dall'art. 36.</li>
+        </ol>
+        <h2>Impegni del datore di lavoro</h2>
+        <p>Il datore di lavoro fornisce all'RSPP le informazioni sulla natura dei rischi, sull'organizzazione del lavoro, sulla programmazione e attuazione delle misure, sulla descrizione degli impianti e dei processi produttivi, sui dati del registro degli infortuni e delle malattie professionali e sulle prescrizioni degli organi di vigilanza (art. 18 c. 2). Resta fermo che l'obbligo di valutazione dei rischi e di elaborazione del DVR non è delegabile (art. 17).</p>
+        <h2>Condizioni</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Durata</th><td>${esc(o.durata || '')}</td></tr>
+          <tr><th>Sopralluoghi all'anno</th><td>${esc(o.accessi || '')}</td></tr>
+          ${esterno ? `<tr><th>Compenso</th><td>${esc(o.compenso || '')}</td></tr>` : ''}
+        </tbody></table>
+        <p>Il nominativo dell'RSPP è riportato nel documento di valutazione dei rischi e comunicato ai lavoratori.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['Per accettazione, l\'RSPP', nome])}`;
+    }
   },
   {
     id: 'nomina-medico',
@@ -869,6 +902,395 @@ export const MODELLI = [
         ${luogoData(a, oggi)}
         ${firme(['Il datore di lavoro, per presa d\'atto', titolare(a)], ...(territoriale ? [] : [['L\'RLS eletto, per accettazione', o.eletto || a.rls]]))}`;
     }
+  },
+  {
+    id: 'valutazione-incendio',
+    titolo: 'Valutazione del rischio di incendio (DM 3 settembre 2021)',
+    descrizione: 'Valutazione secondo il «minicodice»: pericoli, occupanti, verifica del basso rischio, misure di prevenzione, esodo, estintori, rivelazione, gestione della sicurezza e livello di formazione degli addetti.',
+    ambito: 'impresa',
+    attivaSe: { any: [{ fatto: 'haDipendenti' }, { q: 'sede', eq: true }] },
+    opzioni: (d) => [
+      { id: 'superficie', etichetta: 'Superficie lorda dei locali (m²)', tipo: 'numero' },
+      { id: 'piani', etichetta: 'Piani occupati', tipo: 'testo', segnaposto: 'es. piano terra' },
+      { id: 'persone', etichetta: 'Massimo di persone presenti insieme (lavoratori e pubblico)', tipo: 'numero' },
+      { id: 'vulnerabili', etichetta: 'Persone con difficoltà di movimento, vista o udito', tipo: 'casella' },
+      { id: 'soggetta', etichetta: 'Attività soggetta ai controlli dei Vigili del fuoco (CPI)', tipo: 'scelta', valori: [{ valore: 'no', etichetta: 'No' }, { valore: 'si', etichetta: 'Sì' }], valore: d.ctx?.risposte?.rischio_incendio === 'si' ? 'si' : 'no' },
+      { id: 'quote', etichetta: 'Tutti i piani tra −5 m e +24 m', tipo: 'scelta', valori: [{ valore: 'si', etichetta: 'Sì' }, { valore: 'no', etichetta: 'No' }] },
+      { id: 'combustibili', etichetta: 'Depositi di materiali combustibili in quantità significative', tipo: 'scelta', valori: [{ valore: 'no', etichetta: 'No' }, { valore: 'si', etichetta: 'Sì' }] },
+      { id: 'sostanze', etichetta: 'Sostanze infiammabili o pericolose in quantità significative', tipo: 'scelta', valori: [{ valore: 'no', etichetta: 'No' }, { valore: 'si', etichetta: 'Sì' }] },
+      { id: 'lavorazioni', etichetta: 'Lavorazioni pericolose per l\'incendio (fiamme, saldature, verniciature, forni)', tipo: 'scelta', valori: [{ valore: 'no', etichetta: 'No' }, { valore: 'si', etichetta: 'Sì' }] },
+      { id: 'materiali', etichetta: 'Materiali combustibili presenti', tipo: 'spunte', valori: ['Carta e cartone', 'Legno', 'Tessuti', 'Plastiche e imballaggi', 'Vernici e solventi', 'Gas in bombole', 'Carburanti e oli', 'Prodotti alimentari e oli di frittura', 'Rifiuti'].map((x) => ({ valore: x, etichetta: x })) },
+      { id: 'inneschi', etichetta: 'Possibili sorgenti di innesco', tipo: 'spunte', valori: ['Impianto e apparecchi elettrici', 'Prese multiple e prolunghe', 'Fiamme libere e cannelli', 'Saldature e molature', 'Forni, piastre, friggitrici', 'Caldaie e stufe', 'Fumo di sigaretta', 'Attriti e surriscaldamenti di macchine', 'Batterie in carica'].map((x) => ({ valore: x, etichetta: x })) },
+      { id: 'uscite', etichetta: 'Numero di uscite verso l\'esterno', tipo: 'numero' },
+      { id: 'esodo', etichetta: 'Percorso più lungo per raggiungere un\'uscita (m)', tipo: 'numero' },
+      { id: 'estintori', etichetta: 'Numero di estintori', tipo: 'numero' },
+      { id: 'rivelazione', etichetta: 'Rivelatori di fumo o allarme incendio', tipo: 'casella' },
+      { id: 'illuminazione', etichetta: 'Illuminazione di emergenza', tipo: 'casella' },
+      { id: 'segnaletica', etichetta: 'Segnaletica di esodo e dei presidi', tipo: 'casella' }
+    ],
+    genera: ({ anagrafica: a, oggi, lavoratori, opzioni: o = {} }) => {
+      const br = bassoRischioIncendio(o);
+      const livello = br.basso ? 1 : o.soggetta === 'si' ? 2 : 2;
+      const ore = { 1: 4, 2: 8, 3: 16 }[livello];
+      const persone = Number(o.persone) || null;
+      const si = (x) => (x ? 'Sì' : '<strong>No</strong>');
+      return `${intestazione(a)}
+        <h1>Valutazione del rischio di incendio</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 46; DM 3 settembre 2021 (criteri di progettazione, Allegato I); DM 2 settembre 2021 (gestione della sicurezza); DM 1 settembre 2021 (controlli)</p>
+        <h2>1 · Descrizione dei luoghi</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Sede</th><td>${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
+          <tr><th>Superficie lorda</th><td>${esc(o.superficie ? `${o.superficie} m²` : '')}</td></tr>
+          <tr><th>Piani</th><td>${esc(o.piani || '')}</td></tr>
+          <tr><th>Lavoratori</th><td>${(lavoratori || []).length}</td></tr>
+          <tr><th>Massimo di persone presenti</th><td>${persone ?? ''}</td></tr>
+          <tr><th>Persone vulnerabili</th><td>${o.vulnerabili ? 'Presenti: prevedere assistenza dedicata durante l\'esodo' : 'Non presenti abitualmente'}</td></tr>
+        </tbody></table>
+        <h2>2 · Pericoli di incendio</h2>
+        <table class="doc__tabella"><thead><tr><th>Materiali combustibili</th><th>Sorgenti di innesco</th></tr></thead><tbody>
+          <tr><td><ul>${(o.materiali || []).map((x) => `<li>${esc(x)}</li>`).join('') || '<li>&nbsp;</li>'}</ul></td><td><ul>${(o.inneschi || []).map((x) => `<li>${esc(x)}</li>`).join('') || '<li>&nbsp;</li>'}</ul></td></tr>
+        </tbody></table>
+        <h2>3 · Classificazione</h2>
+        <table class="doc__tabella"><thead><tr><th>Criterio per il basso rischio (DM 3/9/2021)</th><th>Rispettato</th></tr></thead><tbody>
+          ${br.criteri.map((c) => `<tr><td>${esc(c.testo)}</td><td>${c.ok ? 'Sì' : '<strong>No</strong>'}</td></tr>`).join('')}
+        </tbody></table>
+        <p class="doc__esito doc__esito--${br.basso ? 'verde' : 'giallo'}"><strong>${br.basso ? 'Luogo di lavoro a basso rischio di incendio: si applicano i criteri semplificati dell\'Allegato I del DM 3/9/2021.' : 'Il luogo non rientra nel basso rischio: la progettazione antincendio segue il Codice di prevenzione incendi (DM 3/8/2015) con l\'aiuto di un tecnico.'}</strong></p>
+        <h2>4 · Misure presenti</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Uscite verso l'esterno</th><td>${esc(o.uscite || '')}${Number(o.uscite) === 1 && persone > 50 ? ' · <strong>con più di 50 persone valutare una seconda uscita</strong>' : ''}</td></tr>
+          <tr><th>Percorso di esodo più lungo</th><td>${esc(o.esodo ? `${o.esodo} m` : '')}</td></tr>
+          <tr><th>Estintori</th><td>${esc(o.estintori || '')} · controllo ogni 6 mesi da ditta qualificata (DM 1/9/2021)</td></tr>
+          <tr><th>Rivelazione e allarme</th><td>${si(o.rivelazione)}</td></tr>
+          <tr><th>Illuminazione di emergenza</th><td>${si(o.illuminazione)}</td></tr>
+          <tr><th>Segnaletica</th><td>${si(o.segnaletica)}</td></tr>
+        </tbody></table>
+        <h2>5 · Misure di prevenzione e gestione</h2>
+        <ul>
+          <li>Ordine e pulizia: ridurre al minimo i materiali combustibili e tenerli lontani dalle sorgenti di innesco.</li>
+          <li>Divieto di fumo e di uso di fiamme libere, salvo permesso di lavoro a caldo.</li>
+          <li>Impianti elettrici a norma e verificati; niente prese multiple a cascata.</li>
+          <li>Vie di esodo e uscite sempre libere, porte apribili facilmente nel verso dell'esodo.</li>
+          <li>Controlli periodici di estintori, luci di emergenza e porte, registrati nel registro antincendio.</li>
+          <li>Istruzioni di emergenza esposte e, oltre 10 lavoratori o con pubblico numeroso, piano di emergenza scritto e prova di evacuazione annuale.</li>
+        </ul>
+        <h2>6 · Addetti antincendio</h2>
+        <p>Addetti designati: ${v(conRuolo(lavoratori, 'antincendio'), 24)}</p>
+        <p>Livello di formazione indicato: <strong>livello ${livello}</strong> (${ore} ore, aggiornamento ogni 5 anni) secondo il DM 2/9/2021. ${br.basso ? '' : 'Verificare con l\'RSPP se l\'attività richiede il livello 3 (16 ore) e l\'idoneità tecnica dei Vigili del fuoco.'}</p>
+        <h2>7 · Programma di miglioramento</h2>
+        <table class="doc__tabella"><thead><tr><th>Misura</th><th>Entro il</th><th>Incaricato</th></tr></thead><tbody>
+          ${[!o.rivelazione && persone > 50 ? 'Valutare un sistema di allarme incendio' : '', !o.illuminazione ? 'Installare l\'illuminazione di emergenza sulle vie di esodo' : '', !o.segnaletica ? 'Esporre la segnaletica di esodo e dei presidi' : '']
+            .filter(Boolean)
+            .map((x) => `<tr><td>${esc(x)}</td><td></td><td></td></tr>`)
+            .join('')}
+          <tr><td style="height:2em"></td><td></td><td></td></tr>
+        </tbody></table>
+        <p class="doc__nota">Valutazione da verificare con l'RSPP. Per le attività soggette al DPR 151/2011 resta l'obbligo di SCIA antincendio e dei relativi adempimenti.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['L\'RLS, per consultazione', a.rls])}`;
+    }
+  },
+  {
+    id: 'valutazione-rumore',
+    titolo: 'Valutazione del rischio rumore',
+    descrizione: 'Calcolo dell\'esposizione giornaliera LEX,8h per ogni mansione dai livelli delle attrezzature e dai tempi d\'uso, con confronto con i valori di 80, 85 e 87 dB(A).',
+    ambito: 'impresa',
+    attivaSe: { q: 'rumore_vibrazioni', eq: true },
+    opzioni: (d) => [
+      { id: 'mansione', etichetta: 'Mansione valutata', tipo: 'testo', valore: d.lavoratori?.[0]?.mansione || '' },
+      {
+        id: 'righe',
+        etichetta: 'Attività rumorose della giornata tipo',
+        tipo: 'tabella',
+        aiuto: 'Il livello LAeq in dB(A) si trova nel libretto della macchina, nelle banche dati (es. INAIL) o con una misura. Inserisci anche il tempo senza rumore (es. 70 dB(A)).',
+        righe: 6,
+        iniziali: (d.attrezzature || []).slice(0, 6).map((x) => ({ attivita: x.nome, livello: '', ore: '' })),
+        colonne: [
+          { id: 'attivita', etichetta: 'Attività o attrezzatura' },
+          { id: 'livello', etichetta: 'LAeq dB(A)', tipo: 'numero' },
+          { id: 'ore', etichetta: 'Ore al giorno', tipo: 'numero' },
+          { id: 'fonte', etichetta: 'Fonte del dato' }
+        ]
+      },
+      { id: 'picco', etichetta: 'Rumori impulsivi forti (spari, martellate violente, scoppi)', tipo: 'casella' }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const righe = (o.righe || []).filter((r) => r.attivita || r.livello || r.ore);
+      const lex = lex8h(righe);
+      const f = fasciaRumore(lex);
+      const ore = righe.reduce((s, r) => s + (Number(String(r.ore).replace(',', '.')) || 0), 0);
+      return `${intestazione(a)}
+        <h1>Valutazione del rischio rumore</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 Titolo VIII, Capo II (artt. 187-198)</p>
+        <p>Mansione: ${v(o.mansione, 24)}</p>
+        <h2>1 · Attività e livelli</h2>
+        <table class="doc__tabella"><thead><tr><th>Attività o attrezzatura</th><th>LAeq dB(A)</th><th>Ore</th><th>Fonte</th></tr></thead><tbody>
+          ${righe.map((r) => `<tr><td>${esc(r.attivita)}</td><td>${esc(r.livello)}</td><td>${esc(r.ore)}</td><td>${esc(r.fonte || '')}</td></tr>`).join('') || '<tr><td style="height:2em"></td><td></td><td></td><td></td></tr>'}
+        </tbody></table>
+        ${ore && Math.abs(ore - 8) > 0.01 ? `<p class="doc__nota">Totale ore inserite: ${ore}. Il calcolo riporta comunque l'esposizione su 8 ore.</p>` : ''}
+        <h2>2 · Risultato</h2>
+        <p>LEX,8h = 10 · log<sub>10</sub>[ Σ (T<sub>i</sub>/8) · 10<sup>L<sub>i</sub>/10</sup> ]</p>
+        <p class="doc__esito doc__esito--${f?.colore || 'giallo'}"><strong>LEX,8h = ${lex ?? '—'} dB(A)</strong>${f ? ` · ${esc(f.testo)}` : ''}</p>
+        ${o.picco ? '<p><strong>Rumori impulsivi:</strong> verificare anche il livello di picco (valori di azione 135 e 137 dB(C), limite 140 dB(C)) con una misura.</p>' : ''}
+        <h2>3 · Misure</h2>
+        <ul>
+          <li>Scegliere attrezzature meno rumorose e mantenerle efficienti.</li>
+          <li>Ridurre i tempi di esposizione e allontanare chi non lavora dalle sorgenti rumorose.</li>
+          ${lex > 80 ? '<li>Fornire cuffie o tappi adatti e addestrare all\'uso; informazione e formazione specifiche.</li>' : ''}
+          ${lex > 85 ? '<li>Obbligo d\'uso dei DPI uditivi, segnaletica nelle aree rumorose, sorveglianza sanitaria, programma di riduzione.</li>' : ''}
+        </ul>
+        <p class="doc__nota">Valutazione da ripetere almeno ogni 4 anni o quando cambiano attrezzature e lavorazioni (art. 181). I livelli da banca dati vanno confermati con una misura se il risultato è vicino ai valori di azione.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp])}`;
+    }
+  },
+  {
+    id: 'valutazione-vibrazioni',
+    titolo: 'Valutazione del rischio vibrazioni',
+    descrizione: 'Calcolo dell\'esposizione A(8) per mano-braccio e corpo intero dagli utensili e dai mezzi usati, con confronto con i valori di azione e limite.',
+    ambito: 'impresa',
+    attivaSe: { q: 'rumore_vibrazioni', eq: true },
+    opzioni: (d) => [
+      { id: 'mansione', etichetta: 'Mansione valutata', tipo: 'testo', valore: d.lavoratori?.[0]?.mansione || '' },
+      {
+        id: 'righe',
+        etichetta: 'Utensili e mezzi che vibrano',
+        tipo: 'tabella',
+        aiuto: 'L\'accelerazione in m/s² si trova nel libretto dell\'utensile o nella banca dati vibrazioni (Portale Agenti Fisici). Per le macchine portatili scegli «Mano-braccio», per mezzi e piattaforme «Corpo intero». Indica il tempo di vibrazione effettivo, non tutto il turno.',
+        righe: 6,
+        iniziali: (d.attrezzature || []).filter((x) => /utensil|macchin|veicol/i.test(x.tipo || '')).slice(0, 6).map((x) => ({ attrezzo: x.nome, sistema: 'HAV', accelerazione: '', ore: '' })),
+        colonne: [
+          { id: 'attrezzo', etichetta: 'Utensile o mezzo' },
+          { id: 'sistema', etichetta: 'Tipo', tipo: 'scelta', valori: [{ valore: 'HAV', etichetta: 'Mano-braccio' }, { valore: 'WBV', etichetta: 'Corpo intero' }] },
+          { id: 'accelerazione', etichetta: 'm/s²', tipo: 'numero' },
+          { id: 'ore', etichetta: 'Ore al giorno', tipo: 'numero' }
+        ]
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const righe = (o.righe || []).filter((r) => r.attrezzo || r.accelerazione);
+      const hav = a8(righe, 'HAV');
+      const wbv = a8(righe, 'WBV');
+      const fh = fasciaVibrazioni(hav, 'HAV');
+      const fw = fasciaVibrazioni(wbv, 'WBV');
+      return `${intestazione(a)}
+        <h1>Valutazione del rischio vibrazioni</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 Titolo VIII, Capo III (artt. 199-205) e Allegato XXXV</p>
+        <p>Mansione: ${v(o.mansione, 24)}</p>
+        <table class="doc__tabella"><thead><tr><th>Utensile o mezzo</th><th>Tipo</th><th>Accelerazione m/s²</th><th>Ore</th></tr></thead><tbody>
+          ${righe.map((r) => `<tr><td>${esc(r.attrezzo)}</td><td>${r.sistema === 'WBV' ? 'Corpo intero' : 'Mano-braccio'}</td><td>${esc(r.accelerazione)}</td><td>${esc(r.ore)}</td></tr>`).join('') || '<tr><td style="height:2em"></td><td></td><td></td><td></td></tr>'}
+        </tbody></table>
+        <p>A(8) = √[ Σ a<sub>i</sub>² · T<sub>i</sub> / 8 ]</p>
+        <table class="doc__tabella"><thead><tr><th></th><th>A(8)</th><th>Azione / limite</th><th>Esito</th></tr></thead><tbody>
+          <tr><td>Mano-braccio</td><td><strong>${hav ?? '—'}</strong></td><td>2,5 / 5 m/s²</td><td class="doc__esito--${fh?.colore || ''}">${esc(fh?.testo || 'Non presente')}</td></tr>
+          <tr><td>Corpo intero</td><td><strong>${wbv ?? '—'}</strong></td><td>0,5 / 1 m/s²</td><td class="doc__esito--${fw?.colore || ''}">${esc(fw?.testo || 'Non presente')}</td></tr>
+        </tbody></table>
+        <h2>Misure</h2>
+        <ul>
+          <li>Preferire utensili e mezzi a basse vibrazioni, mantenuti e con impugnature antivibranti.</li>
+          <li>Alternare le attività e fare pause; tenere le mani calde e asciutte.</li>
+          ${(hav ?? 0) > 2.5 || (wbv ?? 0) > 0.5 ? '<li>Programma di riduzione dell\'esposizione, informazione e formazione specifiche, sorveglianza sanitaria.</li>' : ''}
+        </ul>
+        <p class="doc__nota">Valutazione da ripetere almeno ogni 4 anni o quando cambiano utensili e lavorazioni.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp])}`;
+    }
+  },
+  {
+    id: 'valutazione-mmc',
+    titolo: 'Valutazione della movimentazione manuale dei carichi (NIOSH)',
+    descrizione: 'Calcolo del peso limite raccomandato e dell\'indice di sollevamento con il metodo NIOSH (ISO 11228-1, Allegato XXXIII) per le operazioni di sollevamento più gravose.',
+    ambito: 'impresa',
+    attivaSe: { q: 'carichi', eq: true },
+    opzioni: () => [
+      {
+        id: 'compiti',
+        etichetta: 'Sollevamenti da valutare',
+        tipo: 'tabella',
+        aiuto: 'Una riga per ogni sollevamento tipico. Altezza: delle mani da terra all\'inizio. Distanza: tra mani e caviglie. Spostamento: differenza di altezza tra inizio e fine. Frequenza: sollevamenti al minuto (0,2 se pochi). Durata: breve fino a 1 ora, media 1-2 ore, lunga oltre 2 ore.',
+        righe: 4,
+        colonne: [
+          { id: 'compito', etichetta: 'Operazione' },
+          { id: 'peso', etichetta: 'Peso kg', tipo: 'numero' },
+          { id: 'altezza', etichetta: 'Altezza cm', tipo: 'numero' },
+          { id: 'distanza', etichetta: 'Distanza cm', tipo: 'numero' },
+          { id: 'dislocazione', etichetta: 'Spostamento cm', tipo: 'numero' },
+          { id: 'angolo', etichetta: 'Rotazione °', tipo: 'numero' },
+          { id: 'frequenza', etichetta: 'Atti/min', tipo: 'numero' },
+          { id: 'durata', etichetta: 'Durata', tipo: 'scelta', valori: [{ valore: 'lunga', etichetta: 'Oltre 2 h' }, { valore: 'media', etichetta: '1-2 h' }, { valore: 'breve', etichetta: 'Fino a 1 h' }] },
+          { id: 'presa', etichetta: 'Presa', tipo: 'scelta', valori: [{ valore: 'buona', etichetta: 'Buona' }, { valore: 'discreta', etichetta: 'Discreta' }, { valore: 'scarsa', etichetta: 'Scarsa' }] }
+        ]
+      },
+      { id: 'genere', etichetta: 'Lavoratori interessati', tipo: 'scelta', valori: [{ valore: 'uomo', etichetta: 'Uomini' }, { valore: 'donna', etichetta: 'Donne o gruppo misto' }] },
+      { id: 'fascia', etichetta: 'Età', tipo: 'scelta', valori: [{ valore: 'adulto', etichetta: 'Tra 18 e 45 anni' }, { valore: 'giovane_anziano', etichetta: 'Sotto 18 o sopra 45 anni' }] },
+      { id: 'unaMano', etichetta: 'Sollevamento con una mano sola', tipo: 'casella' },
+      { id: 'dueOperatori', etichetta: 'Sollevamento in due persone', tipo: 'casella' }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const compiti = (o.compiti || []).filter((r) => r.compito || r.peso);
+      const risultati = compiti.map((r) => ({ r, n: niosh({ ...r, genere: o.genere, fascia: o.fascia, unaMano: o.unaMano, dueOperatori: o.dueOperatori }) }));
+      const CP = costantePeso(o.genere, o.fascia);
+      const f2 = (x) => (x === undefined || x === null ? '' : String(Math.round(x * 100) / 100).replace('.', ','));
+      return `${intestazione(a)}
+        <h1>Valutazione della movimentazione manuale dei carichi</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 Titolo VI e Allegato XXXIII; norma ISO 11228-1 (metodo NIOSH)</p>
+        <p>Costante di peso: <strong>${CP} kg</strong> (${o.genere === 'donna' ? 'donne' : 'uomini'}, ${o.fascia === 'giovane_anziano' ? 'sotto 18 o sopra 45 anni' : '18-45 anni'})${o.unaMano ? ' · una mano (× 0,6)' : ''}${o.dueOperatori ? ' · due operatori (× 0,85)' : ''}</p>
+        <table class="doc__tabella"><thead><tr><th>Operazione</th><th>Peso</th><th>Fattori A · B · C · D · E · F</th><th>Peso limite (RWL)</th><th>Indice</th><th>Esito</th></tr></thead><tbody>
+          ${
+            risultati
+              .map(({ r, n }) => {
+                const f = fasciaNiosh(n?.indice);
+                return `<tr><td>${esc(r.compito)}</td><td>${esc(r.peso)} kg</td><td><small>${n ? [n.fattori.altezza, n.fattori.dislocazione, n.fattori.distanza, n.fattori.angolo, n.fattori.presa, n.fattori.frequenza].map(f2).join(' · ') : 'dati incompleti'}</small></td><td>${n ? `${f2(n.rwl)} kg` : ''}</td><td><strong>${n ? f2(n.indice) ?? '—' : ''}</strong></td><td class="doc__esito--${n ? f.colore : ''}">${n ? esc(f.testo) : ''}</td></tr>`;
+              })
+              .join('') || '<tr><td style="height:2em" colspan="6"></td></tr>'
+          }
+        </tbody></table>
+        <p><small>A altezza · B spostamento verticale · C distanza orizzontale · D rotazione · E presa · F frequenza. RWL = costante di peso × A × B × C × D × E × F; indice = peso / RWL.</small></p>
+        <h2>Misure</h2>
+        <ul>
+          <li>Usare carrelli, transpallet, sollevatori o altri ausili; ridurre il peso delle confezioni.</li>
+          <li>Tenere i carichi tra l'altezza delle nocche e delle spalle, vicino al corpo, senza ruotare il busto.</li>
+          <li>Formare e addestrare i lavoratori alle corrette tecniche di sollevamento.</li>
+          ${risultati.some(({ n }) => !n || n.indice === null || n.indice > 0.85) ? '<li>Per gli indici oltre 0,85: programmare interventi di riduzione; oltre 1: sorveglianza sanitaria.</li>' : ''}
+        </ul>
+        <p class="doc__nota">Il metodo vale per sollevamenti a due mani in piedi; per traino, spinta e movimenti ripetitivi servono altri metodi (ISO 11228-2 e 11228-3).</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp])}`;
+    }
+  },
+  {
+    id: 'valutazione-chimico',
+    titolo: 'Valutazione del rischio chimico (stima semplificata)',
+    descrizione: 'Per ogni prodotto: pericolosità dalle frasi H e stima dell\'esposizione (quantità, frequenza, modalità d\'uso, ventilazione), con esito irrilevante o da approfondire.',
+    ambito: 'impresa',
+    attivaSe: { q: 'chimici', eq: true },
+    opzioni: (d) => [
+      {
+        id: 'righe',
+        etichetta: 'Uso dei prodotti',
+        tipo: 'tabella',
+        aiuto: 'Le frasi H sono nella sezione 2 della scheda di sicurezza. Modalità: chiuso (mai a contatto), controllato (dosatori, piccole superfici), aperto (pennello, immersione), dispersivo (spruzzo, polveri).',
+        righe: Math.max(4, (d.prodotti || []).length),
+        iniziali: (d.prodotti || []).map((p) => ({ prodotto: p.nome, frasiH: p.frasiH || '', quantita: 'media', frequenza: 'settimanale', modalita: 'aperto', ventilazione: 'generale' })),
+        colonne: [
+          { id: 'prodotto', etichetta: 'Prodotto' },
+          { id: 'frasiH', etichetta: 'Frasi H' },
+          { id: 'quantita', etichetta: 'Quantità', tipo: 'scelta', valori: [{ valore: 'piccola', etichetta: 'Piccola (g, ml)' }, { valore: 'media', etichetta: 'Media (kg, litri)' }, { valore: 'grande', etichetta: 'Grande (decine di kg)' }] },
+          { id: 'frequenza', etichetta: 'Frequenza', tipo: 'scelta', valori: [{ valore: 'occasionale', etichetta: 'Occasionale' }, { valore: 'settimanale', etichetta: 'Settimanale' }, { valore: 'quotidiana', etichetta: 'Quotidiana' }] },
+          { id: 'modalita', etichetta: 'Modalità', tipo: 'scelta', valori: [{ valore: 'chiuso', etichetta: 'Sistema chiuso' }, { valore: 'controllato', etichetta: 'Uso controllato' }, { valore: 'aperto', etichetta: 'Uso aperto' }, { valore: 'dispersivo', etichetta: 'Spruzzo o polveri' }] },
+          { id: 'ventilazione', etichetta: 'Ventilazione', tipo: 'scelta', valori: [{ valore: 'generale', etichetta: 'Finestre o ricambio' }, { valore: 'aspirazione', etichetta: 'Aspirazione localizzata' }, { valore: 'nessuna', etichetta: 'Nessuna' }] }
+        ]
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const righe = (o.righe || []).filter((r) => r.prodotto);
+      const PER = { cmr: 'CMR', alta: 'Alta', media: 'Media', bassa: 'Bassa', nessuna: 'Nessuna' };
+      const valutate = righe.map((r) => {
+        const p = pericolositaSalute(r.frasiH);
+        const e = esposizioneChimica(r);
+        return { r, p, e, esito: esitoChimico(p, e) };
+      });
+      return `${intestazione(a)}
+        <h1>Valutazione del rischio chimico</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 Titolo IX, Capo I (artt. 221-232); Reg. CE 1272/2008 (CLP)</p>
+        <p>Stima qualitativa: combina la pericolosità per la salute indicata dalle frasi H con l'esposizione, stimata da quantità, frequenza, modalità d'uso e ventilazione.</p>
+        <table class="doc__tabella"><thead><tr><th>Prodotto</th><th>Frasi H</th><th>Pericolosità</th><th>Esposizione</th><th>Esito</th></tr></thead><tbody>
+          ${valutate.map((x) => `<tr><td>${esc(x.r.prodotto)}</td><td>${esc(x.r.frasiH)}</td><td>${PER[x.p]}</td><td>${esc(x.e)}</td><td class="doc__esito--${x.esito.colore}">${esc(x.esito.testo)}</td></tr>`).join('') || '<tr><td style="height:2em" colspan="5"></td></tr>'}
+        </tbody></table>
+        <h2>Misure generali (art. 224)</h2>
+        <ul>
+          <li>Ridurre al minimo quantità e numero di lavoratori esposti; preferire prodotti meno pericolosi.</li>
+          <li>Conservare i prodotti chiusi, etichettati e separati per incompatibilità; tenere le schede di sicurezza a disposizione.</li>
+          <li>Aerare i locali, usare aspirazione localizzata per spruzzi, vapori e polveri.</li>
+          <li>Usare i DPI indicati nella sezione 8 delle schede; non mangiare, bere o fumare durante l'uso.</li>
+          <li>Informare e formare i lavoratori sulle etichette e sulle schede di sicurezza.</li>
+        </ul>
+        <p class="doc__nota">Per i prodotti con esito giallo o rosso confermare la valutazione con un modello riconosciuto (per esempio MoVaRisCh) o con misure ambientali. I prodotti cancerogeni, mutageni o tossici per la riproduzione richiedono la valutazione del Capo II.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['Il medico competente', a.medico])}`;
+    }
+  },
+  {
+    id: 'richiesta-visite',
+    titolo: 'Comunicazione al medico competente dei lavoratori da visitare',
+    descrizione: 'Elenco dei lavoratori con visita da fare o in scadenza, con mansione, rischi e tipo di visita, da inviare al medico competente.',
+    ambito: 'impresa',
+    attivaSe: { all: [{ fatto: 'haDipendenti' }, { fatto: 'rischiConSorveglianza' }] },
+    opzioni: () => [{ id: 'giorni', etichetta: 'Includi le visite in scadenza entro (giorni)', tipo: 'numero', valore: '60' }],
+    genera: ({ anagrafica: a, oggi, situazioni, dvr, ctx, opzioni: o = {} }) => {
+      const giorni = Number(o.giorni) || 60;
+      const limite = new Date(Date.parse(oggi) + giorni * 86400000).toISOString().slice(0, 10);
+      const rischi = pericoliPresenti(dvr, ctx).filter((x) => x.sorveglianza).map((x) => x.pericolo);
+      const elenco = (situazioni || [])
+        .map((s) => ({ s, vm: s.voci.find((x) => x.requisito.id === 'visita-medica') }))
+        .filter(({ vm }) => vm && (!vm.registro || (vm.prossimaScadenza && vm.prossimaScadenza <= limite)));
+      return `${intestazione(a)}
+        <p>Al medico competente ${v(a.medico, 24)}</p>
+        <h1>Richiesta di visite mediche</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 artt. 18 c. 1 lett. g e 41</p>
+        <p>Le chiediamo di programmare le visite per i seguenti lavoratori.</p>
+        <table class="doc__tabella"><thead><tr><th>Lavoratore</th><th>Mansione</th><th>Tipo di visita</th><th>Scadenza</th></tr></thead><tbody>
+          ${elenco
+            .map(({ s, vm }) => `<tr><td>${esc(nomeCompleto(s.lavoratore))}</td><td>${esc(s.lavoratore.mansione || '')}</td><td>${vm.registro ? 'Periodica' : 'Preventiva (prima visita)'}</td><td>${vm.prossimaScadenza ? esc(data(vm.prossimaScadenza)) : 'subito'}</td></tr>`)
+            .join('') || '<tr><td colspan="4">Nessuna visita da programmare nel periodo.</td></tr>'}
+        </tbody></table>
+        <h2>Rischi per i quali è prevista la sorveglianza</h2>
+        <ul>${rischi.map((x) => `<li>${esc(x)}</li>`).join('') || '<li>&nbsp;</li>'}</ul>
+        <p>Segnaliamo inoltre: ☐ cambi di mansione ☐ rientri dopo assenze per malattia oltre 60 giorni ☐ richieste di visita dei lavoratori ☐ nuove attrezzature o prodotti.</p>
+        <p>Restiamo a disposizione per concordare date e luogo delle visite.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)])}`;
+    }
+  },
+  {
+    id: 'permesso-lavoro-caldo',
+    titolo: 'Permesso di lavoro a caldo',
+    descrizione: 'Autorizzazione per saldature, tagli, molature e uso di cannelli nei locali, con controlli prima, durante e dopo e sorveglianza antincendio.',
+    ambito: 'impresa',
+    attivaSe: { any: [{ q: 'appalti_in_sede', eq: true }, { q: 'cantiere', eq: true }, { q: 'lavori_presso_clienti', eq: true }] },
+    opzioni: () => [
+      { id: 'ditta', etichetta: 'Chi esegue il lavoro (ditta e operatore)', tipo: 'testo' },
+      { id: 'luogo', etichetta: 'Luogo esatto', tipo: 'testo' },
+      { id: 'lavoro', etichetta: 'Tipo di lavoro', tipo: 'spunte', valori: ['Saldatura elettrica', 'Saldatura o taglio a fiamma', 'Brasatura con cannello', 'Molatura o taglio con disco', 'Guaine bituminose a fiamma'].map((x) => ({ valore: x, etichetta: x })) },
+      { id: 'data', etichetta: 'Data', tipo: 'data' },
+      { id: 'dalle', etichetta: 'Dalle ore', tipo: 'testo' },
+      { id: 'alle', etichetta: 'Alle ore', tipo: 'testo' },
+      { id: 'sorvegliante', etichetta: 'Addetto alla sorveglianza antincendio', tipo: 'testo' }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => `${intestazione(a)}
+        <h1>Permesso di lavoro a caldo</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 artt. 26 e 46; DM 3 settembre 2021 · buona prassi per prevenire gli incendi</p>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Esecutore</th><td>${esc(o.ditta || '')}</td></tr>
+          <tr><th>Luogo</th><td>${esc(o.luogo || '')}</td></tr>
+          <tr><th>Lavoro</th><td>${(o.lavoro || []).map(esc).join(', ')}</td></tr>
+          <tr><th>Validità</th><td>${o.data ? esc(data(o.data)) : v('', 10)} dalle ${v(o.dalle, 5)} alle ${v(o.alle, 5)} (valido solo per questo turno)</td></tr>
+          <tr><th>Sorveglianza antincendio</th><td>${esc(o.sorvegliante || '')}</td></tr>
+        </tbody></table>
+        <h2>Prima di iniziare</h2>
+        <ul class="doc__spunte">
+          ${[
+            'Valutato se il lavoro può essere fatto a freddo o fuori dai locali',
+            'Allontanati i materiali combustibili per almeno 10 metri, o protetti con teli ignifughi',
+            'Chiuse o protette aperture, fessure e cavedi dove possono cadere scintille',
+            'Pavimenti puliti da polveri, oli e residui combustibili',
+            'Disattivati i rivelatori di fumo della zona, con avviso al responsabile',
+            'Estintore adatto a portata di mano e operatore capace di usarlo',
+            'Locale aerato; nessuna atmosfera infiammabile (verificare serbatoi e tubazioni)',
+            'Bombole vincolate, valvole antiritorno sui cannelli',
+            'Operatori con DPI per saldatura (schermo, guanti, indumenti ignifughi)'
+          ]
+            .map((x) => `<li>☐ ${esc(x)}</li>`)
+            .join('')}
+        </ul>
+        <h2>Durante il lavoro</h2>
+        <ul class="doc__spunte"><li>☐ Sorveglianza continua di scintille e materiali vicini</li><li>☐ Lavoro sospeso se cambiano le condizioni</li></ul>
+        <h2>Dopo il lavoro</h2>
+        <ul class="doc__spunte">
+          <li>☐ Sorveglianza della zona e dei locali vicini per almeno 60 minuti dopo la fine</li>
+          <li>☐ Controllo finale alle ore ${v('', 5)}: nessun focolaio o surriscaldamento</li>
+          <li>☐ Rivelatori riattivati</li>
+        </ul>
+        ${firme(['Autorizza (committente o preposto)', titolare(a)], ['L\'esecutore', ''], ['Controllo finale', o.sorvegliante || ''])}`
   },
   {
     id: 'info-rischi-ditte',

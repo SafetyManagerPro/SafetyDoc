@@ -181,3 +181,26 @@ test('nuovi documenti: emergenza, informazione, addestramento, elezione RLS', ()
   const rls = generaDocumento('verbale-elezione-rls', { anagrafica, oggi: '2026-11-24', lavoratori, opzioni: { modalita: 'territoriale' } }).html;
   assert.ok(rls.includes('territoriale') && !rls.includes('accettazione'));
 });
+
+test('valutazioni specifiche, incarico RSPP, richiesta visite e lavoro a caldo', () => {
+  const g = (id, extra) => generaDocumento(id, { anagrafica, oggi: '2026-11-24', ...extra }).html;
+  const rumore = g('valutazione-rumore', { opzioni: { mansione: 'Falegname', righe: [{ attivita: 'Sega circolare', livello: '95', ore: '2' }, { attivita: 'Banco', livello: '70', ore: '6' }] } });
+  assert.ok(rumore.includes('LEX,8h = 89') && rumore.includes('87 dB(A)'));
+  const vib = g('valutazione-vibrazioni', { opzioni: { righe: [{ attrezzo: 'Martello demolitore', sistema: 'HAV', accelerazione: '12', ore: '1' }] } });
+  assert.ok(vib.includes('4.24') || vib.includes('4,24'));
+  const mmc = g('valutazione-mmc', { opzioni: { genere: 'uomo', fascia: 'adulto', compiti: [{ compito: 'Sacchi di cemento', peso: '25', altezza: '10', distanza: '40', dislocazione: '90', angolo: '30', frequenza: '1', durata: 'lunga', presa: 'discreta' }] } });
+  assert.ok(mmc.includes('Sacchi di cemento') && mmc.includes('Indice oltre 1'));
+  const chim = g('valutazione-chimico', { opzioni: { righe: [{ prodotto: 'Diluente', frasiH: 'H225 H336', quantita: 'media', frequenza: 'quotidiana', modalita: 'aperto', ventilazione: 'generale' }] } });
+  assert.ok(chim.includes('Diluente') && chim.includes('doc__esito--'));
+  const inc = g('valutazione-incendio', { lavoratori: [], opzioni: { soggetta: 'no', persone: '20', superficie: '150', quote: 'si', combustibili: 'no', sostanze: 'no', lavorazioni: 'no' } });
+  assert.ok(inc.includes('basso rischio di incendio') && inc.includes('livello 1'));
+  const rspp = g('nomina-rspp-esterno', { opzioni: { nome: 'Ing. Bruno', tipo: 'esterno', compenso: '800 €' } });
+  assert.ok(rspp.includes('Ing. Bruno') && rspp.includes('art. 36') && rspp.includes('800 €'));
+  const sit = [{ lavoratore: { nome: 'Anna', cognome: 'Verdi', mansione: 'Barista' }, voci: [{ requisito: { id: 'visita-medica' }, registro: { data: '2025-12-01' }, prossimaScadenza: '2026-12-10' }] },
+    { lavoratore: { nome: 'Paolo', cognome: 'Neri' }, voci: [{ requisito: { id: 'visita-medica' }, registro: null, prossimaScadenza: null }] },
+    { lavoratore: { nome: 'Lia', cognome: 'Bo' }, voci: [{ requisito: { id: 'visita-medica' }, registro: { data: '2026-01-01' }, prossimaScadenza: '2027-06-01' }] }];
+  const vis = g('richiesta-visite', { situazioni: sit, dvr, ctx: creaContesto({ composizione: 'dipendenti', numero_lavoratori: 3, carichi: true }, questionario, ateco), opzioni: { giorni: '60' } });
+  assert.ok(vis.includes('Verdi') && vis.includes('Preventiva') && !vis.includes('Lia'));
+  const caldo = g('permesso-lavoro-caldo', { opzioni: { ditta: 'Idro srl', lavoro: ['Brasatura con cannello'] } });
+  assert.ok(caldo.includes('Idro srl') && caldo.includes('60 minuti'));
+});
