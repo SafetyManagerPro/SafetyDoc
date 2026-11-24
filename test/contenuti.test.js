@@ -90,3 +90,14 @@ test('POS, registri, allergeni e stress si compilano con i dati', () => {
   const stress = generaDocumento('stress-preliminare', { anagrafica, oggi: '2026-11-24', perAnno: { 2024: { infortunio: 0 }, 2025: { infortunio: 3 }, 2026: { infortunio: 1 } } }).html;
   assert.ok(stress.includes('<th>2025</th>') && stress.includes('<td>3</td>'));
 });
+
+test('esempi per settore: un pacchetto per ogni attività e tipi di attrezzatura validi', () => {
+  const settori = json('settori.json').settori;
+  const tipi = new Set(json('attrezzature.json').tipi.map((t) => t.id));
+  const attivita = questionario.domande.find((d) => d.id === 'attivita').opzioni.map((o) => o.valore);
+  for (const a of attivita) assert.ok(settori[a], `manca il settore ${a}`);
+  for (const [k, s] of Object.entries(settori)) {
+    for (const a of s.attrezzature) assert.ok(tipi.has(a.tipo), `${k}: tipo ${a.tipo}`);
+    assert.equal(new Set(s.attrezzature.map((a) => a.nome)).size, s.attrezzature.length, `${k}: doppioni`);
+  }
+});

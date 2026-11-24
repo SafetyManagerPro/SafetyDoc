@@ -37,7 +37,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.9.0';
+export const VERSIONE_APP = '0.10.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -85,7 +85,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
+const stato = { settori: null, questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -176,7 +176,7 @@ function elencoAllegati(tipo, id) {
   if (!lista.length) return '';
   return `<ul class="allegati">${lista
     .map(
-      (a) => `<li><button type="button" class="allegato" data-apri="${esc(a.id)}"><span class="allegato__tipo">${a.tipo?.startsWith('image/') ? 'Foto' : 'PDF'}</span> ${esc(a.nome)} <small>${esc(dimensioneLeggibile(a.dimensione))}</small></button>
+      (a) => `<li><button type="button" class="allegato" data-apri="${esc(a.id)}"><span class="allegato__tipo">${a.tipo?.startsWith('image/') ? 'Foto' : a.tipo === 'text/html' ? 'Firmato' : 'PDF'}</span> ${esc(a.nome)} <small>${esc(dimensioneLeggibile(a.dimensione))}</small></button>
         <button type="button" class="btn btn--testo btn--piccolo" data-togli="${esc(a.id)}">Elimina</button></li>`
     )
     .join('')}</ul>`;
@@ -189,7 +189,7 @@ function attivaAllegati(ridisegna) {
       if (!a?.file) return avviso('Questo file non è presente su questo dispositivo.');
       const url = URL.createObjectURL(a.file);
       const link = Object.assign(document.createElement('a'), { href: url, target: '_blank', rel: 'noopener' });
-      if (!a.tipo?.startsWith('image/') && a.tipo !== 'application/pdf') link.download = a.nome;
+      if (!a.tipo?.startsWith('image/') && a.tipo !== 'application/pdf' && a.tipo !== 'text/html') link.download = a.nome;
       document.body.append(link);
       link.click();
       link.remove();
@@ -283,7 +283,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
+const SEZIONE = { partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -709,6 +709,162 @@ async function schermataScheda(id) {
   });
 }
 
+// ---------- partenza rapida per settore ----------
+
+const normalizza = (t) => String(t || '').trim().toLowerCase();
+
+/** Esempi tipici per il lavoro dell'impresa (attività scelta o settore suggerito dal codice ATECO). */
+function pacchettoSettore() {
+  const chiave = risposte().attivita || ctx().fatti.ateco?.settore || 'altro';
+  return stato.settori?.settori?.[chiave] || stato.settori?.settori?.altro || { attrezzature: [], prodotti: [], mansioni: [] };
+}
+
+async function schermataPartenza() {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const pacc = pacchettoSettore();
+  const giaAttr = new Set(stato.attrezzature.filter((a) => !a.deleted).map((a) => normalizza(a.nome)));
+  const giaProd = new Set(stato.prodotti.filter((p) => !p.deleted).map((p) => normalizza(p.nome)));
+  const attr = pacc.attrezzature.filter((a) => !giaAttr.has(normalizza(a.nome)));
+  const prod = risposte().chimici ? pacc.prodotti.filter((p) => !giaProd.has(normalizza(p.nome))) : [];
+  const voce = (gruppo, i, titolo, sotto) => `<label class="spunta"><input type="checkbox" name="${gruppo}" value="${i}"><span class="spunta__testo">${esc(titolo)}${sotto ? `<small>${esc(sotto)}</small>` : ''}</span></label>`;
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/">‹ Oggi</a>
+      <h1>Parti più in fretta</h1>
+      <p class="lead">Queste sono le attrezzature${prod.length ? ' e i prodotti' : ''} più comuni nel tuo lavoro. Spunta solo quelli che usi davvero: li aggiungiamo in un colpo e poi completi i dati con calma.</p>
+      <form id="partenza">
+        ${attr.length ? `<fieldset class="spunte"><legend>Macchine e attrezzature</legend>${attr.map((a, i) => voce('attr', i, a.nome, tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta)).join('')}</fieldset>` : ''}
+        ${prod.length ? `<fieldset class="spunte"><legend>Prodotti chimici</legend>${prod.map((p, i) => voce('prod', i, p.nome, p.uso)).join('')}</fieldset>` : ''}
+        ${attr.length || prod.length ? '<button class="btn btn--primario btn--grande" type="submit">Aggiungi quelli spuntati</button>' : '<p>Hai già inserito tutti gli esempi del tuo settore.</p>'}
+      </form>
+      ${pacc.mansioni.length ? `<p class="nota">Quando inserisci un lavoratore ti suggeriremo le mansioni tipiche: ${esc(pacc.mansioni.join(', '))}.</p>` : ''}
+    </section>`;
+  app.querySelector('#partenza').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const sceltiA = f.getAll('attr').map((i) => attr[Number(i)]);
+    const sceltiP = f.getAll('prod').map((i) => prod[Number(i)]);
+    if (!sceltiA.length && !sceltiP.length) return avviso('Spunta almeno una voce.');
+    for (const a of sceltiA) await store.salva('attrezzature', { tipo: a.tipo, nome: a.nome, marcaturaCE: true });
+    for (const p of sceltiP) await store.salva('prodotti', { nome: p.nome, uso: p.uso, pittogrammi: [] });
+    await ricarica();
+    avviso(`Aggiunte ${sceltiA.length + sceltiP.length} voci. Ora completa marca, matricola e schede di sicurezza.`);
+    location.hash = sceltiA.length ? '#/attrezzature' : '#/prodotti';
+  });
+}
+
+// ---------- firma sul telefono ----------
+
+/** Riquadro per firmare con il dito o con la penna. Restituisce l'immagine PNG (data URL) o null. */
+function chiediFirma(chi) {
+  return new Promise((risolvi) => {
+    const d = document.createElement('dialog');
+    d.className = 'firma';
+    d.innerHTML = `<form method="dialog">
+        <h2>Firma${chi ? ` di ${esc(chi)}` : ''}</h2>
+        <p class="nota">Firma nel riquadro con il dito o con la penna.</p>
+        <canvas class="firma__tela" width="600" height="260" aria-label="Riquadro per la firma"></canvas>
+        <div class="firma__azioni">
+          <button class="btn btn--testo" type="button" data-azione="cancella">Cancella</button>
+          <button class="btn btn--secondario" value="annulla">Annulla</button>
+          <button class="btn btn--primario" value="ok" disabled>Conferma</button>
+        </div></form>`;
+    document.body.append(d);
+    const tela = d.querySelector('canvas');
+    const g = tela.getContext('2d');
+    const ok = d.querySelector('[value="ok"]');
+    g.lineWidth = 3;
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.strokeStyle = '#111';
+    let disegna = false;
+    let tratti = 0;
+    const punto = (e) => {
+      const r = tela.getBoundingClientRect();
+      return [((e.clientX - r.left) * tela.width) / r.width, ((e.clientY - r.top) * tela.height) / r.height];
+    };
+    tela.addEventListener('pointerdown', (e) => {
+      disegna = true;
+      tela.setPointerCapture(e.pointerId);
+      g.beginPath();
+      g.moveTo(...punto(e));
+      e.preventDefault();
+    });
+    tela.addEventListener('pointermove', (e) => {
+      if (!disegna) return;
+      g.lineTo(...punto(e));
+      g.stroke();
+      tratti++;
+      ok.disabled = tratti < 5;
+    });
+    const fine = () => (disegna = false);
+    tela.addEventListener('pointerup', fine);
+    tela.addEventListener('pointercancel', fine);
+    d.querySelector('[data-azione="cancella"]').addEventListener('click', () => {
+      g.clearRect(0, 0, tela.width, tela.height);
+      tratti = 0;
+      ok.disabled = true;
+    });
+    d.addEventListener('close', () => {
+      const risultato = d.returnValue === 'ok' ? tela.toDataURL('image/png') : null;
+      d.remove();
+      risolvi(risultato);
+    });
+    d.showModal();
+  });
+}
+
+/** Aggiunge i pulsanti di firma al documento e il salvataggio della copia firmata. */
+function attivaFirme({ modello, lavoratore, requisito, registro }) {
+  const caselle = [...app.querySelectorAll('.doc .doc__firme > div')];
+  if (!caselle.length) return;
+  const firmate = new Set();
+  const barra = app.querySelector('#barra-firma');
+  caselle.forEach((casella, i) => {
+    const chi = casella.querySelector('.doc__nome')?.textContent.trim();
+    const ruolo = casella.querySelector('p')?.textContent.trim();
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn btn--secondario btn--piccolo solo-schermo';
+    b.textContent = 'Firma qui';
+    b.addEventListener('click', async () => {
+      const png = await chiediFirma(chi && chi !== ' ' ? chi : ruolo);
+      if (!png) return;
+      casella.querySelector('.doc__firma')?.remove();
+      const img = Object.assign(document.createElement('img'), { src: png, alt: `Firma: ${ruolo || ''}`, className: 'doc__firma' });
+      casella.querySelector('.doc__linea').before(img);
+      firmate.add(i);
+      b.textContent = 'Firma di nuovo';
+      barra.hidden = false;
+      barra.querySelector('span').textContent = `${firmate.size} di ${caselle.length} firme`;
+    });
+    casella.append(b);
+  });
+  barra.querySelector('button').addEventListener('click', async () => {
+    const copia = app.querySelector('.doc').cloneNode(true);
+    copia.querySelectorAll('.solo-schermo').forEach((x) => x.remove());
+    const css = await fetch('css/style.css').then((r) => r.text()).catch(() => '');
+    const quando = new Date().toLocaleString('it-IT');
+    const html = `<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(modello.titolo)}</title><style>${css}</style></head>
+      <body><main class="pagina pagina--doc"><article class="doc">${copia.innerHTML}<p class="doc__nota">Firmato su safetyDoc il ${esc(quando)}.</p></article></main></body></html>`;
+    const file = new Blob([html], { type: 'text/html' });
+    const nome = `${modello.titolo}${lavoratore ? ` - ${nomeCompleto(lavoratore)}` : ''} (firmato ${oggiIso()}).html`;
+    let tipo = 'documento';
+    let id = lavoratore ? `${modello.id}:${lavoratore.id}` : modello.id;
+    if (lavoratore && requisito) {
+      // La firma vale come registrazione del requisito (consegna DPI, informativa, autorizzazione).
+      const oggiReg = registro?.data === oggiIso() ? registro : null;
+      const r = oggiReg || (await store.salva('registri', { lavoratoreId: lavoratore.id, requisitoId: requisito.id, data: oggiIso(), dettagli: registro?.dettagli || '', note: 'Firmato su safetyDoc' }));
+      tipo = 'registro';
+      id = r.id;
+    }
+    await store.salva('allegati', { collegatoTipo: tipo, collegatoId: id, nome, tipo: 'text/html', dimensione: file.size, file });
+    await ricarica();
+    avviso(requisito && lavoratore ? `Documento firmato salvato: «${requisito.titolo}» è registrato a oggi.` : 'Documento firmato salvato.');
+    instrada();
+  });
+}
+
 // ---------- prodotti chimici ----------
 
 const numeroAllegati = (tipo, id) => stato.allegati.filter((a) => !a.deleted && a.collegatoTipo === tipo && a.collegatoId === id).length;
@@ -744,6 +900,7 @@ async function schermataProdotti() {
       <p class="lead">Vernici, solventi, colle, detergenti, oli, gas, prodotti per capelli o per la pulizia: per ognuno serve la scheda di sicurezza del fornitore.</p>
       ${sit.length ? `<div class="lista">${sit.map(cardProdotto).join('')}</div>` : '<p>Non hai ancora inserito nessun prodotto.</p>'}
       <a class="btn btn--primario btn--grande" href="#/prodotto/nuovo">Aggiungi un prodotto</a>
+      <a class="btn btn--secondario" href="#/partenza">Scegli tra quelli tipici del tuo lavoro</a>
       ${sit.length ? `<a class="btn btn--secondario" href="#/documento/elenco-prodotti-chimici">Stampa l'elenco</a>` : ''}
     </section>`;
 }
@@ -1164,7 +1321,8 @@ async function schermataModificaLavoratore(id) {
         <label>Nome<input class="campo" name="nome" required autocomplete="off" value="${esc(l.nome || '')}"></label>
         <label>Cognome<input class="campo" name="cognome" autocomplete="off" value="${esc(l.cognome || '')}"></label>
         <label>Mansione <small>(cosa fa: es. muratore, magazziniera, apprendista elettricista)</small>
-          <input class="campo" name="mansione" value="${esc(l.mansione || '')}"></label>
+          <input class="campo" name="mansione" list="mansioni-tipiche" value="${esc(l.mansione || '')}"></label>
+        <datalist id="mansioni-tipiche">${pacchettoSettore().mansioni.map((m) => `<option value="${esc(m)}">`).join('')}</datalist>
         <label>Data di assunzione<input class="campo" type="date" name="dataAssunzione" value="${esc(l.dataAssunzione || '')}"></label>
         <h2>Ruoli e lavori particolari</h2>
         <p class="aiuto">Tocca quelli che riguardano questa persona: aggiungono i corsi che le servono.</p>
@@ -1307,6 +1465,7 @@ function bloccoMacchineOggi() {
   if (!lista.length) {
     return `<h2>Macchine e attrezzature</h2>
       <p>Inserisci scale, utensili, macchine e mezzi: ti ricorderemo manutenzioni e verifiche obbligatorie.</p>
+      <a class="btn btn--primario" href="#/partenza">Scegli quelle tipiche del tuo lavoro</a>
       <a class="btn btn--secondario" href="#/attrezzatura-modifica/nuova">Aggiungi una macchina o attrezzatura</a>`;
   }
   const urg = urgenzeAttrezzature({ attrezzature: stato.attrezzature, defAttr: stato.defAttr, controlli: stato.controlli, ctx: ctx(), oggi: oggiIso() });
@@ -1350,6 +1509,7 @@ async function schermataAttrezzature() {
           : '<p>Non hai ancora inserito nessuna attrezzatura.</p>'
       }
       <a class="btn btn--primario btn--grande" href="#/attrezzatura-modifica/nuova">Aggiungi una macchina o attrezzatura</a>
+      <a class="btn btn--secondario" href="#/partenza">Scegli tra quelle tipiche del tuo lavoro</a>
       <p class="nota">Usa solo attrezzature con marcatura CE e libretto d'uso, e tienile in buono stato (artt. 70 e 71 del D.Lgs. 81/2008).</p>
     </section>`;
 }
@@ -1602,17 +1762,25 @@ async function schermataDocumento(id, lavId) {
       : {})
   });
 
+  const chiaveDoc = l ? `${id}:${l.id}` : id;
+  const firmatiReg = req && l ? storicoRegistri(l.id, req.id, stato.registri).map((r) => elencoAllegati('registro', r.id)).join('') : '';
+  const firmati = (elencoAllegati('documento', chiaveDoc) + firmatiReg).replace(/<ul class="allegati">\s*<\/ul>/g, '');
   app.innerHTML = `
     <section class="pagina pagina--doc">
       <div class="solo-schermo">
         <a class="indietro" href="${l ? `#/lavoratore/${esc(l.id)}` : '#/documenti'}">‹ Indietro</a>
         <p class="aiuto">Le righe vuote si completano a mano. Per cambiare i dati dell'impresa vai su <a href="#/dati">I miei dati</a>.</p>
         <button class="btn btn--primario btn--grande" id="stampa">Stampa o salva in PDF</button>
+        <p class="nota">Puoi anche far firmare qui sul telefono o sul tablet: tocca «Firma qui» sotto ogni firma.</p>
+        ${firmati.length ? `<h2>Copie già firmate</h2>${firmati}` : ''}
       </div>
+      <div class="barra-firma solo-schermo" id="barra-firma" hidden><span></span><button class="btn btn--primario" type="button">Salva il documento firmato</button></div>
       <article class="doc">${html}</article>
       <p class="nota solo-schermo">Modello da verificare e adattare con il tuo consulente prima dell'uso.</p>
     </section>`;
   app.querySelector('#stampa').addEventListener('click', () => window.print());
+  attivaAllegati(() => schermataDocumento(id, lavId));
+  attivaFirme({ modello: m, lavoratore: l, requisito: req && l ? req : null, registro });
 }
 
 const CAMPI_CONSULENTE = [
@@ -1801,6 +1969,7 @@ async function instrada() {
   if (rotta === 'attrezzatura') return schermataAttrezzatura(param);
   if (rotta === 'attrezzatura-modifica') return schermataModificaAttrezzatura(param);
   if (rotta === 'controllo') return schermataControllo(param, extra);
+  if (rotta === 'partenza') return schermataPartenza();
   if (rotta === 'prodotti') return schermataProdotti();
   if (rotta === 'prodotto') return schermataProdotto(param);
   if (rotta === 'eventi') return schermataEventi();
@@ -1812,9 +1981,12 @@ async function instrada() {
 
 async function avvia() {
   try {
-    const [q, c, l, d, a, t] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json'].map((u) => fetch(u).then((r) => r.json()))
+    const [q, c, l, d, a, t, se] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json'].map((u) =>
+        fetch(u).then((r) => r.json())
+      )
     );
+    stato.settori = se;
     stato.defAttr = t;
     stato.dvr = d;
     stato.ateco = a;
