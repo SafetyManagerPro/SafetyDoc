@@ -276,15 +276,6 @@ select.campo { appearance: auto; }
 .aiuto-box__azioni { display: flex; flex-wrap: wrap; gap: 8px; }
 .aiuto-box__azioni .btn { flex: 1 1 110px; }
 .doc__riga--rosso td:nth-child(4) { font-weight: 700; }
-.banner--info { background: var(--info-sfondo); color: var(--primario); }
-.filtri { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 16px; }
-.filtro { padding: 8px 12px; border: 1px solid var(--bordo); border-radius: 999px; color: var(--testo); text-decoration: none; font-size: 0.9rem; }
-.filtro[aria-current="true"] { background: var(--primario); border-color: var(--primario); color: var(--primario-testo); }
-.messaggi { display: grid; gap: 10px; margin: 16px 0; }
-.messaggio { background: var(--superficie); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 10px 14px; margin-right: 12%; }
-.messaggio--operatore { background: var(--info-sfondo); margin-right: 0; margin-left: 12%; }
-.messaggio__chi { margin: 0 0 4px; font-size: 0.8rem; color: var(--testo-2); }
-.messaggio__testo { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* Allegati */
 .allegati { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 6px; }
