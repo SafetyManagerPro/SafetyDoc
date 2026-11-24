@@ -3,17 +3,19 @@
 **Cosa fare, come e quando per la sicurezza della tua impresa.**
 
 safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno personale dedicato alla sicurezza e
-usano poco il computer. L'utente risponde a circa 20 domande semplici e ottiene il suo piano: ogni voce spiega
+usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.1.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.4.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
-1. **Questionario** – una domanda per schermata, con un aiuto in parole semplici (`data/questionario.json`).
+1. **Questionario** – poche schermate semplici: le domande sì/no simili si spuntano tutte insieme (`data/questionario.json`).
 2. **Catalogo** – le schede degli adempimenti, ognuna con la sua regola di attivazione (`data/catalogo.json`).
 3. **Motore** – combina risposte e catalogo e calcola il piano e il semaforo (`js/engine.js`).
-4. **Dati** – salvati solo nel dispositivo; si esportano e importano come file JSON, anche protetto da password
+4. **Lavoratori** – per ogni persona: formazione, visite mediche (solo il giudizio), DPI, privacy e corsi legati ai ruoli (`data/lavoratori.json`).
+5. **Documenti** – nomine, designazioni, verbale DPI, informative privacy, verbali e registri compilati con i dati e stampabili in PDF (`js/modelli.js`).
+6. **Dati** – salvati solo nel dispositivo; si esportano e importano come file JSON, anche protetto da password
    (`js/store.js`, `js/merge.js`, `js/cifratura.js`).
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta.
@@ -30,7 +32,8 @@ js/engine.js          regole, piano, semaforo (modulo puro, testato)
 js/merge.js           formato di scambio e unione tra postazioni (modulo puro, testato)
 js/store.js           salvataggio nel browser (IndexedDB): l'unico file da sostituire per passare a Supabase
 js/cifratura.js       cifratura dei backup (AES-GCM, PBKDF2)
-data/                 questionario e catalogo
+js/modelli.js         modelli di documenti stampabili (modulo puro, testato)
+data/                 questionario, catalogo e requisiti dei lavoratori
 docs/                 documentazione tecnica
 test/                 test con il test runner di Node
 ```

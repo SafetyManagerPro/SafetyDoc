@@ -51,3 +51,10 @@ test('export e validazione', () => {
   assert.throws(() => validaExport({ ...exp, schemaVersion: 99 }), /versione più recente/);
   assert.throws(() => validaExport({ formato: FORMATO_CIFRATO }), /CIFRATO/);
 });
+
+test('i backup della versione 1 si leggono ancora', () => {
+  const vecchio = { formato: 'safetydoc-export', schemaVersion: 1, collezioni: { profilo: [], adempimenti: [] } };
+  const dati = validaExport(vecchio);
+  assert.deepEqual(dati.collezioni.lavoratori, []);
+  assert.deepEqual(dati.collezioni.registri, []);
+});

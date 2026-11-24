@@ -3,8 +3,8 @@
 
 export const FORMATO = 'safetydoc-export';
 export const FORMATO_CIFRATO = 'safetydoc-export-cifrato';
-export const SCHEMA_VERSION = 1;
-export const COLLEZIONI = ['profilo', 'adempimenti'];
+export const SCHEMA_VERSION = 2;
+export const COLLEZIONI = ['profilo', 'adempimenti', 'lavoratori', 'registri'];
 
 /** Confronto deterministico: vince la modifica più recente; a parità, l'id di postazione maggiore. */
 export function vince(a, b) {
@@ -90,5 +90,8 @@ export function validaExport(dati) {
 
 /** Punto unico per convertire i backup delle versioni precedenti dello schema. */
 export function migra(dati) {
-  return dati;
+  // v1 → v2: aggiunte le collezioni lavoratori e registri (assenti nei file vecchi).
+  const collezioni = { ...dati.collezioni };
+  for (const c of COLLEZIONI) if (!collezioni[c]) collezioni[c] = [];
+  return { ...dati, schemaVersion: SCHEMA_VERSION, collezioni };
 }

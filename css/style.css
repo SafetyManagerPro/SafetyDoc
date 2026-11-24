@@ -178,12 +178,13 @@ label small { font-weight: 400; color: var(--testo-2); }
 /* Barra in basso */
 .nav {
   position: fixed; left: 0; right: 0; bottom: 0;
-  display: grid; grid-template-columns: repeat(3, 1fr);
+  display: flex;
   background: var(--superficie); border-top: 1px solid var(--bordo);
   padding-bottom: env(safe-area-inset-bottom);
 }
 .nav[hidden] { display: none; }
-.nav a { display: grid; place-items: center; min-height: 60px; font-weight: 600; text-decoration: none; color: var(--testo-2); }
+.nav a { flex: 1; display: grid; place-items: center; min-height: 60px; font-size: 0.8rem; font-weight: 600; text-decoration: none; color: var(--testo-2); }
+.nav a[hidden] { display: none; }
 .nav a[aria-current="page"] { color: var(--primario); box-shadow: inset 0 3px 0 var(--primario); }
 
 .avviso {
@@ -193,3 +194,60 @@ label small { font-weight: 400; color: var(--testo-2); }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Spunte (più risposte su una schermata) */
+.spunte { display: grid; gap: 10px; margin: 16px 0; }
+.spunta {
+  display: flex; align-items: flex-start; gap: 12px; text-align: left;
+  min-height: 56px; padding: 14px; background: var(--superficie); color: var(--testo);
+  border: 2px solid var(--bordo); border-radius: var(--raggio); font: inherit; cursor: pointer;
+}
+.spunta__box { flex: none; width: 26px; height: 26px; border: 2px solid var(--testo-2); border-radius: 6px; display: grid; place-items: center; margin-top: 1px; }
+.spunta__testo { display: grid; gap: 2px; }
+.spunta__testo small { color: var(--testo-2); font-size: 0.85rem; }
+.spunta--attiva { border-color: var(--primario); box-shadow: inset 0 0 0 1px var(--primario); }
+.spunta--attiva .spunta__box { background: var(--primario); border-color: var(--primario); }
+.spunta--attiva .spunta__box::after { content: "✓"; color: var(--primario-testo); font-weight: 700; }
+
+h3 { font-size: 1rem; margin: 20px 0 8px; }
+.pill + .pill { margin-left: 4px; }
+.voce--doc { border-left-color: var(--primario); }
+.voce--doc .voce__segno { background: var(--sfondo); color: var(--primario); }
+.btn--piccolo { min-height: 40px; width: auto; padding: 6px 0; margin-top: 4px; }
+.storico { list-style: none; padding: 0; display: grid; gap: 10px; }
+.storico li { background: var(--superficie); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 12px; }
+select.campo { appearance: auto; }
+
+/* Documenti */
+.doc {
+  background: #fff; color: #111; margin-top: 16px; padding: 24px 20px; border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15); font: 15px/1.5 Georgia, "Times New Roman", serif;
+}
+.doc h1 { font-size: 1.25rem; text-align: center; margin: 16px 0 4px; }
+.doc .doc__rif { text-align: center; font-size: 0.85rem; color: #444; margin-bottom: 16px; }
+.doc .doc__centro { text-align: center; font-weight: 700; letter-spacing: .06em; }
+.doc__intestazione { border-bottom: 1px solid #999; padding-bottom: 8px; font-size: 0.9rem; }
+.doc__intestazione p { margin: 0; }
+.doc .vuoto { display: inline-block; border-bottom: 1px solid #333; min-width: 4em; }
+.doc ul, .doc ol { padding-left: 1.4em; }
+.doc li { margin-bottom: 4px; }
+.doc__tabella { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.85rem; }
+.doc__tabella th, .doc__tabella td { border: 1px solid #777; padding: 6px; text-align: left; vertical-align: top; }
+.doc__tabella td { height: 1.8em; }
+.doc__tabella--campi th { width: 45%; font-weight: 600; }
+.doc__tabella--campi td { height: 3em; }
+.doc__nota { font-size: 0.8rem; color: #444; }
+.doc__luogo { margin-top: 24px; }
+.doc__firme { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; margin-top: 28px; }
+.doc__firme p { margin: 0; font-size: 0.85rem; }
+.doc__nome { min-height: 1.4em; font-weight: 700; }
+.doc__linea { border-top: 1px solid #333; margin-top: 36px !important; color: #555; }
+
+@media print {
+  @page { size: A4; margin: 18mm; }
+  body { background: #fff !important; padding: 0 !important; }
+  .nav, .solo-schermo, .avviso, .salta, .banner { display: none !important; }
+  .pagina { max-width: none; padding: 0; }
+  .doc { box-shadow: none; padding: 0; margin: 0; font-size: 11pt; }
+  .doc__tabella tr { page-break-inside: avoid; }
+}

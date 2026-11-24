@@ -1,6 +1,6 @@
 // Service worker: rende l'app utilizzabile anche senza connessione.
 // Cambiare VERSIONE a ogni rilascio per aggiornare i file in cache.
-const VERSIONE = 'safetydoc-v0.3.0';
+const VERSIONE = 'safetydoc-v0.4.0';
 const FILE = [
   './',
   'index.html',
@@ -10,8 +10,10 @@ const FILE = [
   'js/merge.js',
   'js/store.js',
   'js/cifratura.js',
+  'js/modelli.js',
   'data/questionario.json',
   'data/catalogo.json',
+  'data/lavoratori.json',
   'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-192.png',

@@ -10,7 +10,10 @@ const RISCHI_CON_SORVEGLIANZA = [
   'videoterminali',
   'notte_guida',
   'quota',
-  'confinati'
+  'confinati',
+  'amianto',
+  'polveri_cancerogene',
+  'biologici'
 ];
 
 /** Fatti derivati dalle risposte, usabili nelle regole con {"fatto": "..."} */
@@ -72,6 +75,21 @@ export function creaContesto(risposte, questionario) {
 export function domandeVisibili(questionario, risposte) {
   const ctx = creaContesto(risposte, questionario);
   return questionario.domande.filter((d) => !d.mostraSe || valuta(d.mostraSe, ctx));
+}
+
+/**
+ * Le schermate del questionario: le domande sì/no dello stesso "gruppo" vanno su una sola schermata,
+ * così l'utente le spunta tutte insieme invece di rispondere una alla volta.
+ */
+export function schermate(questionario, risposte) {
+  const out = [];
+  for (const d of domandeVisibili(questionario, risposte)) {
+    const ultima = out[out.length - 1];
+    if (d.gruppo && ultima?.gruppo === d.gruppo) ultima.domande.push(d);
+    else if (d.gruppo) out.push({ gruppo: d.gruppo, ...(questionario.gruppi?.[d.gruppo] || {}), domande: [d] });
+    else out.push({ domande: [d] });
+  }
+  return out;
 }
 
 export function aggiungiMesi(dataIso, mesi) {
@@ -166,4 +184,80 @@ export function conteggi(piano) {
   const c = { rosso: 0, giallo: 0, verde: 0, info: 0 };
   for (const v of piano) c[v.colore]++;
   return c;
+}
+
+// ---------- lavoratori ----------
+
+export const ESITI_VISITA = {
+  idoneo: 'Idoneo',
+  idoneo_prescrizioni: 'Idoneo con prescrizioni o limitazioni',
+  non_idoneo_temporaneo: 'Non idoneo temporaneamente',
+  non_idoneo: 'Non idoneo'
+};
+
+export const nomeCompleto = (l) => [l?.nome, l?.cognome].filter(Boolean).join(' ') || 'Lavoratore senza nome';
+
+export function lavoratoriAttivi(lavoratori, oggi) {
+  const giorno = (oggi || new Date().toISOString()).slice(0, 10);
+  return (lavoratori || [])
+    .filter((l) => !l.deleted && !(l.dataCessazione && l.dataCessazione <= giorno))
+    .sort((a, b) => nomeCompleto(a).localeCompare(nomeCompleto(b), 'it'));
+}
+
+/** Ruoli che l'impresa può assegnare, tenendo conto delle sue risposte. */
+export function ruoliDisponibili(defLavoratori, ctx) {
+  return defLavoratori.ruoli.filter((r) => !r.attivaSe || valuta(r.attivaSe, ctx));
+}
+
+/** I requisiti che valgono per un lavoratore: quelli per tutti più quelli dei suoi ruoli. */
+export function requisitiLavoratore(lavoratore, defLavoratori, ctx) {
+  const ruoli = new Set(lavoratore.ruoli || []);
+  return defLavoratori.requisiti.filter((r) => valuta(r.attivaSe, ctx) && (!r.ruolo || ruoli.has(r.ruolo)));
+}
+
+/** Ultima registrazione valida di un requisito per un lavoratore. */
+export function ultimoRegistro(lavoratoreId, requisitoId, registri) {
+  return (registri || [])
+    .filter((r) => r.lavoratoreId === lavoratoreId && r.requisitoId === requisitoId && !r.deleted)
+    .sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.updatedAt || '').localeCompare(a.updatedAt || ''))[0] || null;
+}
+
+export function storicoRegistri(lavoratoreId, requisitoId, registri) {
+  return (registri || [])
+    .filter((r) => r.lavoratoreId === lavoratoreId && r.requisitoId === requisitoId && !r.deleted)
+    .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+}
+
+/** Situazione di un lavoratore: ogni requisito con il suo semaforo, dal più urgente. */
+export function situazioneLavoratore({ lavoratore, defLavoratori, registri, ctx, oggi }) {
+  const giorno = (oggi || new Date().toISOString()).slice(0, 10);
+  const voci = requisitiLavoratore(lavoratore, defLavoratori, ctx).map((requisito) => {
+    const reg = ultimoRegistro(lavoratore.id, requisito.id, registri);
+    const stato = reg ? { fatto: true, dataFatto: reg.data, scadenzaManuale: reg.scadenzaManuale || null } : null;
+    const s = semaforo(requisito, stato, ctx, giorno);
+    if (requisito.conEsito && reg?.esito === 'non_idoneo_temporaneo' && s.colore === 'verde') {
+      s.colore = 'giallo';
+      s.motivo = 'Non idoneo temporaneamente';
+    }
+    return { requisito, registro: reg, ...s };
+  });
+  voci.sort((a, b) => ORDINE[a.colore] - ORDINE[b.colore] || (a.prossimaScadenza || '9999').localeCompare(b.prossimaScadenza || '9999'));
+  const c = conteggi(voci);
+  const colore = c.rosso ? 'rosso' : c.giallo ? 'giallo' : 'verde';
+  return { lavoratore, voci, conteggi: c, colore };
+}
+
+/** Le scadenze più urgenti di tutti i lavoratori, per la schermata iniziale. */
+export function urgenzeLavoratori({ lavoratori, defLavoratori, registri, ctx, oggi }) {
+  const out = [];
+  for (const l of lavoratoriAttivi(lavoratori, oggi)) {
+    const sit = situazioneLavoratore({ lavoratore: l, defLavoratori, registri, ctx, oggi });
+    for (const v of sit.voci) if (v.colore === 'rosso' || v.colore === 'giallo') out.push({ lavoratore: l, ...v });
+  }
+  return out.sort(
+    (a, b) =>
+      ORDINE[a.colore] - ORDINE[b.colore] ||
+      (a.prossimaScadenza || '0000').localeCompare(b.prossimaScadenza || '0000') ||
+      nomeCompleto(a.lavoratore).localeCompare(nomeCompleto(b.lavoratore), 'it')
+  );
 }

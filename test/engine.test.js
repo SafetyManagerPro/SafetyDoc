@@ -178,3 +178,65 @@ test('privacy: telecamere, GPS e whistleblowing', () => {
   assert.ok(!p({}).includes('whistleblowing'));
   assert.ok(p({ numero_lavoratori: 50 }).includes('whistleblowing'));
 });
+
+// ---------- schermate e lavoratori ----------
+import { schermate, situazioneLavoratore, urgenzeLavoratori, requisitiLavoratore, lavoratoriAttivi } from '../js/engine.js';
+const defLav = JSON.parse(readFileSync(new URL('../data/lavoratori.json', import.meta.url)));
+
+test('le domande sì/no dello stesso gruppo stanno su una sola schermata', () => {
+  const solo = schermate(questionario, { composizione: 'solo' });
+  const dip = schermate(questionario, { composizione: 'dipendenti', sede: true });
+  assert.ok(solo.length <= 10, `troppe schermate: ${solo.length}`);
+  assert.ok(dip.length <= 14, `troppe schermate: ${dip.length}`);
+  const lav = dip.find((s) => s.gruppo === 'lavorazioni');
+  assert.ok(lav.domande.length >= 10 && lav.titolo);
+  for (const d of questionario.domande.filter((x) => x.gruppo)) {
+    assert.equal(d.tipo, 'sino', `${d.id}: nei gruppi solo domande sì/no`);
+    assert.ok(d.breve, `${d.id}: manca il testo breve`);
+  }
+});
+
+test('requisiti del lavoratore: base, ruoli e lavorazioni', () => {
+  const ctxBase = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 3, rumore_vibrazioni: true }, questionario);
+  const l = { id: 'l1', nome: 'Mario', ruoli: ['preposto'] };
+  const ids = requisitiLavoratore(l, defLav, ctxBase).map((r) => r.id);
+  for (const id of ['formazione-generale', 'formazione-specifica', 'visita-medica', 'consegna-dpi', 'corso-preposto']) assert.ok(ids.includes(id), `manca ${id}`);
+  assert.ok(!ids.includes('corso-primo-soccorso'));
+  assert.ok(!ids.includes('patentino-macchine'), 'serve solo se l\'impresa usa macchine');
+  const senzaRischi = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 3 }, questionario);
+  assert.ok(!requisitiLavoratore(l, defLav, senzaRischi).some((r) => r.id === 'visita-medica'));
+  for (const r of defLav.requisiti) assert.ok(!r.ruolo || defLav.ruoli.some((x) => x.id === r.ruolo), `${r.id}: ruolo sconosciuto`);
+  for (const r of defLav.requisiti) assert.ok(catalogo.schede.some((s) => s.id === r.schedaId), `${r.id}: scheda ${r.schedaId} inesistente`);
+});
+
+test('situazione del lavoratore: semaforo con registrazioni e visita non idoneo', () => {
+  const ctx = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 2, carichi: true }, questionario);
+  const l = { id: 'l1', nome: 'Anna', ruoli: [] };
+  const registri = [
+    { id: 'r1', lavoratoreId: 'l1', requisitoId: 'formazione-generale', data: '2025-03-01' },
+    { id: 'r2', lavoratoreId: 'l1', requisitoId: 'formazione-specifica', data: '2021-12-01' },
+    { id: 'r3', lavoratoreId: 'l1', requisitoId: 'formazione-specifica', data: '2025-12-01', deleted: true },
+    { id: 'r4', lavoratoreId: 'l1', requisitoId: 'visita-medica', data: '2026-10-01', scadenzaManuale: '2027-10-01', esito: 'non_idoneo_temporaneo' }
+  ];
+  const s = situazioneLavoratore({ lavoratore: l, defLavoratori: defLav, registri, ctx, oggi: '2026-11-24' });
+  const col = Object.fromEntries(s.voci.map((v) => [v.requisito.id, v.colore]));
+  assert.equal(col['formazione-generale'], 'verde');
+  // 2021-12-01 + 60 mesi = 2026-12-01: entro 60 giorni, quindi in scadenza (la registrazione cancellata non conta)
+  assert.equal(col['formazione-specifica'], 'giallo');
+  assert.equal(col['visita-medica'], 'giallo', 'non idoneo temporaneo va tenuto d\'occhio');
+  assert.equal(col['consegna-dpi'], 'rosso');
+  assert.equal(s.colore, 'rosso');
+  assert.equal(s.voci[0].colore, 'rosso', 'le voci rosse vengono prima');
+});
+
+test('urgenze dei lavoratori e lavoratori cessati', () => {
+  const ctx = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 2 }, questionario);
+  const lavoratori = [
+    { id: 'a', nome: 'Bruno', ruoli: [] },
+    { id: 'b', nome: 'Carla', ruoli: [], dataCessazione: '2026-01-31' },
+    { id: 'c', nome: 'Dario', ruoli: [], deleted: true }
+  ];
+  assert.deepEqual(lavoratoriAttivi(lavoratori, '2026-11-24').map((l) => l.id), ['a']);
+  const urg = urgenzeLavoratori({ lavoratori, defLavoratori: defLav, registri: [], ctx, oggi: '2026-11-24' });
+  assert.ok(urg.length > 0 && urg.every((u) => u.lavoratore.id === 'a'));
+});
