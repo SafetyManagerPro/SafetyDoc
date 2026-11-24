@@ -41,7 +41,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.11.0';
+export const VERSIONE_APP = '0.12.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -51,14 +51,15 @@ const SCHEDA_MODELLI = {
   'medico-competente': ['nomina-medico'],
   preposto: ['nomina-preposto'],
   'primo-soccorso': ['designazione-addetti'],
-  antincendio: ['designazione-addetti'],
   dpi: ['consegna-dpi'],
-  'formazione-lavoratori': ['registro-formazione'],
+  'formazione-lavoratori': ['registro-formazione', 'informazione-art36', 'verbale-addestramento'],
+  rls: ['verbale-elezione-rls'],
+  antincendio: ['designazione-addetti', 'piano-emergenza-doc'],
   dvr: ['dvr-bozza'],
   'stress-lavoro-correlato': ['stress-preliminare', 'dvr-bozza'],
   'privacy-lavoratori': ['informativa-lavoratori', 'autorizzazione-trattamento'],
   privacy: ['informativa-clienti', 'nomina-responsabile-esterno'],
-  'piano-emergenza': ['verbale-evacuazione'],
+  'piano-emergenza': ['piano-emergenza-doc', 'verbale-evacuazione'],
   'presidi-antincendio': ['registro-antincendio'],
   'riunione-periodica': ['verbale-riunione'],
   duvri: ['info-rischi-ditte', 'duvri-bozza'],
@@ -89,7 +90,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { settori: null, questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
+const stato = { settori: null, lavorazioni: null, questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -865,30 +866,34 @@ function chiediFirma(chi) {
 
 /** Aggiunge i pulsanti di firma al documento e il salvataggio della copia firmata. */
 function attivaFirme({ modello, lavoratore, requisito, registro }) {
-  const caselle = [...app.querySelectorAll('.doc .doc__firme > div')];
-  if (!caselle.length) return;
-  const firmate = new Set();
   const barra = app.querySelector('#barra-firma');
-  caselle.forEach((casella, i) => {
-    const chi = casella.querySelector('.doc__nome')?.textContent.trim();
-    const ruolo = casella.querySelector('p')?.textContent.trim();
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'btn btn--secondario btn--piccolo solo-schermo';
-    b.textContent = 'Firma qui';
-    b.addEventListener('click', async () => {
-      const png = await chiediFirma(chi && chi !== ' ' ? chi : ruolo);
-      if (!png) return;
-      casella.querySelector('.doc__firma')?.remove();
-      const img = Object.assign(document.createElement('img'), { src: png, alt: `Firma: ${ruolo || ''}`, className: 'doc__firma' });
-      casella.querySelector('.doc__linea').before(img);
-      firmate.add(i);
-      b.textContent = 'Firma di nuovo';
-      barra.hidden = false;
-      barra.querySelector('span').textContent = `${firmate.size} di ${caselle.length} firme`;
+  let firmate = new Set();
+  const collega = () => {
+    const caselle = [...app.querySelectorAll('.doc .doc__firme > div')];
+    firmate = new Set();
+    barra.hidden = true;
+    caselle.forEach((casella, i) => {
+      const chi = casella.querySelector('.doc__nome')?.textContent.trim();
+      const ruolo = casella.querySelector('p')?.textContent.trim();
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn btn--secondario btn--piccolo solo-schermo';
+      b.textContent = 'Firma qui';
+      b.addEventListener('click', async () => {
+        const png = await chiediFirma(chi && chi !== ' ' ? chi : ruolo);
+        if (!png) return;
+        casella.querySelector('.doc__firma')?.remove();
+        const img = Object.assign(document.createElement('img'), { src: png, alt: `Firma: ${ruolo || ''}`, className: 'doc__firma' });
+        casella.querySelector('.doc__linea').before(img);
+        firmate.add(i);
+        b.textContent = 'Firma di nuovo';
+        barra.hidden = false;
+        barra.querySelector('span').textContent = `${firmate.size} di ${caselle.length} firme`;
+      });
+      casella.append(b);
     });
-    casella.append(b);
-  });
+  };
+  collega();
   barra.querySelector('button').addEventListener('click', async () => {
     const copia = app.querySelector('.doc').cloneNode(true);
     copia.querySelectorAll('.solo-schermo').forEach((x) => x.remove());
@@ -912,6 +917,7 @@ function attivaFirme({ modello, lavoratore, requisito, registro }) {
     avviso(requisito && lavoratore ? `Documento firmato salvato: «${requisito.titolo}» è registrato a oggi.` : 'Documento firmato salvato.');
     instrada();
   });
+  return { ricollega: collega };
 }
 
 // ---------- prodotti chimici ----------
@@ -1779,21 +1785,15 @@ function contaAllegati() {
   return n;
 }
 
-async function schermataDocumento(id, lavId) {
-  const m = MODELLI.find((x) => x.id === id);
-  if (!m) return (location.hash = '#/documenti');
-  const l = lavId ? stato.lavoratori.find((x) => x.id === lavId && !x.deleted) : null;
-  if (m.ambito === 'lavoratore' && !l) return (location.hash = '#/documenti');
-  const req = stato.defLav.requisiti.find((r) => r.modello === id);
-  const registro = l && req ? storicoRegistri(l.id, req.id, stato.registri)[0] : null;
-  const situazioni = id === 'registro-formazione' ? attivi().map(situazione) : null;
+/** Tutti i dati che servono ai modelli di documento. */
+function datiDocumento(l, registro, opzioni) {
   const opzioneAttivita = stato.questionario.domande.find((d) => d.id === 'attivita')?.opzioni?.find((o) => o.valore === risposte().attivita);
-  const { html } = generaDocumento(id, {
+  const y = Number(oggiIso().slice(0, 4));
+  return {
     anagrafica: anagrafica(),
     lavoratore: l,
     oggi: oggiIso(),
     registro,
-    situazioni,
     dvr: stato.dvr,
     ctx: ctx(),
     lavoratori: attivi(),
@@ -1802,39 +1802,99 @@ async function schermataDocumento(id, lavId) {
     prodotti: prodottiAttivi(stato.prodotti),
     eventi: eventiAttivi(stato.eventi),
     ruoli: Object.fromEntries(stato.defLav.ruoli.map((r) => [r.id, r.etichetta])),
-    perAnno: (() => {
-      const y = Number(oggiIso().slice(0, 4));
-      return eventiPerAnno(stato.eventi, [y - 2, y - 1, y]);
-    })(),
-    ...(id === 'stato-sicurezza'
-      ? {
-          piano: piano(),
-          situazioni: haDipendenti() ? attivi().map(situazione) : [],
-          macchine: macchine().map(situazioneMacchina),
-          allegati: contaAllegati()
-        }
-      : {})
-  });
+    perAnno: eventiPerAnno(stato.eventi, [y - 2, y - 1, y]),
+    piano: piano(),
+    situazioni: haDipendenti() ? attivi().map(situazione) : [],
+    macchine: macchine().map(situazioneMacchina),
+    allegati: contaAllegati(),
+    lavorazioni: stato.lavorazioni,
+    opzioni
+  };
+}
 
+/** Campi compilabili di un documento (cantiere, ditta, lavorazioni…). */
+function campiOpzioni(defs, valori) {
+  return defs
+    .map((c) => {
+      const val = valori[c.id] ?? c.valore ?? '';
+      const nome = `name="${esc(c.id)}"`;
+      const ph = c.segnaposto ? `placeholder="${esc(c.segnaposto)}"` : '';
+      if (c.tipo === 'area') return `<label>${esc(c.etichetta)}<textarea class="campo" ${nome} rows="3" ${ph}>${esc(val)}</textarea></label>`;
+      if (c.tipo === 'scelta')
+        return `<label>${esc(c.etichetta)}<select class="campo" ${nome}><option value="">Scegli…</option>${(c.valori || [])
+          .map((x) => `<option value="${esc(x.valore)}" ${val === x.valore ? 'selected' : ''}>${esc(x.etichetta)}</option>`)
+          .join('')}</select></label>`;
+      if (c.tipo === 'spunte') {
+        const scelti = Array.isArray(val) ? val : [];
+        return `<fieldset class="spunte"><legend>${esc(c.etichetta)}</legend>${
+          (c.valori || []).map((x) => `<label class="spunta"><input type="checkbox" ${nome} value="${esc(x.valore)}" ${scelti.includes(x.valore) ? 'checked' : ''}><span>${esc(x.etichetta)}</span></label>`).join('') ||
+          '<p class="nota">Nessuna voce disponibile.</p>'
+        }</fieldset>`;
+      }
+      const tipo = { data: 'date', numero: 'number' }[c.tipo] || 'text';
+      return `<label>${esc(c.etichetta)}<input class="campo" type="${tipo}" ${nome} value="${esc(val)}" ${ph} ${tipo === 'number' ? 'min="0" inputmode="numeric"' : ''}></label>`;
+    })
+    .join('');
+}
+
+function leggiOpzioni(form, defs) {
+  const f = new FormData(form);
+  const o = {};
+  for (const c of defs) o[c.id] = c.tipo === 'spunte' ? f.getAll(c.id) : String(f.get(c.id) ?? '').trim();
+  return o;
+}
+
+async function schermataDocumento(id, lavId) {
+  const m = MODELLI.find((x) => x.id === id);
+  if (!m) return (location.hash = '#/documenti');
+  const l = lavId ? stato.lavoratori.find((x) => x.id === lavId && !x.deleted) : null;
+  if (m.ambito === 'lavoratore' && !l) return (location.hash = '#/documenti');
+  const req = stato.defLav.requisiti.find((r) => r.modello === id);
+  const registro = l && req ? storicoRegistri(l.id, req.id, stato.registri)[0] : null;
   const chiaveDoc = l ? `${id}:${l.id}` : id;
+  const chiaveOpzioni = `opzioni:${chiaveDoc}`;
+  let opzioni = (await store.leggiMeta(chiaveOpzioni)) || {};
+  const defs = m.opzioni ? m.opzioni(datiDocumento(l, registro, opzioni)) : [];
+  const genera = () => generaDocumento(id, datiDocumento(l, registro, opzioni)).html;
+
   const firmatiReg = req && l ? storicoRegistri(l.id, req.id, stato.registri).map((r) => elencoAllegati('registro', r.id)).join('') : '';
-  const firmati = (elencoAllegati('documento', chiaveDoc) + firmatiReg).replace(/<ul class="allegati">\s*<\/ul>/g, '');
+  const firmati = elencoAllegati('documento', chiaveDoc) + firmatiReg;
   app.innerHTML = `
     <section class="pagina pagina--doc">
       <div class="solo-schermo">
         <a class="indietro" href="${l ? `#/lavoratore/${esc(l.id)}` : '#/documenti'}">‹ Indietro</a>
+        ${
+          defs.length
+            ? `<details class="opzioni-doc" ${Object.keys(opzioni).length ? '' : 'open'}><summary>Dati di questo documento</summary>
+            <p class="nota">Il documento si aggiorna mentre scrivi. I dati restano salvati su questo dispositivo.</p>
+            <form id="opzioni-doc">${campiOpzioni(defs, opzioni)}</form></details>`
+            : ''
+        }
         <p class="aiuto">Le righe vuote si completano a mano. Per cambiare i dati dell'impresa vai su <a href="#/dati">I miei dati</a>.</p>
         <button class="btn btn--primario btn--grande" id="stampa">Stampa o salva in PDF</button>
-        <p class="nota">Puoi anche far firmare qui sul telefono o sul tablet: tocca «Firma qui» sotto ogni firma.</p>
-        ${firmati.length ? `<h2>Copie già firmate</h2>${firmati}` : ''}
+        <p class="nota">Puoi anche far firmare qui sul telefono o sul tablet: tocca «Firma qui» sotto ogni firma. Compila prima i dati del documento.</p>
+        ${firmati ? `<h2>Copie già firmate</h2>${firmati}` : ''}
       </div>
       <div class="barra-firma solo-schermo" id="barra-firma" hidden><span></span><button class="btn btn--primario" type="button">Salva il documento firmato</button></div>
-      <article class="doc">${html}</article>
+      <article class="doc">${genera()}</article>
       <p class="nota solo-schermo">Modello da verificare e adattare con il tuo consulente prima dell'uso.</p>
     </section>`;
   app.querySelector('#stampa').addEventListener('click', () => window.print());
   attivaAllegati(() => schermataDocumento(id, lavId));
-  attivaFirme({ modello: m, lavoratore: l, requisito: req && l ? req : null, registro });
+  const firme = attivaFirme({ modello: m, lavoratore: l, requisito: req && l ? req : null, registro });
+  const form = app.querySelector('#opzioni-doc');
+  if (form) {
+    let attesa;
+    const aggiorna = () => {
+      opzioni = leggiOpzioni(form, defs);
+      app.querySelector('.doc').innerHTML = genera();
+      firme.ricollega();
+      clearTimeout(attesa);
+      attesa = setTimeout(() => store.scriviMeta(chiaveOpzioni, opzioni), 400);
+    };
+    form.addEventListener('input', aggiorna);
+    form.addEventListener('change', aggiorna);
+  }
 }
 
 const CAMPI_CONSULENTE = [
@@ -2036,12 +2096,13 @@ async function instrada() {
 
 async function avvia() {
   try {
-    const [q, c, l, d, a, t, se] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json'].map((u) =>
+    const [q, c, l, d, a, t, se, lv] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json'].map((u) =>
         fetch(u).then((r) => r.json())
       )
     );
     stato.settori = se;
+    stato.lavorazioni = lv;
     stato.defAttr = t;
     stato.dvr = d;
     stato.ateco = a;

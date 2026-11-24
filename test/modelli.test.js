@@ -52,7 +52,9 @@ test('bozza di DVR: pericoli presenti dalle risposte, mansioni dai lavoratori', 
   const ctx = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 3, sede: true, rumore_vibrazioni: true, quota: true, dl_rspp: true }, questionario);
   const html = generaDocumento('dvr-bozza', { anagrafica, oggi: '2026-11-24', dvr, ctx, lavoratori: [{ mansione: 'Falegname' }, { mansione: 'Falegname' }, { mansione: 'Magazziniere' }], attivita: 'Falegnameria' }).html;
   for (const x of ['Modulo 1.1', 'Modulo 2', 'Modulo 3', 'Falegname', 'Magazziniere', 'Rumore', 'Cadute dall', 'Stress lavoro-correlato', 'Luca Rossi (datore di lavoro)']) assert.ok(html.includes(x), `manca ${x}`);
-  assert.equal(html.split('Falegname<br>').length, 2, 'le mansioni non si ripetono');
+  assert.equal(html.split('<tr><td>Falegname</td>').length, 2, 'le mansioni non si ripetono');
+  assert.ok(html.includes('R = 6') && html.includes('Medio-alto'), 'rumore: P 3 x D 2');
+  assert.ok(html.includes('doc__matrice'), 'matrice dei rischi');
   const mod3 = html.split('Modulo 3')[1];
   assert.ok(!mod3.includes('Atmosfere esplosive'), 'i pericoli assenti non vanno nel modulo 3');
 });

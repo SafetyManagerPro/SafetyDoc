@@ -41,6 +41,61 @@ function pericoliPresenti(dvr, ctx) {
   return (dvr?.pericoli || []).filter((x) => ctx && valuta(x.presenteSe, ctx));
 }
 
+const normalizza = (t) => String(t || '').trim().toLowerCase();
+
+/** Nomi dei lavoratori con un certo ruolo. */
+function conRuolo(lavoratori, ruolo) {
+  return (lavoratori || []).filter((x) => (x.ruoli || []).includes(ruolo)).map(nomeCompleto).join(', ');
+}
+
+/** Lavoratori raggruppati per mansione. */
+function raggruppaMansioni(lavoratori) {
+  const m = new Map();
+  for (const l of lavoratori || []) {
+    const k = (l.mansione || '').trim() || 'Mansione da indicare';
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(l);
+  }
+  return [...m].map(([mansione, lav]) => ({ mansione, lavoratori: lav }));
+}
+
+/** Livello di rischio dato R = P x D, secondo i criteri del DVR. */
+export function livelloRischio(criteri, R) {
+  return (criteri?.livelli || []).find((x) => R >= x.da && R <= x.a) || null;
+}
+
+function organigramma(a, lavoratori, dlRspp) {
+  const righe = [
+    ['Datore di lavoro', titolare(a)],
+    ['RSPP', dlRspp ? `${titolare(a)} (datore di lavoro)` : a.rspp],
+    ['Medico competente', a.medico],
+    ['RLS / RLST', a.rls],
+    ['Preposti', conRuolo(lavoratori, 'preposto')],
+    ['Addetti al primo soccorso', conRuolo(lavoratori, 'primo_soccorso')],
+    ['Addetti antincendio ed emergenze', conRuolo(lavoratori, 'antincendio')]
+  ];
+  return `<table class="doc__tabella doc__tabella--campi"><tbody>${righe.map(([k, x]) => `<tr><th>${esc(k)}</th><td>${esc(x || '')}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function tabellaCriteri(c) {
+  const colore = (R) => {
+    const l = livelloRischio(c, R);
+    return l ? `doc__liv--${normalizza(l.etichetta).replace(/[^a-z]+/g, '-')}` : '';
+  };
+  return `<table class="doc__tabella"><thead><tr><th>P</th><th>Probabilità</th></tr></thead><tbody>${c.probabilita
+    .map((x) => `<tr><td>${x.valore}</td><td><strong>${esc(x.etichetta)}</strong> – ${esc(x.descrizione)}</td></tr>`)
+    .join('')}</tbody></table>
+    <table class="doc__tabella"><thead><tr><th>D</th><th>Danno</th></tr></thead><tbody>${c.magnitudo
+      .map((x) => `<tr><td>${x.valore}</td><td><strong>${esc(x.etichetta)}</strong> – ${esc(x.descrizione)}</td></tr>`)
+      .join('')}</tbody></table>
+    <table class="doc__tabella doc__matrice"><thead><tr><th>P \\ D</th>${[1, 2, 3, 4].map((x) => `<th>${x}</th>`).join('')}</tr></thead><tbody>${[4, 3, 2, 1]
+      .map((p) => `<tr><th>${p}</th>${[1, 2, 3, 4].map((dd) => `<td class="${colore(p * dd)}">${p * dd}</td>`).join('')}</tr>`)
+      .join('')}</tbody></table>
+    <table class="doc__tabella"><thead><tr><th>R</th><th>Livello</th><th>Azione</th></tr></thead><tbody>${c.livelli
+      .map((l) => `<tr><td>${l.da}–${l.a}</td><td class="${colore(l.da)}"><strong>${esc(l.etichetta)}</strong></td><td>${esc(l.azione)}</td></tr>`)
+      .join('')}</tbody></table>`;
+}
+
 /** I 14 allergeni dell'Allegato II del Reg. UE 1169/2011. */
 export const ALLERGENI = [
   'Cereali contenenti glutine (grano, segale, orzo, avena, farro, kamut)',
@@ -134,62 +189,206 @@ export const MODELLI = [
   },
   {
     id: 'dvr-bozza',
-    titolo: 'Bozza del Documento di valutazione dei rischi (DVR)',
-    descrizione: 'Bozza secondo lo schema delle procedure standardizzate, già compilata con le tue risposte, i lavoratori e le misure suggerite. Da completare con il tuo RSPP.',
+    titolo: 'Documento di valutazione dei rischi (DVR) completo',
+    descrizione: 'DVR dettagliato secondo le procedure standardizzate: organigramma, mansioni, criteri, valutazione di ogni rischio con probabilità e danno, attrezzature, prodotti, DPI, formazione, sorveglianza sanitaria, emergenze e programma di miglioramento. Da completare e firmare con RSPP e medico competente.',
     ambito: 'impresa',
     attivaSe: { fatto: 'haDipendenti' },
-    genera: ({ anagrafica: a, oggi, dvr, ctx, lavoratori, attivita, attrezzature }) => {
+    opzioni: () => [
+      { id: 'revisione', etichetta: 'Revisione n.', tipo: 'testo', segnaposto: '0' },
+      { id: 'orario', etichetta: 'Orario di lavoro', tipo: 'testo', segnaposto: 'es. lun-ven 8-12 e 14-18' },
+      { id: 'ciclo', etichetta: 'Descrizione del ciclo lavorativo', tipo: 'area', segnaposto: 'Cosa fa l\'impresa, in quali fasi, in quali locali' },
+      { id: 'presidi', etichetta: 'Presidi di emergenza', tipo: 'area', segnaposto: 'es. 2 estintori a polvere all\'ingresso e in laboratorio, cassetta di pronto soccorso in ufficio, punto di raccolta nel cortile' }
+    ],
+    genera: (d) => {
+      const { anagrafica: a, oggi, dvr, ctx, lavoratori, attivita, opzioni: o = {} } = d;
       const pericoli = (dvr?.pericoli || []).map((x) => ({ ...x, presente: ctx ? valuta(x.presenteSe, ctx) : false }));
       const presenti = pericoli.filter((x) => x.presente);
-      const mansioni = [...new Set((lavoratori || []).map((l) => (l.mansione || '').trim()).filter(Boolean))];
       const famiglie = [...new Set(pericoli.map((x) => x.famiglia))];
-      const n = ctx?.fatti?.lavoratori || '';
+      const mansioni = raggruppaMansioni(lavoratori);
+      const n = ctx?.fatti?.lavoratori || (lavoratori || []).length || '';
+      const dlRspp = ctx?.risposte?.dl_rspp;
+      const criteri = dvr?.criteri;
+      const voce = (id) => (d.piano || []).find((x) => x.scheda.id === id);
+      const statoVoce = (id) => {
+        const x = voce(id);
+        if (!x) return '';
+        return x.stato?.fatto ? `fatto il ${data(x.stato.dataFatto)}${x.prossimaScadenza ? `, scade il ${data(x.prossimaScadenza)}` : ''}` : x.colore === 'info' ? 'quando serve' : 'DA FARE';
+      };
+      const DPI = [...new Set(presenti.flatMap((x) => x.dpi || []))];
+      const migliorare = (d.piano || []).filter((x) => x.colore === 'rosso' || x.colore === 'giallo');
+      const sit = d.situazioni || [];
+      const req = (s, ids) => s.voci.filter((v) => ids.includes(v.requisito.id));
+      const anni = Object.keys(d.perAnno || {}).sort();
       return `${intestazione(a)}
-        <h1>Documento di valutazione dei rischi</h1>
-        <p class="doc__rif">${esc(dvr?.riferimento || '')}</p>
-        <p class="doc__nota">BOZZA generata da safetyDoc il ${esc(data(oggi))}: va verificata, completata e firmata. Deve avere data certa.</p>
+        <section class="doc__frontespizio">
+          <h1>Documento di valutazione dei rischi</h1>
+          <p class="doc__rif">art. 17 c. 1 lett. a, artt. 28 e 29 del D.Lgs. 81/2008 · procedure standardizzate (DM 30/11/2012)</p>
+          <table class="doc__tabella doc__tabella--campi"><tbody>
+            <tr><th>Impresa</th><td>${esc(a.ragioneSociale || '')}</td></tr>
+            <tr><th>Sede</th><td>${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
+            <tr><th>Revisione</th><td>${v(o.revisione || '0', 4)} del ${v(data(oggi), 10)}</td></tr>
+          </tbody></table>
+          <p class="doc__nota">BOZZA generata da safetyDoc: va verificata con un sopralluogo, completata e firmata. Il documento deve avere data certa (firma di tutti i soggetti con data, PEC a sé stessi o firma digitale).</p>
+        </section>
 
-        <h2>Modulo 1.1 · Descrizione generale dell'azienda</h2>
+        <h2>1 · Premessa</h2>
+        <p>Il presente documento contiene la valutazione di tutti i rischi per la salute e la sicurezza dei lavoratori, l'indicazione delle misure di prevenzione e protezione e dei dispositivi di protezione individuale adottati, il programma delle misure per migliorare nel tempo i livelli di sicurezza, le procedure e i ruoli di chi deve attuarle, i nominativi di RSPP, RLS e medico competente, e le mansioni che richiedono capacità professionali, formazione e addestramento specifici (art. 28 c. 2).</p>
+        <p>Il documento va rielaborato entro 30 giorni in caso di modifiche significative del processo produttivo o dell'organizzazione, di evoluzione della tecnica, di infortuni significativi o quando la sorveglianza sanitaria ne evidenzi la necessità (art. 29 c. 3).</p>
+
+        <h2>2 · Descrizione generale dell'azienda (Modulo 1.1)</h2>
         <table class="doc__tabella doc__tabella--campi"><tbody>
           <tr><th>Ragione sociale</th><td>${esc(a.ragioneSociale || '')}</td></tr>
           <tr><th>Attività</th><td>${esc(attivita || '')}</td></tr>
           <tr><th>Codice ATECO</th><td>${esc(ctx?.fatti?.ateco ? `${ctx.fatti.ateco.codice} – ${ctx.fatti.ateco.descrizione}` : '')}</td></tr>
           <tr><th>Classe di rischio (formazione)</th><td>${esc(ctx?.fatti?.classeRischio && ctx.fatti.classeRischio !== 'da_verificare' ? ctx.fatti.classeRischio : '')}</td></tr>
           <tr><th>Sede</th><td>${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
-          <tr><th>Datore di lavoro</th><td>${esc(a.titolare || '')}</td></tr>
-          <tr><th>RSPP</th><td>${esc(ctx?.risposte?.dl_rspp ? `${a.titolare || ''} (datore di lavoro)` : a.rspp || '')}</td></tr>
-          <tr><th>Medico competente</th><td>${esc(a.medico || '')}</td></tr>
-          <tr><th>RLS / RLST</th><td>${esc(a.rls || '')}</td></tr>
+          <tr><th>P.IVA / C.F.</th><td>${esc(a.piva || '')}</td></tr>
           <tr><th>Numero di lavoratori</th><td>${esc(String(n))}</td></tr>
+          <tr><th>Orario di lavoro</th><td>${esc(o.orario || '')}</td></tr>
         </tbody></table>
+        <h3>Organigramma della sicurezza</h3>
+        ${organigramma(a, lavoratori, dlRspp)}
 
-        <h2>Modulo 1.2 · Lavorazioni e mansioni</h2>
-        <table class="doc__tabella"><thead><tr><th>Fasi di lavoro e luoghi</th><th>Attrezzature, materiali e prodotti</th><th>Mansioni</th></tr></thead>
-          <tbody><tr><td style="height:7em"></td><td>${(attrezzature || []).map((x) => esc(x.nome + (x.tipo ? ` (${x.tipo})` : ''))).join('<br>')}</td><td>${mansioni.length ? mansioni.map(esc).join('<br>') : ''}</td></tr></tbody></table>
+        <h2>3 · Ciclo lavorativo e mansioni (Modulo 1.2)</h2>
+        <p style="min-height:3em">${o.ciclo ? esc(o.ciclo).replace(/\n/g, '<br>') : '&nbsp;'}</p>
+        <table class="doc__tabella"><thead><tr><th>Mansione</th><th>Lavoratori</th><th>Attrezzature</th><th>Prodotti</th></tr></thead><tbody>
+          ${
+            mansioni.length
+              ? mansioni
+                  .map((m) => `<tr><td>${esc(m.mansione)}</td><td>${m.lavoratori.map((l) => esc(nomeCompleto(l))).join('<br>')}</td><td>${(d.attrezzature || []).map((x) => esc(x.nome)).join(', ')}</td><td>${(d.prodotti || []).map((p) => esc(p.nome)).join(', ')}</td></tr>`)
+                  .join('')
+              : '<tr><td style="height:3em"></td><td></td><td></td><td></td></tr>'
+          }
+        </tbody></table>
+        <p class="doc__nota">Attrezzature e prodotti sono quelli registrati in safetyDoc: assegnarli alle singole mansioni durante il sopralluogo.</p>
 
-        <h2>Modulo 2 · Individuazione dei pericoli</h2>
-        <table class="doc__tabella"><thead><tr><th>Famiglia</th><th>Pericolo</th><th>Presente</th></tr></thead><tbody>
+        <h2>4 · Criteri di valutazione</h2>
+        <p>Per ogni pericolo presente si stima il rischio R = P × D, dove P è la probabilità che il danno si verifichi e D la gravità del danno, entrambe su una scala da 1 a 4.</p>
+        ${criteri ? tabellaCriteri(criteri) : ''}
+
+        <h2>5 · Individuazione dei pericoli (Modulo 2)</h2>
+        <table class="doc__tabella"><thead><tr><th>Famiglia</th><th>Pericolo</th><th>Presente</th><th>Riferimento</th></tr></thead><tbody>
           ${famiglie
-            .map((f) =>
-              pericoli
-                .filter((x) => x.famiglia === f)
-                .map((x, i) => `<tr>${i === 0 ? `<td rowspan="${pericoli.filter((y) => y.famiglia === f).length}">${esc(f)}</td>` : ''}<td>${esc(x.pericolo)}</td><td>${x.presente ? 'SÌ' : 'NO'}</td></tr>`)
-                .join('')
-            )
+            .map((f) => {
+              const gruppo = pericoli.filter((x) => x.famiglia === f);
+              return gruppo
+                .map((x, i) => `<tr>${i === 0 ? `<td rowspan="${gruppo.length}">${esc(f)}</td>` : ''}<td>${esc(x.pericolo)}</td><td><strong>${x.presente ? 'SÌ' : 'NO'}</strong></td><td><small>${esc(x.norma || '')}</small></td></tr>`)
+                .join('');
+            })
             .join('')}
         </tbody></table>
-        <p class="doc__nota">Le risposte SÌ/NO derivano dal questionario di safetyDoc: vanno confermate con un sopralluogo.</p>
+        <p class="doc__nota">Le risposte SÌ/NO derivano dal questionario: vanno confermate con il sopralluogo.</p>
 
-        <h2>Modulo 3 · Valutazione dei rischi, misure attuate e programma di miglioramento</h2>
-        <table class="doc__tabella"><thead><tr><th>Pericolo</th><th>Misure di prevenzione e protezione (da confermare)</th><th>Misure di miglioramento</th><th>Incaricato</th><th>Entro il</th></tr></thead><tbody>
-          ${presenti
-            .map((x) => `<tr><td>${esc(x.pericolo)}</td><td><ul>${x.misure.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></td><td></td><td></td><td></td></tr>`)
-            .join('')}
+        <h2>6 · Valutazione dei rischi e misure (Modulo 3)</h2>
+        ${presenti
+          .map((x, i) => {
+            const R = (x.probabilita || 0) * (x.magnitudo || 0);
+            const liv = livelloRischio(criteri, R);
+            const st = x.schedaId && x.schedaId !== 'dvr' ? statoVoce(x.schedaId) : '';
+            return `<div class="doc__rischio">
+            <h3>6.${i + 1} · ${esc(x.pericolo)}</h3>
+            <table class="doc__tabella doc__tabella--campi"><tbody>
+              <tr><th>Possibili danni</th><td>${esc(x.danno || '')}</td></tr>
+              <tr><th>Mansioni esposte</th><td>${mansioni.map((m) => esc(m.mansione)).join(', ') || '&nbsp;'}</td></tr>
+              <tr><th>Valutazione</th><td>P = ${v(String(x.probabilita || ''), 2)} · D = ${v(String(x.magnitudo || ''), 2)} · <strong>R = ${R || ''} (${esc(liv?.etichetta || '')})</strong><br><small>Valori tipici da confermare durante il sopralluogo.</small></td></tr>
+              <tr><th>Misure di prevenzione e protezione</th><td><ul>${x.misure.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></td></tr>
+              <tr><th>DPI</th><td>${(x.dpi || []).map(esc).join(', ') || 'Non necessari'}</td></tr>
+              <tr><th>Informazione e formazione</th><td>${esc(x.formazione || '')}</td></tr>
+              <tr><th>Sorveglianza sanitaria</th><td>${x.sorveglianza ? 'Sì, secondo il protocollo del medico competente' : 'Non prevista per questo rischio'}</td></tr>
+              ${st ? `<tr><th>Valutazione specifica o adempimento</th><td>${esc(st)}</td></tr>` : ''}
+              <tr><th>Riferimenti normativi</th><td>${esc(x.norma || '')}</td></tr>
+              <tr><th>Misure di miglioramento, incaricato, entro il</th><td style="height:2.2em">${liv && liv.da >= 6 ? `<strong>${esc(liv.azione)}.</strong> ` : ''}</td></tr>
+            </tbody></table></div>`;
+          })
+          .join('')}
+
+        <h2>7 · Attrezzature di lavoro</h2>
+        ${
+          (d.macchine || []).length
+            ? `<table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Tipo</th><th>Matricola</th><th>CE</th><th>Controlli</th></tr></thead><tbody>
+          ${d.macchine
+            .map((s) => `<tr><td>${esc(s.attrezzatura.nome)}</td><td>${esc(s.tipo?.etichetta || '')}</td><td>${esc(s.attrezzatura.matricola || '')}</td><td>${s.attrezzatura.marcaturaCE === false ? 'NO' : 'Sì'}</td><td>${s.voci
+              .map((x) => `${esc(x.controllo.titolo)}: ${x.registro ? `fatto il ${esc(data(x.registro.data))}` : 'da fare'}${x.prossimaScadenza ? `, scade il ${esc(data(x.prossimaScadenza))}` : ''}`)
+              .join('<br>')}</td></tr>`)
+            .join('')}</tbody></table>`
+            : '<p>Nessuna attrezzatura registrata in safetyDoc.</p>'
+        }
+
+        <h2>8 · Prodotti chimici</h2>
+        ${
+          (d.prodotti || []).length
+            ? `<table class="doc__tabella"><thead><tr><th>Prodotto</th><th>Uso</th><th>Pericoli</th><th>Scheda di sicurezza</th><th>DPI</th></tr></thead><tbody>${d.prodotti
+                .map((p) => `<tr><td>${esc(p.nome)}</td><td>${esc(p.uso || '')}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${p.dataSds ? esc(data(p.dataSds)) : 'da acquisire'}</td><td>${esc(p.dpi || '')}</td></tr>`)
+                .join('')}</tbody></table>`
+            : '<p>Nessun prodotto registrato.</p>'
+        }
+
+        <h2>9 · Dispositivi di protezione individuale</h2>
+        ${
+          DPI.length
+            ? `<table class="doc__tabella"><thead><tr><th>DPI</th>${mansioni.map((m) => `<th>${esc(m.mansione)}</th>`).join('') || '<th>Mansioni</th>'}</tr></thead><tbody>${DPI.map(
+                (x) => `<tr><td>${esc(x)}</td>${mansioni.map(() => '<td>☐</td>').join('') || '<td></td>'}</tr>`
+              ).join('')}</tbody></table>
+          <p class="doc__nota">Spuntare le mansioni a cui ciascun DPI è assegnato. La consegna si registra con il verbale di consegna DPI.</p>`
+            : '<p>Non risultano DPI necessari.</p>'
+        }
+
+        <h2>10 · Informazione, formazione e addestramento</h2>
+        ${
+          sit.length
+            ? `<table class="doc__tabella"><thead><tr><th>Lavoratore</th><th>Mansione</th><th>Formazione e corsi</th></tr></thead><tbody>${sit
+                .map(
+                  (s) => `<tr><td>${esc(nomeCompleto(s.lavoratore))}</td><td>${esc(s.lavoratore.mansione || '')}</td><td>${s.voci
+                    .filter((x) => !['visita-medica', 'consegna-dpi', 'informativa-privacy', 'autorizzazione-trattamento'].includes(x.requisito.id))
+                    .map((x) => `${esc(x.requisito.titolo)}: ${x.registro ? esc(data(x.registro.data)) : '<strong>da fare</strong>'}${x.prossimaScadenza ? ` (scade ${esc(data(x.prossimaScadenza))})` : ''}`)
+                    .join('<br>')}</td></tr>`
+                )
+                .join('')}</tbody></table>`
+            : '<p>Inserire i lavoratori in safetyDoc per compilare questa sezione.</p>'
+        }
+
+        <h2>11 · Sorveglianza sanitaria</h2>
+        <p>Medico competente: ${v(a.medico, 24)}. Il protocollo sanitario è definito dal medico competente in base ai rischi del capitolo 6.</p>
+        ${
+          sit.length
+            ? `<table class="doc__tabella"><thead><tr><th>Lavoratore</th><th>Ultima visita</th><th>Giudizio</th><th>Prossima visita</th></tr></thead><tbody>${sit
+                .map((s) => {
+                  const vm = req(s, ['visita-medica'])[0];
+                  return `<tr><td>${esc(nomeCompleto(s.lavoratore))}</td><td>${vm?.registro ? esc(data(vm.registro.data)) : vm ? 'da fare' : 'non prevista'}</td><td>${esc(vm?.registro?.esito ? ESITI_VISITA[vm.registro.esito] || '' : '')}</td><td>${vm?.prossimaScadenza ? esc(data(vm.prossimaScadenza)) : ''}</td></tr>`;
+                })
+                .join('')}</tbody></table>`
+            : ''
+        }
+        <p class="doc__nota">Sono riportati solo date e giudizi di idoneità: le cartelle sanitarie restano al medico competente.</p>
+
+        <h2>12 · Gestione delle emergenze</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Addetti al primo soccorso</th><td>${esc(conRuolo(lavoratori, 'primo_soccorso'))}</td></tr>
+          <tr><th>Addetti antincendio ed evacuazione</th><td>${esc(conRuolo(lavoratori, 'antincendio'))}</td></tr>
+          <tr><th>Presidi</th><td>${o.presidi ? esc(o.presidi).replace(/\n/g, '<br>') : ''}</td></tr>
+          <tr><th>Numero di emergenza</th><td>112</td></tr>
+          <tr><th>Piano di emergenza</th><td>${esc(statoVoce('piano-emergenza') || 'Istruzioni di emergenza esposte (piano scritto non obbligatorio sotto i 10 lavoratori, salvo casi particolari)')}</td></tr>
         </tbody></table>
 
-        <p>Il presente documento è stato elaborato dal datore di lavoro in collaborazione con il RSPP e il medico competente, previa consultazione del RLS.</p>
+        <h2>13 · Infortuni e quasi incidenti</h2>
+        ${
+          anni.length
+            ? `<table class="doc__tabella"><thead><tr><th>Anno</th><th>Infortuni</th><th>Medicazioni</th><th>Quasi incidenti</th></tr></thead><tbody>${anni
+                .map((y) => `<tr><td>${y}</td><td>${d.perAnno[y].infortunio}</td><td>${d.perAnno[y].medicazione}</td><td>${d.perAnno[y].quasi_incidente}</td></tr>`)
+                .join('')}</tbody></table>`
+            : ''
+        }
+
+        <h2>14 · Programma delle misure di miglioramento</h2>
+        <table class="doc__tabella"><thead><tr><th>Misura o adempimento</th><th>Stato</th><th>Entro il</th><th>Incaricato</th></tr></thead><tbody>
+          ${migliorare.map((x) => `<tr><td>${esc(x.scheda.titolo)}</td><td>${esc(x.motivo)}</td><td>${x.prossimaScadenza ? esc(data(x.prossimaScadenza)) : ''}</td><td></td></tr>`).join('')}
+          <tr><td style="height:2em"></td><td></td><td></td><td></td></tr><tr><td style="height:2em"></td><td></td><td></td><td></td></tr>
+        </tbody></table>
+
+        <h2>15 · Firme</h2>
+        <p>Il presente documento è stato elaborato dal datore di lavoro in collaborazione con l'RSPP e con il medico competente, previa consultazione del rappresentante dei lavoratori per la sicurezza.</p>
         ${luogoData(a, oggi)}
-        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', ctx?.risposte?.dl_rspp ? titolare(a) : a.rspp], ['Il medico competente', a.medico], ['L\'RLS, per consultazione', a.rls])}`;
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', dlRspp ? titolare(a) : a.rspp], ['Il medico competente', a.medico], ['L\'RLS, per consultazione', a.rls])}`;
     }
   },
   {
@@ -520,6 +719,158 @@ export const MODELLI = [
     }
   },
   {
+    id: 'piano-emergenza-doc',
+    titolo: 'Piano di emergenza ed evacuazione',
+    descrizione: 'Organizzazione delle emergenze: addetti, presidi, procedure per incendio, infortunio, terremoto, fuga di gas ed evacuazione, numeri utili e registro delle prove.',
+    ambito: 'impresa',
+    attivaSe: { fatto: 'haDipendenti' },
+    opzioni: () => [
+      { id: 'coordinatore', etichetta: 'Coordinatore dell\'emergenza', tipo: 'testo' },
+      { id: 'raccolta', etichetta: 'Punto di raccolta', tipo: 'testo', segnaposto: 'es. parcheggio davanti all\'ingresso' },
+      { id: 'presidi', etichetta: 'Estintori, idranti, cassetta di soccorso e dove si trovano', tipo: 'area' },
+      { id: 'interruttori', etichetta: 'Dove si tolgono corrente, gas e acqua', tipo: 'area' },
+      { id: 'persone', etichetta: 'Massimo di persone presenti (lavoratori e clienti)', tipo: 'numero' }
+    ],
+    genera: ({ anagrafica: a, oggi, lavoratori, opzioni: o = {} }) => `${intestazione(a)}
+        <h1>Piano di emergenza ed evacuazione</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 artt. 18 c. 1 lett. t e 43-46; DM 2 settembre 2021 (GSA) e DM 3 settembre 2021</p>
+        <h2>1 · Dati generali</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Sede</th><td>${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
+          <tr><th>Persone presenti al massimo</th><td>${esc(o.persone || '')}</td></tr>
+          <tr><th>Coordinatore dell'emergenza</th><td>${esc(o.coordinatore || titolare(a))}</td></tr>
+          <tr><th>Addetti antincendio ed evacuazione</th><td>${esc(conRuolo(lavoratori, 'antincendio'))}</td></tr>
+          <tr><th>Addetti al primo soccorso</th><td>${esc(conRuolo(lavoratori, 'primo_soccorso'))}</td></tr>
+          <tr><th>Punto di raccolta</th><td>${esc(o.raccolta || '')}</td></tr>
+          <tr><th>Presidi</th><td>${o.presidi ? esc(o.presidi).replace(/\n/g, '<br>') : ''}</td></tr>
+          <tr><th>Interruttori e valvole generali</th><td>${o.interruttori ? esc(o.interruttori).replace(/\n/g, '<br>') : ''}</td></tr>
+        </tbody></table>
+        <h2>2 · Numeri utili</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Numero unico di emergenza (vigili del fuoco, ambulanza, forze dell'ordine)</th><td><strong>112</strong></td></tr>
+          <tr><th>Datore di lavoro</th><td>${esc(titolare(a))} ${esc(a.contatto || '')}</td></tr>
+          <tr><th>Guasti gas, elettricità, acqua</th><td></td></tr>
+        </tbody></table>
+        <h2>3 · Chi fa cosa</h2>
+        <table class="doc__tabella"><thead><tr><th>Chi</th><th>Compiti</th></tr></thead><tbody>
+          <tr><td>Chi scopre l'emergenza</td><td>Avvisa subito gli addetti o il coordinatore; se è in grado e senza rischi, usa l'estintore; non si mette in pericolo.</td></tr>
+          <tr><td>Coordinatore</td><td>Valuta la situazione, decide se evacuare, chiama il 112, toglie corrente e gas, accoglie i soccorsi.</td></tr>
+          <tr><td>Addetti antincendio</td><td>Intervengono con gli estintori sui principi d'incendio, guidano l'evacuazione, controllano che nessuno resti nei locali.</td></tr>
+          <tr><td>Addetti al primo soccorso</td><td>Prestano i primi soccorsi con la cassetta, non spostano l'infortunato se non c'è pericolo, chiamano il 112.</td></tr>
+          <tr><td>Tutti i lavoratori</td><td>Interrompono il lavoro, mettono in sicurezza le macchine se possibile, escono con calma dalla via più vicina, aiutano clienti e persone in difficoltà, vanno al punto di raccolta e non si allontanano.</td></tr>
+        </tbody></table>
+        <h2>4 · Procedure</h2>
+        <h3>Incendio</h3>
+        <ol><li>Dare l'allarme a voce e chiamare il 112.</li><li>Solo se il fuoco è piccolo e si è addestrati: usare l'estintore tenendosi tra il fuoco e l'uscita.</li><li>Chiudere le porte dietro di sé, togliere corrente e gas.</li><li>Se c'è fumo: camminare abbassati, coprire naso e bocca con un panno.</li><li>Evacuare verso il punto di raccolta e fare l'appello.</li></ol>
+        <h3>Infortunio o malore</h3>
+        <ol><li>Mettere in sicurezza la zona e chiamare l'addetto al primo soccorso.</li><li>Chiamare il 112 descrivendo cosa è successo e dove.</li><li>Non dare da bere né spostare l'infortunato, salvo pericolo immediato.</li><li>Registrare l'evento nel registro di infortuni e quasi incidenti.</li></ol>
+        <h3>Terremoto</h3>
+        <ol><li>Durante la scossa: ripararsi sotto un tavolo robusto o vicino a un muro portante, lontano da finestre e scaffali.</li><li>Finita la scossa: uscire con calma, senza usare l'ascensore, e raggiungere il punto di raccolta lontano da edifici e linee elettriche.</li></ol>
+        <h3>Fuga di gas</h3>
+        <ol><li>Non accendere né spegnere luci o apparecchi elettrici, non usare fiamme.</li><li>Chiudere la valvola generale, aprire le finestre, uscire e chiamare il 112 da fuori.</li></ol>
+        <h3>Allagamento o guasto elettrico</h3>
+        <ol><li>Togliere la corrente dall'interruttore generale solo se si è all'asciutto.</li><li>Spostarsi in zona sicura e avvisare il coordinatore.</li></ol>
+        <h2>5 · Prove di evacuazione</h2>
+        <p>La prova di evacuazione si svolge almeno una volta all'anno e si registra con il verbale della prova.</p>
+        <table class="doc__tabella"><thead><tr><th>Data</th><th>Esito e osservazioni</th><th>Firma</th></tr></thead><tbody>${Array.from({ length: 3 }, () => '<tr><td style="height:2em"></td><td></td><td></td></tr>').join('')}</tbody></table>
+        <p class="doc__nota">Allegare la planimetria con vie di esodo, uscite, presidi e punto di raccolta, ed esporla nei locali.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['L\'RLS, per presa visione', a.rls])}`
+  },
+  {
+    id: 'informazione-art36',
+    titolo: 'Informazione al lavoratore sui rischi (art. 36)',
+    descrizione: 'Informazione scritta sui rischi della mansione, le misure, i DPI, le emergenze e le figure della sicurezza, con firma del lavoratore.',
+    ambito: 'lavoratore',
+    attivaSe: { fatto: 'haDipendenti' },
+    genera: ({ anagrafica: a, oggi, lavoratore: l, lavoratori, dvr, ctx, prodotti }) => {
+      const presenti = pericoliPresenti(dvr, ctx).filter((x) => !['interferenze', 'differenze', 'tutele'].includes(x.id));
+      return `${intestazione(a)}
+        <h1>Informazione sui rischi per la salute e la sicurezza</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 36</p>
+        <p>Lavoratore: ${v(l ? nomeCompleto(l) : '', 24)} · mansione: ${v(l?.mansione, 20)}</p>
+        <h2>Figure della sicurezza</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Datore di lavoro</th><td>${esc(titolare(a))}</td></tr>
+          <tr><th>RSPP</th><td>${esc(ctx?.risposte?.dl_rspp ? titolare(a) : a.rspp || '')}</td></tr>
+          <tr><th>Medico competente</th><td>${esc(a.medico || '')}</td></tr>
+          <tr><th>RLS</th><td>${esc(a.rls || '')}</td></tr>
+          <tr><th>Preposto</th><td>${esc(conRuolo(lavoratori, 'preposto'))}</td></tr>
+          <tr><th>Addetti primo soccorso</th><td>${esc(conRuolo(lavoratori, 'primo_soccorso'))}</td></tr>
+          <tr><th>Addetti antincendio</th><td>${esc(conRuolo(lavoratori, 'antincendio'))}</td></tr>
+        </tbody></table>
+        <h2>Rischi della tua attività e come ti proteggi</h2>
+        <table class="doc__tabella"><thead><tr><th>Rischio</th><th>Cosa può succedere</th><th>Misure e comportamenti</th><th>DPI</th></tr></thead><tbody>
+          ${presenti.map((x) => `<tr><td>${esc(x.pericolo)}</td><td>${esc(x.danno || '')}</td><td>${esc(x.misure.join('; '))}</td><td>${esc((x.dpi || []).join(', '))}</td></tr>`).join('')}
+        </tbody></table>
+        ${(prodotti || []).length ? `<h2>Prodotti chimici che usi</h2><p>${(prodotti || []).map((p) => esc(p.nome)).join(', ')}. Le schede di sicurezza sono a tua disposizione: leggi i pittogrammi dell'etichetta e usa i DPI indicati.</p>` : ''}
+        <h2>Emergenze</h2>
+        <p>In caso di emergenza chiama il <strong>112</strong>, avvisa gli addetti, segui le vie di esodo e raggiungi il punto di raccolta. Le procedure sono nel piano di emergenza esposto.</p>
+        <h2>I tuoi obblighi (art. 20)</h2>
+        <ul><li>Usare correttamente attrezzature, prodotti e DPI.</li><li>Segnalare subito difetti, pericoli e situazioni a rischio.</li><li>Non rimuovere o modificare dispositivi di sicurezza.</li><li>Partecipare alla formazione e sottoporsi alle visite mediche previste.</li></ul>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['Il lavoratore, per ricevuta e comprensione', l ? nomeCompleto(l) : ''])}`;
+    }
+  },
+  {
+    id: 'verbale-addestramento',
+    titolo: 'Verbale di addestramento all\'uso delle attrezzature',
+    descrizione: 'Registra l\'addestramento pratico del lavoratore sulle attrezzature che usa (artt. 37 e 73), con chi lo ha svolto e la firma.',
+    ambito: 'lavoratore',
+    attivaSe: { fatto: 'haDipendenti' },
+    opzioni: (d) => [
+      { id: 'attrezzature', etichetta: 'Attrezzature su cui è stato addestrato', tipo: 'spunte', valori: (d.attrezzature || []).map((x) => ({ valore: x.nome, etichetta: x.nome })) },
+      { id: 'addestratore', etichetta: 'Chi ha svolto l\'addestramento', tipo: 'testo' },
+      { id: 'ore', etichetta: 'Durata (ore)', tipo: 'numero' }
+    ],
+    genera: ({ anagrafica: a, oggi, lavoratore: l, attrezzature, opzioni: o = {} }) => {
+      const elenco = (o.attrezzature || []).length ? o.attrezzature : (attrezzature || []).map((x) => x.nome);
+      return `${intestazione(a)}
+        <h1>Verbale di addestramento</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 artt. 37 c. 5, 71 c. 7 e 73</p>
+        <p>Il lavoratore ${v(l ? nomeCompleto(l) : '', 24)}, mansione ${v(l?.mansione, 18)}, ha ricevuto in data ${v(data(oggi), 10)} l'addestramento pratico, della durata di ${v(o.ore ? `${o.ore} ore` : '', 8)}, svolto da ${v(o.addestratore, 22)}, persona esperta, sul luogo di lavoro.</p>
+        <table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Contenuti</th><th>Esito</th></tr></thead><tbody>
+          ${(elenco.length ? elenco : ['']).map((n) => `<tr><td>${esc(n)}</td><td><small>Uso corretto secondo il manuale, dispositivi di sicurezza, controlli prima dell'uso, DPI, cosa fare in caso di guasto</small></td><td>☐ idoneo ☐ da ripetere</td></tr>`).join('')}
+        </tbody></table>
+        <p>Il lavoratore dichiara di aver compreso le istruzioni e di essere in grado di usare le attrezzature in sicurezza.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['L\'addestratore', o.addestratore || ''], ['Il lavoratore', l ? nomeCompleto(l) : ''], ['Il datore di lavoro', titolare(a)])}`;
+    }
+  },
+  {
+    id: 'verbale-elezione-rls',
+    titolo: 'Verbale di elezione o designazione dell\'RLS',
+    descrizione: 'Verbale dell\'elezione del rappresentante dei lavoratori per la sicurezza da parte dei lavoratori, oppure della scelta di ricorrere all\'RLS territoriale.',
+    ambito: 'impresa',
+    attivaSe: { fatto: 'haDipendenti' },
+    opzioni: () => [
+      { id: 'modalita', etichetta: 'Come è stato scelto', tipo: 'scelta', valori: [{ valore: 'eletto', etichetta: 'Eletto dai lavoratori tra di loro' }, { valore: 'territoriale', etichetta: 'Nessun eletto: si ricorre all\'RLS territoriale' }] },
+      { id: 'eletto', etichetta: 'Nome dell\'RLS eletto', tipo: 'testo' },
+      { id: 'votanti', etichetta: 'Lavoratori votanti', tipo: 'numero' },
+      { id: 'voti', etichetta: 'Voti ricevuti', tipo: 'numero' }
+    ],
+    genera: ({ anagrafica: a, oggi, lavoratori, opzioni: o = {} }) => {
+      const territoriale = o.modalita === 'territoriale';
+      return `${intestazione(a)}
+        <h1>Verbale ${territoriale ? 'di mancata elezione e ricorso all\'RLS territoriale' : 'di elezione del rappresentante dei lavoratori per la sicurezza'}</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 artt. 47 e 48</p>
+        ${
+          territoriale
+            ? `<p>Il giorno ${v(data(oggi), 10)} i lavoratori dell'impresa, riuniti per l'elezione del rappresentante dei lavoratori per la sicurezza, hanno deciso di non eleggere un proprio rappresentante. Le funzioni di RLS sono pertanto svolte dal rappresentante territoriale (RLST) dell'organismo paritetico competente, al quale l'impresa versa il contributo previsto.</p>`
+            : `<p>Il giorno ${v(data(oggi), 10)}, presso ${v([a.sede, a.comune].filter(Boolean).join(', '), 24)}, i lavoratori dell'impresa si sono riuniti per eleggere al proprio interno il rappresentante dei lavoratori per la sicurezza.</p>
+          <p>Votanti: ${v(o.votanti, 4)} · Voti ricevuti dall'eletto: ${v(o.voti, 4)}</p>
+          <p>Risulta eletto: ${v(o.eletto || a.rls, 24)}, che accetta l'incarico. L'RLS frequenterà il corso di 32 ore e l'aggiornamento annuale.</p>`
+        }
+        <p>L'impresa comunica il nominativo dell'RLS all'INAIL in via telematica.</p>
+        <h2>Firme dei lavoratori presenti</h2>
+        <table class="doc__tabella"><thead><tr><th>Lavoratore</th><th>Firma</th></tr></thead><tbody>
+          ${(lavoratori || []).map((l) => `<tr><td>${esc(nomeCompleto(l))}</td><td style="height:2em"></td></tr>`).join('')}
+        </tbody></table>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro, per presa d\'atto', titolare(a)], ...(territoriale ? [] : [['L\'RLS eletto, per accettazione', o.eletto || a.rls]]))}`;
+    }
+  },
+  {
     id: 'info-rischi-ditte',
     titolo: 'Informazioni sui rischi per le ditte esterne',
     descrizione: 'Da consegnare a ogni ditta o lavoratore autonomo che lavora nella tua sede: rischi presenti, regole ed emergenze.',
@@ -558,45 +909,130 @@ export const MODELLI = [
   },
   {
     id: 'duvri-bozza',
-    titolo: 'Bozza di DUVRI (rischi da interferenze)',
-    descrizione: 'Documento di valutazione dei rischi da interferenze con la ditta esterna, con i costi della sicurezza. Da completare per ogni appalto.',
+    titolo: 'DUVRI completo (rischi da interferenze)',
+    descrizione: 'Documento unico di valutazione dei rischi da interferenze: dati delle due imprese, verifica dell\'idoneità, rischi della sede e della ditta, valutazione delle interferenze con probabilità e danno, misure, costi della sicurezza, verbale di coordinamento.',
     ambito: 'impresa',
     attivaSe: { all: [{ fatto: 'haDipendenti' }, { q: 'appalti_in_sede', eq: true }] },
-    genera: ({ anagrafica: a, oggi, dvr, ctx }) => {
-      const presenti = pericoliPresenti(dvr, ctx);
-      const righe = (n) => Array.from({ length: n }, () => '<tr><td style="height:2.2em"></td><td></td><td></td><td></td></tr>').join('');
+    opzioni: (d) => [
+      { id: 'tipo', etichetta: 'Tipo di lavoro o servizio affidato', tipo: 'scelta', valori: (d.lavorazioni?.tipiAppalto || []).map((t) => ({ valore: t.id, etichetta: t.titolo })) },
+      { id: 'appaltatore', etichetta: 'Ditta o lavoratore autonomo incaricato', tipo: 'testo' },
+      { id: 'pivaAppaltatore', etichetta: 'P.IVA della ditta', tipo: 'testo' },
+      { id: 'referenteAppaltatore', etichetta: 'Referente della ditta e telefono', tipo: 'testo' },
+      { id: 'oggetto', etichetta: 'Descrizione del lavoro', tipo: 'area' },
+      { id: 'luogo', etichetta: 'Locali o aree interessati', tipo: 'testo' },
+      { id: 'dal', etichetta: 'Dal', tipo: 'data' },
+      { id: 'al', etichetta: 'Al', tipo: 'data' },
+      { id: 'orari', etichetta: 'Orari di lavoro della ditta', tipo: 'testo' },
+      { id: 'uominiGiorno', etichetta: 'Durata stimata in uomini-giorno', tipo: 'numero' },
+      { id: 'referente', etichetta: 'Tuo referente per il coordinamento', tipo: 'testo', valore: d.anagrafica?.titolare || '' }
+    ],
+    genera: (d) => {
+      const { anagrafica: a, oggi, dvr, ctx, lavoratori, opzioni: o = {} } = d;
+      const tipo = (d.lavorazioni?.tipiAppalto || []).find((t) => t.id === o.tipo);
+      const presenti = pericoliPresenti(dvr, ctx).filter((x) => !['stress', 'differenze', 'tutele', 'interferenze'].includes(x.id));
+      const criteri = dvr?.criteri;
+      const ug = Number(o.uominiGiorno) || null;
+      const particolari = ['incendio-alto', 'confinati', 'amianto', 'cancerogeni', 'atex'].filter((id) => (id === 'incendio-alto' ? ctx?.risposte?.rischio_incendio === 'si' : presenti.some((x) => x.id === id)));
+      const esente = ug !== null && ug <= 5 && !particolari.length;
+      const righe = (n, c = 4) => Array.from({ length: n }, () => `<tr>${'<td style="height:2em"></td>'.repeat(c)}</tr>`).join('');
       return `${intestazione(a)}
-        <h1>Documento unico di valutazione dei rischi da interferenze (DUVRI)</h1>
-        <p class="doc__rif">D.Lgs. 81/2008 art. 26 c. 3 · BOZZA da completare per ogni appalto</p>
-        <h2>1 · Dati dell'appalto</h2>
+        <section class="doc__frontespizio">
+          <h1>Documento unico di valutazione dei rischi da interferenze</h1>
+          <p class="doc__rif">D.Lgs. 81/2008 art. 26 c. 3</p>
+          <table class="doc__tabella doc__tabella--campi"><tbody>
+            <tr><th>Committente</th><td>${esc(a.ragioneSociale || '')}</td></tr>
+            <tr><th>Appaltatore</th><td>${esc(o.appaltatore || '')}</td></tr>
+            <tr><th>Oggetto</th><td>${esc(tipo?.titolo || '')}</td></tr>
+          </tbody></table>
+        </section>
+
+        <h2>1 · Premessa</h2>
+        <p>Il committente, in caso di affidamento di lavori, servizi o forniture a imprese o lavoratori autonomi all'interno della propria sede, verifica la loro idoneità tecnico-professionale, fornisce informazioni dettagliate sui rischi dell'ambiente di lavoro e sulle misure di emergenza, promuove la cooperazione e il coordinamento ed elabora il presente documento, che indica le misure per eliminare o ridurre al minimo i rischi da interferenze. Il DUVRI è allegato al contratto e va aggiornato in base all'evoluzione dei lavori.</p>
+        ${
+          ug !== null
+            ? `<p class="${esente ? 'doc__nota' : ''}"><strong>Applicabilità:</strong> durata stimata ${ug} uomini-giorno${particolari.length ? `, con rischi particolari (${esc(particolari.join(', '))})` : ''}. ${
+                esente
+                  ? 'Il DUVRI non sarebbe obbligatorio (art. 26 c. 3-bis): restano comunque dovuti verifica dell\'idoneità, informazione e coordinamento. Si redige come buona prassi.'
+                  : 'Il DUVRI è obbligatorio.'
+              }</p>`
+            : ''
+        }
+
+        <h2>2 · Imprese interessate</h2>
+        <table class="doc__tabella"><thead><tr><th></th><th>Committente</th><th>Appaltatore</th></tr></thead><tbody>
+          <tr><th>Ragione sociale</th><td>${esc(a.ragioneSociale || '')}</td><td>${esc(o.appaltatore || '')}</td></tr>
+          <tr><th>P.IVA</th><td>${esc(a.piva || '')}</td><td>${esc(o.pivaAppaltatore || '')}</td></tr>
+          <tr><th>Datore di lavoro</th><td>${esc(titolare(a))}</td><td></td></tr>
+          <tr><th>RSPP</th><td>${esc(ctx?.risposte?.dl_rspp ? titolare(a) : a.rspp || '')}</td><td></td></tr>
+          <tr><th>Referente per il coordinamento</th><td>${esc(o.referente || '')}</td><td>${esc(o.referenteAppaltatore || '')}</td></tr>
+          <tr><th>Addetti alle emergenze</th><td>${esc([conRuolo(lavoratori, 'primo_soccorso'), conRuolo(lavoratori, 'antincendio')].filter(Boolean).join(', '))}</td><td></td></tr>
+        </tbody></table>
+
+        <h2>3 · Descrizione dell'appalto</h2>
         <table class="doc__tabella doc__tabella--campi"><tbody>
-          <tr><th>Committente</th><td>${esc(a.ragioneSociale || '')} · datore di lavoro ${esc(titolare(a))}</td></tr>
-          <tr><th>Luogo dei lavori</th><td>${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
-          <tr><th>Ditta appaltatrice / lavoratore autonomo</th><td></td></tr>
-          <tr><th>Oggetto dell'appalto</th><td></td></tr>
-          <tr><th>Durata prevista (date e uomini-giorno)</th><td></td></tr>
-          <tr><th>Referenti per il coordinamento</th><td></td></tr>
+          <tr><th>Tipo</th><td>${esc(tipo?.titolo || '')}</td></tr>
+          <tr><th>Descrizione</th><td>${o.oggetto ? esc(o.oggetto).replace(/\n/g, '<br>') : ''}</td></tr>
+          <tr><th>Luogo</th><td>${esc([o.luogo, a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
+          <tr><th>Periodo</th><td>${o.dal ? `dal ${esc(data(o.dal))}` : ''} ${o.al ? `al ${esc(data(o.al))}` : ''}</td></tr>
+          <tr><th>Orari</th><td>${esc(o.orari || '')}</td></tr>
+          <tr><th>Uomini-giorno stimati</th><td>${ug ?? ''}</td></tr>
         </tbody></table>
-        <h2>2 · Verifica dell'idoneità tecnico-professionale</h2>
-        <p>☐ Visura camerale &nbsp; ☐ Autocertificazione dei requisiti &nbsp; ☐ DURC regolare &nbsp; ☐ Per lavori edili: documenti dell'Allegato XVII</p>
-        <h2>3 · Rischi della sede del committente</h2>
-        <ul>${presenti.map((x) => `<li>${esc(x.pericolo)}</li>`).join('') || '<li>&nbsp;</li>'}</ul>
-        <h2>4 · Rischi da interferenze e misure</h2>
-        <table class="doc__tabella"><thead><tr><th>Attività o fase</th><th>Interferenza (chi e cosa)</th><th>Misure per eliminarla o ridurla</th><th>A cura di</th></tr></thead><tbody>
-          <tr><td>Accesso e transito di persone e mezzi</td><td>Presenza contemporanea di lavoratori, clienti e personale esterno</td><td>Orari concordati, percorsi separati, area delimitata e segnalata</td><td>Entrambi</td></tr>
-          <tr><td>Uso di attrezzature e prodotti</td><td>Rumore, polveri, prodotti chimici, cavi a terra</td><td>Avviso preventivo, aerazione, nessun materiale lungo le vie di uscita</td><td>Appaltatore</td></tr>
-          <tr><td>Emergenze</td><td>Personale esterno che non conosce il locale</td><td>Informazione su uscite, estintori, punto di raccolta e addetti</td><td>Committente</td></tr>
-          ${righe(3)}
+
+        <h2>4 · Verifica dell'idoneità tecnico-professionale</h2>
+        <table class="doc__tabella"><thead><tr><th>Documento</th><th>Acquisito il</th><th>Note</th></tr></thead><tbody>
+          ${['Visura camerale', 'Autocertificazione dei requisiti (art. 47 DPR 445/2000)', 'DURC in corso di validità', 'Elenco dei lavoratori impiegati e attestati di formazione', 'Elenco delle attrezzature e dei prodotti che porterà', ...(o.tipo === 'edili' ? ['Documenti dell\'Allegato XVII e patente a crediti'] : [])]
+            .map((x) => `<tr><td>☐ ${esc(x)}</td><td></td><td></td></tr>`)
+            .join('')}
         </tbody></table>
-        <h2>5 · Costi della sicurezza per le interferenze</h2>
-        <table class="doc__tabella"><thead><tr><th>Voce (delimitazioni, segnaletica, riunioni, DPI specifici…)</th><th>Importo (€)</th></tr></thead><tbody>
-          <tr><td style="height:2.2em"></td><td></td></tr><tr><td style="height:2.2em"></td><td></td></tr><tr><th>Totale (non soggetto a ribasso)</th><td></td></tr>
+
+        <h2>5 · Rischi presenti nella sede del committente</h2>
+        <table class="doc__tabella"><thead><tr><th>Rischio</th><th>Misure in atto da rispettare</th></tr></thead><tbody>
+          ${presenti.map((x) => `<tr><td>${esc(x.pericolo)}</td><td>${esc(x.misure.slice(0, 2).join('; '))}</td></tr>`).join('') || righe(2, 2)}
         </tbody></table>
-        <h2>6 · Riunione di coordinamento</h2>
-        <p>Data ${v('', 12)} · Presenti ${v('', 40)}</p>
-        <p class="doc__nota">Il DUVRI non è richiesto per servizi intellettuali, mere forniture di materiali o attrezzature e lavori o servizi fino a 5 uomini-giorno, salvo rischi particolari (art. 26 c. 3-bis). Va allegato al contratto.</p>
+
+        <h2>6 · Rischi introdotti dall'appaltatore</h2>
+        <ul>${(tipo?.rischiIntrodotti || []).map((r) => `<li>${esc(r)}</li>`).join('')}<li>${v('', 30)}</li></ul>
+
+        <h2>7 · Valutazione dei rischi da interferenze e misure</h2>
+        ${criteri ? '<p>Stima con R = P × D come nel DVR del committente (scala da 1 a 4).</p>' : ''}
+        <table class="doc__tabella"><thead><tr><th>Attività</th><th>Rischio da interferenza</th><th>P</th><th>D</th><th>R</th><th>Misure</th><th>A cura di</th></tr></thead><tbody>
+          ${(tipo?.interferenze || [])
+            .map((x) => {
+              const R = x.probabilita * x.magnitudo;
+              return `<tr><td>${esc(x.attivita)}</td><td>${esc(x.rischio)}</td><td>${x.probabilita}</td><td>${x.magnitudo}</td><td><strong>${R}</strong><br><small>${esc(livelloRischio(criteri, R)?.etichetta || '')}</small></td><td>${esc(x.misure)}</td><td>${esc(x.acura)}</td></tr>`;
+            })
+            .join('')}
+          ${righe(2, 7)}
+        </tbody></table>
+
+        <h2>8 · Misure generali di coordinamento</h2>
+        <ul>
+          <li>Prima dell'inizio dei lavori si svolge un sopralluogo congiunto e una riunione di coordinamento (verbale al punto 10).</li>
+          <li>Il personale dell'appaltatore espone la tessera di riconoscimento con fotografia, generalità e datore di lavoro.</li>
+          <li>L'appaltatore non usa attrezzature, impianti o prodotti del committente senza autorizzazione scritta.</li>
+          <li>Le aree di lavoro sono delimitate e segnalate; uscite e percorsi di emergenza restano sempre liberi.</li>
+          <li>I lavori rumorosi, polverosi o con fiamme libere sono comunicati in anticipo e concordati negli orari.</li>
+          <li>In caso di emergenza il personale dell'appaltatore segue le istruzioni degli addetti del committente e raggiunge il punto di raccolta.</li>
+          <li>Ogni variazione dei lavori, del personale o dei tempi viene comunicata e il documento aggiornato.</li>
+        </ul>
+
+        <h2>9 · Costi della sicurezza</h2>
+        <p>Costi delle misure per eliminare o ridurre i rischi da interferenze, non soggetti a ribasso (art. 26 c. 5).</p>
+        <table class="doc__tabella"><thead><tr><th>Voce</th><th>Unità</th><th>Quantità</th><th>Prezzo unitario €</th><th>Totale €</th></tr></thead><tbody>
+          ${(tipo?.costi || []).map((c) => `<tr><td>${esc(c.voce)}</td><td>${esc(c.unita)}</td><td></td><td></td><td></td></tr>`).join('')}
+          ${righe(1, 5)}
+          <tr><th colspan="4">Totale costi della sicurezza</th><td></td></tr>
+        </tbody></table>
+
+        <h2>10 · Verbale di sopralluogo e riunione di coordinamento</h2>
+        <p>Il giorno ${v('', 10)} presso ${v([a.sede, a.comune].filter(Boolean).join(', '), 24)} si sono riuniti i referenti delle imprese, che hanno visitato le aree di lavoro, esaminato i rischi e concordato le misure di questo documento.</p>
+        <p>Osservazioni: ${v('', 50)}</p>
+
+        <h2>11 · Aggiornamenti</h2>
+        <table class="doc__tabella"><thead><tr><th>Revisione</th><th>Data</th><th>Motivo</th></tr></thead><tbody>${righe(2, 3)}</tbody></table>
+
         ${luogoData(a, oggi)}
-        ${firme(['Il committente', titolare(a)], ['L\'appaltatore', ''])}`;
+        ${firme(['Il committente', titolare(a)], ['L\'appaltatore', o.appaltatore || ''], ['L\'RLS del committente, per presa visione', a.rls])}`;
     }
   },
   {
@@ -634,57 +1070,167 @@ export const MODELLI = [
   },
   {
     id: 'pos-bozza',
-    titolo: 'Bozza di Piano operativo di sicurezza (POS)',
-    descrizione: 'Schema con i contenuti minimi dell\'Allegato XV, già compilato con impresa, lavoratori, attrezzature e prodotti. Da completare per ogni cantiere.',
+    titolo: 'Piano operativo di sicurezza (POS) completo',
+    descrizione: 'POS dettagliato con tutti i contenuti dell\'Allegato XV: dati del cantiere e dell\'impresa, lavoratori e incarichi, organizzazione, attrezzature, prodotti, analisi di ogni fase di lavoro con rischi, misure e DPI, emergenze e documenti da tenere in cantiere.',
     ambito: 'impresa',
     attivaSe: { all: [{ q: 'cantiere', eq: true }, { fatto: 'haDipendenti' }] },
-    genera: ({ anagrafica: a, oggi, ctx, lavoratori, attrezzature, prodotti, ruoli }) => {
+    opzioni: (d) => [
+      { id: 'indirizzo', etichetta: 'Indirizzo del cantiere', tipo: 'testo' },
+      { id: 'committente', etichetta: 'Committente', tipo: 'testo' },
+      { id: 'responsabileLavori', etichetta: 'Responsabile dei lavori', tipo: 'testo' },
+      { id: 'csp', etichetta: 'Coordinatore per la progettazione (CSP)', tipo: 'testo' },
+      { id: 'cse', etichetta: 'Coordinatore per l\'esecuzione (CSE)', tipo: 'testo' },
+      { id: 'affidataria', etichetta: 'Impresa affidataria (se diversa)', tipo: 'testo' },
+      { id: 'lavori', etichetta: 'Lavori affidati alla tua impresa', tipo: 'area' },
+      { id: 'inizio', etichetta: 'Inizio lavori', tipo: 'data' },
+      { id: 'durata', etichetta: 'Durata prevista', tipo: 'testo', segnaposto: 'es. 30 giorni lavorativi' },
+      { id: 'orario', etichetta: 'Orario di lavoro in cantiere', tipo: 'testo', segnaposto: 'es. 8-12 / 13-17' },
+      { id: 'capocantiere', etichetta: 'Capocantiere o preposto', tipo: 'scelta', valori: (d.lavoratori || []).map((l) => ({ valore: l.id, etichetta: nomeCompleto(l) })) },
+      { id: 'lavoratori', etichetta: 'Lavoratori presenti in cantiere', tipo: 'spunte', valori: (d.lavoratori || []).map((l) => ({ valore: l.id, etichetta: `${nomeCompleto(l)}${l.mansione ? ` · ${l.mansione}` : ''}` })) },
+      { id: 'fasi', etichetta: 'Lavorazioni che farai in questo cantiere', tipo: 'spunte', valori: (d.lavorazioni?.fasiCantiere || []).map((f) => ({ valore: f.id, etichetta: f.titolo })) },
+      { id: 'subappalti', etichetta: 'Lavorazioni affidate in subappalto o a lavoratori autonomi', tipo: 'area' }
+    ],
+    genera: (d) => {
+      const { anagrafica: a, oggi, ctx, opzioni: o = {}, ruoli } = d;
+      const tutti = d.lavoratori || [];
+      const scelti = (o.lavoratori || []).length ? tutti.filter((l) => o.lavoratori.includes(l.id)) : tutti;
+      const fasi = (d.lavorazioni?.fasiCantiere || []).filter((f) => (o.fasi || []).includes(f.id));
+      const capo = tutti.find((l) => l.id === o.capocantiere);
       const etichetta = (r) => (ruoli && ruoli[r]) || r;
-      const conRuolo = (r) => (lavoratori || []).filter((l) => (l.ruoli || []).includes(r)).map(nomeCompleto).join(', ');
+      const dpi = [...new Set(fasi.flatMap((f) => f.dpi))];
+      const sitPer = (id) => (d.situazioni || []).find((s) => s.lavoratore.id === id);
+      const ponteggio = fasi.some((f) => f.id === 'ponteggi') || (d.macchine || []).some((s) => s.attrezzatura.tipo === 'ponteggio');
+      const vuoto = (n = 2) => Array.from({ length: n }, () => '<tr><td style="height:2em"></td><td></td><td></td></tr>').join('');
       return `${intestazione(a)}
-        <h1>Piano operativo di sicurezza</h1>
-        <p class="doc__rif">D.Lgs. 81/2008 art. 89 c. 1 lett. h e Allegato XV punto 3.2.1 · BOZZA da completare per ogni cantiere</p>
-        <h2>Cantiere</h2>
+        <section class="doc__frontespizio">
+          <h1>Piano operativo di sicurezza</h1>
+          <p class="doc__rif">D.Lgs. 81/2008 artt. 89 c. 1 lett. h, 96 c. 1 lett. g e Allegato XV punto 3.2</p>
+          <table class="doc__tabella doc__tabella--campi"><tbody>
+            <tr><th>Impresa esecutrice</th><td>${esc(a.ragioneSociale || '')}</td></tr>
+            <tr><th>Cantiere</th><td>${esc(o.indirizzo || '')}</td></tr>
+            <tr><th>Data</th><td>${esc(data(oggi))}</td></tr>
+          </tbody></table>
+        </section>
+
+        <h2>1 · Dati del cantiere</h2>
         <table class="doc__tabella doc__tabella--campi"><tbody>
-          <tr><th>Indirizzo del cantiere</th><td></td></tr><tr><th>Committente</th><td></td></tr>
-          <tr><th>Impresa affidataria</th><td></td></tr><tr><th>Coordinatore per l'esecuzione</th><td></td></tr>
-          <tr><th>Lavori affidati all'impresa</th><td></td></tr><tr><th>Inizio e durata prevista</th><td></td></tr>
+          <tr><th>Indirizzo</th><td>${esc(o.indirizzo || '')}</td></tr>
+          <tr><th>Committente</th><td>${esc(o.committente || '')}</td></tr>
+          <tr><th>Responsabile dei lavori</th><td>${esc(o.responsabileLavori || '')}</td></tr>
+          <tr><th>Coordinatore per la progettazione</th><td>${esc(o.csp || '')}</td></tr>
+          <tr><th>Coordinatore per l'esecuzione</th><td>${esc(o.cse || '')}</td></tr>
+          <tr><th>Impresa affidataria</th><td>${esc(o.affidataria || '')}</td></tr>
+          <tr><th>Lavori affidati</th><td>${o.lavori ? esc(o.lavori).replace(/\n/g, '<br>') : ''}</td></tr>
+          <tr><th>Inizio e durata</th><td>${esc(o.inizio ? data(o.inizio) : '')} ${o.durata ? `· ${esc(o.durata)}` : ''}</td></tr>
         </tbody></table>
-        <h2>a) Dati dell'impresa esecutrice</h2>
+
+        <h2>2 · Impresa esecutrice (lett. a)</h2>
         <table class="doc__tabella doc__tabella--campi"><tbody>
-          <tr><th>Impresa</th><td>${esc(a.ragioneSociale || '')} · ${esc([a.sede, a.comune].filter(Boolean).join(', '))} · P.IVA ${esc(a.piva || '')}</td></tr>
+          <tr><th>Ragione sociale e sede</th><td>${esc(a.ragioneSociale || '')} · ${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
+          <tr><th>P.IVA</th><td>${esc(a.piva || '')}</td></tr>
+          <tr><th>Telefono / email</th><td>${esc(a.contatto || '')}</td></tr>
+          <tr><th>Codice ATECO</th><td>${esc(ctx?.fatti?.ateco ? `${ctx.fatti.ateco.codice} – ${ctx.fatti.ateco.descrizione}` : '')}</td></tr>
           <tr><th>Datore di lavoro</th><td>${esc(titolare(a))}</td></tr>
           <tr><th>RSPP</th><td>${esc(ctx?.risposte?.dl_rspp ? `${titolare(a)} (datore di lavoro)` : a.rspp || '')}</td></tr>
           <tr><th>Medico competente</th><td>${esc(a.medico || '')}</td></tr>
           <tr><th>RLS / RLST</th><td>${esc(a.rls || '')}</td></tr>
-          <tr><th>Preposto / capocantiere</th><td>${esc(conRuolo('preposto'))}</td></tr>
-          <tr><th>Addetti al primo soccorso</th><td>${esc(conRuolo('primo_soccorso'))}</td></tr>
-          <tr><th>Addetti antincendio ed emergenze</th><td>${esc(conRuolo('antincendio'))}</td></tr>
+          <tr><th>Capocantiere / preposto</th><td>${esc(capo ? nomeCompleto(capo) : conRuolo(scelti, 'preposto'))}</td></tr>
+          <tr><th>Addetti al primo soccorso in cantiere</th><td>${esc(conRuolo(scelti, 'primo_soccorso'))}</td></tr>
+          <tr><th>Addetti antincendio ed emergenze in cantiere</th><td>${esc(conRuolo(scelti, 'antincendio'))}</td></tr>
         </tbody></table>
-        <h2>b) Lavoratori presenti in cantiere e incarichi</h2>
-        <table class="doc__tabella"><thead><tr><th>Lavoratore</th><th>Mansione</th><th>Incarichi per la sicurezza</th><th>In cantiere</th></tr></thead><tbody>
-          ${(lavoratori || [])
-            .map((l) => `<tr><td>${esc(nomeCompleto(l))}</td><td>${esc(l.mansione || '')}</td><td>${esc((l.ruoli || []).map(etichetta).join(', '))}</td><td>☐</td></tr>`)
+
+        <h3>Lavoratori presenti in cantiere e incarichi (lett. a e b)</h3>
+        <table class="doc__tabella"><thead><tr><th>Lavoratore</th><th>Mansione</th><th>Incarichi</th><th>Formazione e idoneità</th></tr></thead><tbody>
+          ${scelti
+            .map((l) => {
+              const s = sitPer(l.id);
+              const stato = s
+                ? s.voci
+                    .filter((x) => ['formazione-generale', 'formazione-specifica', 'visita-medica', 'corso-preposto', 'corso-primo-soccorso', 'corso-antincendio', 'addestramento-quota', 'patentino-macchine'].includes(x.requisito.id))
+                    .map((x) => `${esc(x.requisito.titolo)}: ${x.colore === 'verde' ? 'in regola' : '<strong>' + esc(x.motivo) + '</strong>'}`)
+                    .join('<br>')
+                : '';
+              return `<tr><td>${esc(nomeCompleto(l))}</td><td>${esc(l.mansione || '')}</td><td>${esc((l.ruoli || []).map(etichetta).join(', '))}</td><td><small>${stato}</small></td></tr>`;
+            })
+            .join('') || '<tr><td style="height:2em" colspan="4"></td></tr>'}
+        </tbody></table>
+
+        <h2>3 · Organizzazione del lavoro (lett. c)</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Orario e turni</th><td>${esc(o.orario || '')}</td></tr>
+          <tr><th>Lavorazioni</th><td>${fasi.map((f) => esc(f.titolo)).join('<br>')}</td></tr>
+          <tr><th>Subappalti e lavoratori autonomi</th><td>${o.subappalti ? esc(o.subappalti).replace(/\n/g, '<br>') : 'Nessuno'}</td></tr>
+          <tr><th>Servizi igienico-assistenziali</th><td>Messi a disposizione dall'impresa affidataria secondo il PSC ☐ · propri ☐</td></tr>
+        </tbody></table>
+
+        <h2>4 · Opere provvisionali, macchine e impianti (lett. d)</h2>
+        <table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Matricola</th><th>Verifiche e controlli</th></tr></thead><tbody>
+          ${(d.macchine || [])
+            .map((s) => `<tr><td>${esc(s.attrezzatura.nome)}${s.tipo ? ` <small>(${esc(s.tipo.etichetta)})</small>` : ''}</td><td>${esc(s.attrezzatura.matricola || '')}</td><td>${s.colore === 'verde' ? 'In regola' : esc(s.voci.filter((x) => x.colore !== 'verde').map((x) => `${x.controllo.titolo}: ${x.motivo}`).join('; '))}</td></tr>`)
+            .join('')}
+          ${[...new Set(fasi.flatMap((f) => f.attrezzature))]
+            .filter((n) => !(d.macchine || []).some((s) => normalizza(s.attrezzatura.nome).includes(normalizza(n))))
+            .map((n) => `<tr><td>${esc(n)} <small>(prevista dalle lavorazioni)</small></td><td></td><td></td></tr>`)
             .join('')}
         </tbody></table>
-        <h2>c) Attività di cantiere, organizzazione e turni</h2>
-        <p style="min-height:5em">&nbsp;</p>
-        <h2>d) Opere provvisionali, macchine e impianti</h2>
-        <ul>${(attrezzature || []).map((x) => `<li>${esc(x.nome)}${x.tipo ? ` (${esc(x.tipo)})` : ''} ☐</li>`).join('') || '<li>&nbsp;</li>'}</ul>
-        <h2>e) Sostanze e miscele pericolose (con schede di sicurezza)</h2>
-        <ul>${(prodotti || []).map((p) => `<li>${esc(p.nome)}${p.pittogrammi?.length ? ` · ${esc(p.pittogrammi.join(', '))}` : ''} ☐</li>`).join('') || '<li>&nbsp;</li>'}</ul>
-        <h2>f) Esito della valutazione del rumore</h2>
-        <p>Livello di esposizione per mansione: ${v('', 40)}</p>
-        <h2>g) Misure di prevenzione integrative rispetto al PSC</h2>
-        <p style="min-height:4em">&nbsp;</p>
-        <h2>h) Procedure richieste dal PSC</h2>
+        ${ponteggio ? '<p><strong>Ponteggio:</strong> allegare il PiMUS, il libretto di autorizzazione ministeriale e, se oltre 20 m o fuori schema, il progetto firmato.</p>' : ''}
+
+        <h2>5 · Sostanze e miscele pericolose (lett. e)</h2>
+        <table class="doc__tabella"><thead><tr><th>Prodotto</th><th>Pericoli</th><th>Scheda di sicurezza</th></tr></thead><tbody>
+          ${(d.prodotti || []).map((p) => `<tr><td>${esc(p.nome)}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${p.dataSds ? `del ${esc(data(p.dataSds))}, allegata` : 'da allegare'}</td></tr>`).join('') || vuoto(1)}
+        </tbody></table>
+
+        <h2>6 · Rumore (lett. f)</h2>
+        <table class="doc__tabella"><thead><tr><th>Mansione</th><th>Livello di esposizione LEX,8h dB(A)</th><th>Fonte (misure o banca dati)</th></tr></thead><tbody>
+          ${[...new Set(scelti.map((l) => l.mansione).filter(Boolean))].map((m) => `<tr><td>${esc(m)}</td><td></td><td></td></tr>`).join('') || vuoto(2)}
+        </tbody></table>
+
+        <h2>7 · Analisi delle lavorazioni: rischi, misure e DPI (lett. g)</h2>
+        ${
+          fasi.length
+            ? fasi
+                .map(
+                  (f, i) => `<div class="doc__rischio"><h3>7.${i + 1} · ${esc(f.titolo)}</h3>
+          <table class="doc__tabella doc__tabella--campi"><tbody>
+            <tr><th>Attrezzature</th><td>${f.attrezzature.map(esc).join(', ')}</td></tr>
+            <tr><th>Rischi</th><td><ul>${f.rischi.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></td></tr>
+            <tr><th>Misure di prevenzione</th><td><ul>${f.misure.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></td></tr>
+            <tr><th>DPI</th><td>${f.dpi.map(esc).join(', ')}</td></tr>
+            <tr><th>Misure integrative rispetto al PSC</th><td style="height:2em"></td></tr>
+          </tbody></table></div>`
+                )
+                .join('')
+            : '<p>Scegli le lavorazioni del cantiere nei dati del documento.</p>'
+        }
+
+        <h2>8 · Procedure complementari richieste dal PSC (lett. h)</h2>
         <p style="min-height:3em">&nbsp;</p>
-        <h2>i) DPI forniti ai lavoratori</h2>
-        <p>☐ Elmetto &nbsp; ☐ Scarpe antinfortunistiche &nbsp; ☐ Guanti &nbsp; ☐ Occhiali &nbsp; ☐ Otoprotettori &nbsp; ☐ Mascherine &nbsp; ☐ Imbracatura anticaduta &nbsp; ☐ Indumenti alta visibilità</p>
-        <h2>l) Informazione e formazione dei lavoratori</h2>
-        <p>Gli attestati di formazione generale, specifica e per gli incarichi sono allegati. Registro: vedi «Registro della formazione».</p>
+
+        <h2>9 · DPI forniti ai lavoratori (lett. i)</h2>
+        <table class="doc__tabella"><thead><tr><th>DPI</th>${scelti.map((l) => `<th>${esc(l.cognome || l.nome || '')}</th>`).join('')}</tr></thead><tbody>
+          ${(dpi.length ? dpi : ['Casco', 'Scarpe antinfortunistiche', 'Guanti']).map((x) => `<tr><td>${esc(x)}</td>${scelti.map(() => '<td>☐</td>').join('')}</tr>`).join('')}
+        </tbody></table>
+
+        <h2>10 · Informazione e formazione dei lavoratori (lett. l)</h2>
+        <p>I lavoratori sono stati informati sui contenuti del presente POS e del PSC e sulle procedure di emergenza del cantiere in data ${v('', 10)}. Gli attestati di formazione sono allegati.</p>
+
+        <h2>11 · Gestione delle emergenze in cantiere</h2>
+        <ul>
+          <li>Numero unico di emergenza: <strong>112</strong>. Indicare ai soccorsi l'indirizzo esatto del cantiere e il punto di accesso.</li>
+          <li>Cassetta di pronto soccorso e estintore presenti in cantiere, posizione: ${v('', 24)}.</li>
+          <li>In caso di infortunio: prestare soccorso, mettere in sicurezza l'area, avvisare il capocantiere, il datore di lavoro e il CSE.</li>
+          <li>Procedure di emergenza comuni definite nel PSC: ☐ lette e condivise con i lavoratori.</li>
+        </ul>
+
+        <h2>12 · Documenti da tenere in cantiere</h2>
+        <ul class="doc__spunte">
+          ${['Copia del POS e del PSC', 'Copia della notifica preliminare (quando prevista)', 'Tessere di riconoscimento dei lavoratori', 'Attestati di formazione e giudizi di idoneità', 'Libretti e verifiche delle attrezzature', 'Schede di sicurezza dei prodotti', 'Verbale di consegna dei DPI', 'DURC e iscrizione alla Camera di commercio', 'Patente a crediti (impresa e lavoratori autonomi)', ...(ponteggio ? ['PiMUS, libretto e disegno del ponteggio'] : [])]
+            .map((x) => `<li>☐ ${esc(x)}</li>`)
+            .join('')}
+        </ul>
+
         ${luogoData(a, oggi)}
-        ${firme(['Il datore di lavoro', titolare(a)], ['Per presa visione, l\'RLS', a.rls])}`;
+        ${firme(['Il datore di lavoro dell\'impresa esecutrice', titolare(a)], ['Per presa visione, l\'RLS', a.rls], ['Verifica di congruità dell\'impresa affidataria', ''], ['Verifica di idoneità del CSE', o.cse || ''])}`;
     }
   },
   {
