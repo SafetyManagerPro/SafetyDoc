@@ -33,6 +33,7 @@ import {
   dataDaMese
 } from './engine.js';
 import { linkAiuto } from './aiuto.js';
+import { oggiLocale, formattaData, interpretaData, mascheraData, erroreData, MESI } from './date.js';
 import { immaginiPerStampa } from './allegati.js';
 import { LINGUE } from './lingue.js';
 import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport } from './allegati.js';
@@ -42,7 +43,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.15.0';
+export const VERSIONE_APP = '0.15.1';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -104,7 +105,7 @@ const app = document.getElementById('app');
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-const oggiIso = () => new Date().toISOString().slice(0, 10);
+const oggiIso = () => oggiLocale();
 
 function dataLeggibile(iso) {
   if (!iso) return '';
@@ -266,6 +267,90 @@ function attivaAllegati(ridisegna) {
 function situazione(l) {
   return situazioneLavoratore({ lavoratore: l, defLavoratori: stato.defLav, registri: stato.registri, ctx: ctx(), oggi: oggiIso() });
 }
+
+// ---------- campi data ----------
+
+const ICONA_CALENDARIO = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+/**
+ * Trasforma ogni <input type="date"> in un campo uguale su tutti i telefoni: la data si scrive come gg/mm/aaaa
+ * (le barre si aggiungono da sole) oppure si sceglie con il pulsante del calendario.
+ * Il campo originale resta nascosto e continua a portare il valore AAAA-MM-GG nel modulo.
+ */
+function miglioraCampoData(nativo) {
+  if (nativo.dataset.migliorato) return;
+  nativo.dataset.migliorato = '1';
+  const obbligatoria = nativo.required;
+  nativo.required = false;
+  nativo.dataset.minBase = nativo.min || '';
+  const box = document.createElement('span');
+  box.className = 'data-campo';
+  const testo = document.createElement('input');
+  Object.assign(testo, { type: 'text', className: 'campo data-campo__testo', placeholder: 'gg/mm/aaaa', autocomplete: 'off', inputMode: 'numeric', required: obbligatoria, value: formattaData(nativo.value) });
+  testo.setAttribute('maxlength', '10');
+  const bottone = document.createElement('button');
+  Object.assign(bottone, { type: 'button', className: 'data-campo__cal', innerHTML: ICONA_CALENDARIO });
+  bottone.setAttribute('aria-label', 'Scegli la data dal calendario');
+  const messaggio = document.createElement('span');
+  messaggio.className = 'data-campo__errore';
+  messaggio.setAttribute('aria-live', 'polite');
+  nativo.before(box);
+  box.append(testo, bottone, nativo, messaggio);
+  nativo.classList.add('data-campo__nativo');
+  nativo.tabIndex = -1;
+  nativo.setAttribute('aria-hidden', 'true');
+
+  const limiti = () => {
+    const altro = nativo.dataset.dopo ? nativo.form?.elements[nativo.dataset.dopo] : null;
+    const min = [nativo.dataset.minBase, altro?.value].filter(Boolean).sort().pop() || '';
+    return { min, max: nativo.max || '', obbligatoria };
+  };
+  const aggiorna = (avvisa) => {
+    const iso = interpretaData(testo.value);
+    const err = erroreData(iso, { ...limiti(), testo: testo.value });
+    testo.setCustomValidity(err);
+    // Mentre si scrive l'errore compare solo se era già mostrato; all'uscita dal campo sempre.
+    if (avvisa || !err || messaggio.textContent) messaggio.textContent = err;
+    const nuovo = iso && !err ? iso : '';
+    if (nativo.value !== nuovo) {
+      nativo.value = nuovo;
+      nativo.dispatchEvent(new Event('input', { bubbles: true }));
+      nativo.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  };
+  testo.addEventListener('input', () => {
+    const m = mascheraData(testo.value);
+    if (m !== testo.value) testo.value = m;
+    aggiorna(false);
+  });
+  testo.addEventListener('blur', () => {
+    const iso = interpretaData(testo.value);
+    if (iso) testo.value = formattaData(iso);
+    aggiorna(true);
+  });
+  nativo.addEventListener('change', (e) => {
+    if (!e.isTrusted) return;
+    testo.value = formattaData(nativo.value);
+    aggiorna(true);
+  });
+  bottone.addEventListener('click', () => {
+    nativo.min = limiti().min;
+    try {
+      nativo.showPicker();
+    } catch {
+      nativo.focus();
+      nativo.click();
+    }
+  });
+  // Se cambia la data a cui è legata (es. data del corso), ricontrolla questa.
+  if (nativo.dataset.dopo) nativo.form?.elements[nativo.dataset.dopo]?.addEventListener('change', () => testo.value && aggiorna(true));
+}
+
+function miglioraDate(radice = document) {
+  radice.querySelectorAll('input[type="date"]:not([data-migliorato])').forEach(miglioraCampoData);
+}
+
+new MutationObserver(() => miglioraDate(app)).observe(app, { childList: true, subtree: true });
 
 // ---------- chiedi aiuto ----------
 
@@ -731,7 +816,7 @@ async function schermataScheda(id) {
         ${
           chiedeScadenza
             ? `<label>Prossima scadenza ${mesi ? `<small>(se la lasci vuota la calcoliamo: ogni ${mesi} mesi)</small>` : '<small>(scrivila se la conosci, per esempio dall\'attestato o dal medico)</small>'}
-          <input class="campo" type="date" name="scadenzaManuale" value="${esc(st?.scadenzaManuale || '')}">
+          <input class="campo" type="date" name="scadenzaManuale" data-dopo="dataFatto" value="${esc(st?.scadenzaManuale || '')}">
         </label>`
             : ''
         }
@@ -1132,8 +1217,8 @@ async function schermataEvento(id) {
         <label>Perché è successo <small>(attrezzatura, procedura, fretta, formazione, ordine)</small><textarea class="campo" name="causa" rows="2">${esc(ev.causa || '')}</textarea></label>
         <div id="campi-infortunio">
           <label>Giorni di prognosi sul certificato medico <small>(escluso il giorno dell'infortunio)</small><input class="campo" type="number" inputmode="numeric" min="0" max="999" name="giorniPrognosi" value="${esc(ev.giorniPrognosi ?? '')}"></label>
-          <label>Data in cui hai ricevuto il certificato<input class="campo" type="date" name="dataCertificato" max="${oggiIso()}" value="${esc(ev.dataCertificato || '')}"></label>
-          <label>Data della denuncia o comunicazione all'INAIL<input class="campo" type="date" name="dataDenuncia" max="${oggiIso()}" value="${esc(ev.dataDenuncia || '')}"></label>
+          <label>Data in cui hai ricevuto il certificato<input class="campo" type="date" name="dataCertificato" data-dopo="data" max="${oggiIso()}" value="${esc(ev.dataCertificato || '')}"></label>
+          <label>Data della denuncia o comunicazione all'INAIL<input class="campo" type="date" name="dataDenuncia" data-dopo="data" max="${oggiIso()}" value="${esc(ev.dataDenuncia || '')}"></label>
           <p class="riquadro">Prognosi oltre 3 giorni: denuncia telematica all'INAIL entro 2 giorni dal certificato. Da 1 a 3 giorni: comunicazione a fini statistici. Morte o pericolo di morte: entro 24 ore. Non scrivere qui diagnosi o lesioni.</p>
         </div>
         <label>Cosa fai perché non si ripeta<textarea class="campo" name="misure" rows="2">${esc(ev.misure || '')}</textarea></label>
@@ -1217,9 +1302,12 @@ async function schermataControlloIniziale(indiceTesto) {
         <button class="scelta" id="nonso"><span class="scelta__titolo">Non lo so</span><span class="scelta__aiuto">La segniamo da controllare con chi ti aiuta</span></button>
       </div>
       <form id="quando" hidden>
-        <label>Quando, più o meno? <small>(mese e anno: va bene anche una data approssimativa)</small>
-          <input class="campo" type="month" name="mese" max="${mese}" value="${esc(st?.dataFatto?.slice(0, 7) || '')}" placeholder="AAAA-MM" required>
-        </label>
+        <fieldset class="data-mese"><legend>Quando, più o meno? <small>(va bene anche approssimativo)</small></legend>
+          <label>Mese<select class="campo" name="meseN"><option value="">Non ricordo</option>${MESI.map((nm, k) => `<option value="${k + 1}" ${Number(st?.dataFatto?.slice(5, 7)) === k + 1 ? 'selected' : ''}>${nm}</option>`).join('')}</select></label>
+          <label>Anno<select class="campo" name="anno" required><option value="">Scegli…</option>${Array.from({ length: 41 }, (_, k) => Number(mese.slice(0, 4)) - k)
+            .map((y) => `<option value="${y}" ${Number(st?.dataFatto?.slice(0, 4)) === y ? 'selected' : ''}>${y}</option>`)
+            .join('')}</select></label>
+        </fieldset>
         ${
           conScadenza
             ? `<label>Quando scade? <small>(se è scritto sull'attestato o sul documento; altrimenti lascia vuoto)</small>
@@ -1239,7 +1327,7 @@ async function schermataControlloIniziale(indiceTesto) {
   app.querySelector('#si').addEventListener('click', () => {
     app.querySelector('#risposte').hidden = true;
     form.hidden = false;
-    form.querySelector('input').focus();
+    form.querySelector('select').focus();
   });
   app.querySelector('#no').addEventListener('click', () => {
     giro.esiti[id] = 'no';
@@ -1252,8 +1340,9 @@ async function schermataControlloIniziale(indiceTesto) {
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const f = new FormData(form);
-    const dataFatto = dataDaMese(f.get('mese'));
-    if (!dataFatto) return avviso('Scrivi mese e anno, per esempio 2024-03.');
+    const anno = f.get('anno');
+    if (!anno) return avviso('Scegli almeno l\'anno.');
+    const dataFatto = dataDaMese(`${anno}-${String(f.get('meseN') || 1).padStart(2, '0')}`);
     if (dataFatto > oggiIso()) return avviso('La data non può essere nel futuro.');
     await store.salvaAdempimento({
       ...(st || {}),
@@ -1443,7 +1532,7 @@ async function schermataModificaLavoratore(id) {
               <span class="spunta__box" aria-hidden="true"></span><span class="spunta__testo">${esc(r.etichetta)}</span></button>`
           )
           .join('')}</div>
-        ${nuovo ? '' : `<label>Data di fine rapporto <small>(solo se non lavora più con te)</small><input class="campo" type="date" name="dataCessazione" value="${esc(l.dataCessazione || '')}"></label>`}
+        ${nuovo ? '' : `<label>Data di fine rapporto <small>(solo se non lavora più con te)</small><input class="campo" type="date" name="dataCessazione" data-dopo="dataAssunzione" value="${esc(l.dataCessazione || '')}"></label>`}
         <p class="nota">Non scrivere qui malattie, diagnosi o altri dati sulla salute.</p>
         <button class="btn btn--primario btn--grande" type="submit">Salva</button>
         ${nuovo ? '' : `<button class="btn btn--testo" type="button" id="elimina">Elimina questo lavoratore</button>`}
@@ -1510,7 +1599,7 @@ async function schermataRegistro(lavId, reqId) {
         ${
           chiedeScadenza
             ? `<label>Prossima scadenza ${req.periodicitaMesi ? `<small>(se la lasci vuota la calcoliamo: ogni ${req.periodicitaMesi} mesi)</small>` : '<small>(scrivila dall\'attestato o da quanto indicato dal medico)</small>'}
-          <input class="campo" type="date" name="scadenzaManuale"></label>`
+          <input class="campo" type="date" name="scadenzaManuale" data-dopo="data"></label>`
             : ''
         }
         ${
@@ -1764,7 +1853,7 @@ async function schermataControllo(attrId, controlloId) {
         ${
           chiedeScadenza
             ? `<label>Prossima scadenza ${c.tipoScadenza === 'periodica' && c.periodicitaMesi ? `<small>(se la lasci vuota la calcoliamo: ogni ${c.periodicitaMesi} mesi)</small>` : '<small>(dal libretto, dal verbale o dalla ditta)</small>'}
-          <input class="campo" type="date" name="scadenzaManuale"></label>`
+          <input class="campo" type="date" name="scadenzaManuale" data-dopo="data"></label>`
             : ''
         }
         <label>Esito<select class="campo" name="esito"><option value="positivo">Tutto a posto</option><option value="con_interventi">Fatti interventi o riparazioni</option><option value="negativo">Non idonea: non usarla finché non è riparata</option></select></label>

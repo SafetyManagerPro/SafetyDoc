@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.15.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.15.1. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -56,6 +56,7 @@ js/store.js           salvataggio nel browser (IndexedDB): l'unico file da sosti
 js/cifratura.js       cifratura dei backup (AES-GCM, PBKDF2)
 js/modelli.js         modelli di documenti stampabili, compresa la bozza di DVR (modulo puro, testato)
 js/allegati.js        foto e PDF allegati: riduzione e conversione per il backup
+js/date.js            date in formato gg/mm/aaaa e data di oggi in ora locale (modulo puro, testato)
 js/calcoli.js         rumore, vibrazioni, NIOSH, rischio chimico, basso rischio incendio (modulo puro, testato)
 js/aiuto.js           link per chiedere aiuto al consulente (modulo puro, testato)
 js/calendario.js      scadenze esportate nel calendario del telefono (.ics) (modulo puro, testato)
