@@ -1,0 +1,703 @@
+{
+  "versione": "0.1.0",
+  "nota": "Esempi tipici per settore, senza marche: l'impresa sceglie quelli che usa davvero e completa i dati (marca, matricola, scheda di sicurezza).",
+  "settori": {
+    "edilizia": {
+      "attrezzature": [
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        },
+        {
+          "tipo": "trabattello",
+          "nome": "Trabattello"
+        },
+        {
+          "tipo": "ponteggio",
+          "nome": "Ponteggio metallico fisso"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Betoniera"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Sega da banco o tagliapiastrelle"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Smerigliatrice angolare (flessibile)"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Martello demolitore"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Trapano"
+        },
+        {
+          "tipo": "veicolo",
+          "nome": "Furgone"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Cemento e malte",
+          "uso": "Impasti e intonaci"
+        },
+        {
+          "nome": "Disarmante per casseforme",
+          "uso": "Getti in calcestruzzo"
+        },
+        {
+          "nome": "Schiuma poliuretanica",
+          "uso": "Sigillature"
+        },
+        {
+          "nome": "Pitture e vernici",
+          "uso": "Tinteggiatura"
+        },
+        {
+          "nome": "Diluente",
+          "uso": "Pulizia attrezzi e diluizione"
+        },
+        {
+          "nome": "Impermeabilizzante bituminoso",
+          "uso": "Coperture e fondazioni"
+        }
+      ],
+      "mansioni": [
+        "Muratore",
+        "Manovale",
+        "Carpentiere",
+        "Pittore edile",
+        "Piastrellista",
+        "Capocantiere"
+      ]
+    },
+    "impianti": {
+      "attrezzature": [
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        },
+        {
+          "tipo": "trabattello",
+          "nome": "Trabattello"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Trapano e avvitatore"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Smerigliatrice angolare (flessibile)"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Cannello per saldobrasatura"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Scanalatrice per tracce"
+        },
+        {
+          "tipo": "veicolo",
+          "nome": "Furgone"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Gas per saldobrasatura (bombole)",
+          "uso": "Saldature di tubi"
+        },
+        {
+          "nome": "Pasta flussante",
+          "uso": "Saldature"
+        },
+        {
+          "nome": "Colla per tubi in PVC",
+          "uso": "Scarichi"
+        },
+        {
+          "nome": "Schiuma poliuretanica",
+          "uso": "Sigillature"
+        },
+        {
+          "nome": "Gas refrigerante",
+          "uso": "Climatizzazione e refrigerazione"
+        }
+      ],
+      "mansioni": [
+        "Elettricista",
+        "Idraulico",
+        "Termoidraulico",
+        "Frigorista",
+        "Aiutante installatore"
+      ]
+    },
+    "metalmeccanica": {
+      "attrezzature": [
+        {
+          "tipo": "macchina",
+          "nome": "Trapano a colonna"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Troncatrice o segatrice a nastro"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Saldatrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Piegatrice o cesoia"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Smerigliatrice angolare (flessibile)"
+        },
+        {
+          "tipo": "pressione",
+          "nome": "Compressore"
+        },
+        {
+          "tipo": "sollevamento_fisso",
+          "nome": "Paranco o carroponte"
+        },
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Ossigeno e acetilene (bombole)",
+          "uso": "Taglio e saldatura"
+        },
+        {
+          "nome": "Gas di protezione per saldatura",
+          "uso": "Saldatura a filo"
+        },
+        {
+          "nome": "Olio o emulsione da taglio",
+          "uso": "Lavorazioni alle macchine"
+        },
+        {
+          "nome": "Sgrassante",
+          "uso": "Pulizia dei pezzi"
+        },
+        {
+          "nome": "Antiruggine e vernici",
+          "uso": "Finitura"
+        }
+      ],
+      "mansioni": [
+        "Fabbro",
+        "Saldatore",
+        "Operaio metalmeccanico",
+        "Montatore",
+        "Verniciatore"
+      ]
+    },
+    "legno": {
+      "attrezzature": [
+        {
+          "tipo": "macchina",
+          "nome": "Sega circolare o squadratrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Pialla a filo e spessore"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Toupie"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Sega a nastro"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Levigatrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Impianto di aspirazione"
+        },
+        {
+          "tipo": "pressione",
+          "nome": "Compressore"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Elettroutensili portatili"
+        },
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Vernici e impregnanti",
+          "uso": "Finitura del legno"
+        },
+        {
+          "nome": "Colla vinilica o poliuretanica",
+          "uso": "Incollaggio"
+        },
+        {
+          "nome": "Diluente",
+          "uso": "Pulizia attrezzi"
+        },
+        {
+          "nome": "Stucco per legno",
+          "uso": "Riparazioni"
+        }
+      ],
+      "mansioni": [
+        "Falegname",
+        "Verniciatore",
+        "Montatore di mobili",
+        "Apprendista falegname"
+      ]
+    },
+    "alimentare_produzione": {
+      "attrezzature": [
+        {
+          "tipo": "macchina",
+          "nome": "Impastatrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Forno"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Sfogliatrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Affettatrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Abbattitore e celle frigorifere"
+        },
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Detergente sgrassante",
+          "uso": "Pulizia di superfici e attrezzature"
+        },
+        {
+          "nome": "Disinfettante",
+          "uso": "Sanificazione"
+        },
+        {
+          "nome": "Disincrostante per forni",
+          "uso": "Pulizia forni"
+        },
+        {
+          "nome": "Detergente per lavaggio stoviglie",
+          "uso": "Lavaggio"
+        }
+      ],
+      "mansioni": [
+        "Panettiere",
+        "Pasticciere",
+        "Addetto al banco",
+        "Addetto alla produzione",
+        "Addetto alle pulizie"
+      ]
+    },
+    "autoriparazione": {
+      "attrezzature": [
+        {
+          "tipo": "sollevamento_fisso",
+          "nome": "Ponte sollevatore"
+        },
+        {
+          "tipo": "pressione",
+          "nome": "Compressore"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Smontagomme"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Equilibratrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Saldatrice"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Avvitatore pneumatico"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Smerigliatrice angolare (flessibile)"
+        },
+        {
+          "tipo": "altro",
+          "nome": "Sollevatore idraulico a carrello (cric)"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Olio motore e lubrificanti",
+          "uso": "Manutenzione"
+        },
+        {
+          "nome": "Liquido antigelo",
+          "uso": "Impianti di raffreddamento"
+        },
+        {
+          "nome": "Liquido freni",
+          "uso": "Impianti frenanti"
+        },
+        {
+          "nome": "Pulitore freni e sgrassante spray",
+          "uso": "Pulizia componenti"
+        },
+        {
+          "nome": "Vernici e diluenti per carrozzeria",
+          "uso": "Verniciatura"
+        },
+        {
+          "nome": "Stucco e catalizzatore",
+          "uso": "Carrozzeria"
+        }
+      ],
+      "mansioni": [
+        "Meccanico",
+        "Carrozziere",
+        "Verniciatore",
+        "Gommista",
+        "Elettrauto"
+      ]
+    },
+    "ristorazione": {
+      "attrezzature": [
+        {
+          "tipo": "macchina",
+          "nome": "Affettatrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Forno"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Friggitrice"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Macchina da caffè"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Lavastoviglie"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Frigoriferi e congelatori"
+        },
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Detergente sgrassante",
+          "uso": "Pulizia della cucina"
+        },
+        {
+          "nome": "Disinfettante",
+          "uso": "Sanificazione"
+        },
+        {
+          "nome": "Detergente per lavastoviglie",
+          "uso": "Lavaggio"
+        },
+        {
+          "nome": "Brillantante",
+          "uso": "Lavaggio"
+        },
+        {
+          "nome": "Decalcificante",
+          "uso": "Macchina da caffè e lavastoviglie"
+        }
+      ],
+      "mansioni": [
+        "Cuoco",
+        "Aiuto cuoco",
+        "Pizzaiolo",
+        "Cameriere",
+        "Barista",
+        "Lavapiatti"
+      ]
+    },
+    "acconciatura_estetica": {
+      "attrezzature": [
+        {
+          "tipo": "utensile",
+          "nome": "Asciugacapelli e piastre"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Sterilizzatrice per strumenti"
+        },
+        {
+          "tipo": "altro",
+          "nome": "Apparecchi per estetica"
+        },
+        {
+          "tipo": "altro",
+          "nome": "Lettino o poltrona regolabile"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Tinture per capelli",
+          "uso": "Colorazione"
+        },
+        {
+          "nome": "Ossidante (acqua ossigenata)",
+          "uso": "Colorazione e decolorazione"
+        },
+        {
+          "nome": "Decolorante",
+          "uso": "Decolorazione"
+        },
+        {
+          "nome": "Prodotti per permanente e stiratura",
+          "uso": "Trattamenti"
+        },
+        {
+          "nome": "Disinfettante per strumenti",
+          "uso": "Igiene"
+        },
+        {
+          "nome": "Smalti e solventi per unghie",
+          "uso": "Manicure"
+        },
+        {
+          "nome": "Cera depilatoria",
+          "uso": "Depilazione"
+        }
+      ],
+      "mansioni": [
+        "Acconciatore",
+        "Estetista",
+        "Shampista",
+        "Apprendista"
+      ]
+    },
+    "pulizie": {
+      "attrezzature": [
+        {
+          "tipo": "macchina",
+          "nome": "Lavasciuga pavimenti"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Aspiratore per polveri e liquidi"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Idropulitrice"
+        },
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        },
+        {
+          "tipo": "veicolo",
+          "nome": "Furgone"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Detergente sgrassante",
+          "uso": "Pulizie"
+        },
+        {
+          "nome": "Disinfettante a base di cloro",
+          "uso": "Sanificazione"
+        },
+        {
+          "nome": "Disincrostante acido",
+          "uso": "Bagni"
+        },
+        {
+          "nome": "Detergente per vetri",
+          "uso": "Vetri"
+        },
+        {
+          "nome": "Prodotti per disinfestazione",
+          "uso": "Disinfestazione"
+        }
+      ],
+      "mansioni": [
+        "Addetto alle pulizie",
+        "Caposquadra",
+        "Operatore di disinfestazione"
+      ]
+    },
+    "trasporto": {
+      "attrezzature": [
+        {
+          "tipo": "veicolo",
+          "nome": "Camion o furgone"
+        },
+        {
+          "tipo": "carrello",
+          "nome": "Carrello elevatore (muletto)"
+        },
+        {
+          "tipo": "altro",
+          "nome": "Transpallet"
+        },
+        {
+          "tipo": "altro",
+          "nome": "Sponda idraulica"
+        },
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Gasolio",
+          "uso": "Rifornimento"
+        },
+        {
+          "nome": "AdBlue",
+          "uso": "Rifornimento"
+        },
+        {
+          "nome": "Olio e lubrificanti",
+          "uso": "Manutenzione mezzi"
+        }
+      ],
+      "mansioni": [
+        "Autista",
+        "Magazziniere",
+        "Carrellista",
+        "Facchino"
+      ]
+    },
+    "agricoltura": {
+      "attrezzature": [
+        {
+          "tipo": "macchina",
+          "nome": "Trattore"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Decespugliatore"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Motosega"
+        },
+        {
+          "tipo": "utensile",
+          "nome": "Tagliasiepi"
+        },
+        {
+          "tipo": "macchina",
+          "nome": "Tosaerba"
+        },
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        },
+        {
+          "tipo": "veicolo",
+          "nome": "Furgone o autocarro"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Prodotti fitosanitari",
+          "uso": "Trattamenti delle piante"
+        },
+        {
+          "nome": "Concimi",
+          "uso": "Fertilizzazione"
+        },
+        {
+          "nome": "Miscela e carburanti",
+          "uso": "Motori delle attrezzature"
+        }
+      ],
+      "mansioni": [
+        "Giardiniere",
+        "Operaio agricolo",
+        "Potatore"
+      ]
+    },
+    "commercio_ufficio": {
+      "attrezzature": [
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        },
+        {
+          "tipo": "altro",
+          "nome": "Scaffalature"
+        },
+        {
+          "tipo": "altro",
+          "nome": "Transpallet"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Detergente per pulizie",
+          "uso": "Pulizia del locale"
+        },
+        {
+          "nome": "Disinfettante",
+          "uso": "Igiene"
+        }
+      ],
+      "mansioni": [
+        "Commesso",
+        "Impiegato",
+        "Magazziniere",
+        "Cassiere"
+      ]
+    },
+    "altro": {
+      "attrezzature": [
+        {
+          "tipo": "scala",
+          "nome": "Scala portatile"
+        }
+      ],
+      "prodotti": [
+        {
+          "nome": "Detergente per pulizie",
+          "uso": "Pulizia del locale"
+        }
+      ],
+      "mansioni": []
+    }
+  }
+}

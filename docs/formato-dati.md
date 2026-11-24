@@ -62,7 +62,7 @@ Collezioni:
   `misureFatte`. Nessuna diagnosi: solo i giorni di prognosi che servono per le scadenze INAIL (oltre 3 giorni
   denuncia, da 1 a 3 comunicazione statistica, entro 2 giorni dal certificato).
 - `allegati`: foto e PDF collegati a un'altra voce: `collegatoTipo` (`adempimento`, `registro`, `controllo`,
-  `attrezzatura`, `prodotto`, `evento`), `collegatoId`, `nome`, `tipo` (MIME), `dimensione`, `file` (Blob). Nel file di backup il
+  `attrezzatura`, `prodotto`, `evento`, `documento`). I documenti firmati sul telefono sono salvati come HTML (`text/html`) con le firme incluse e collegati alla registrazione del lavoratore o al documento, `collegatoId`, `nome`, `tipo` (MIME), `dimensione`, `file` (Blob). Nel file di backup il
   contenuto diventa `datiBase64`; si può scegliere di non includerlo.
 
 ## File di backup

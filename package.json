@@ -1,6 +1,6 @@
 {
   "name": "safetydoc",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "safetyDoc: cosa fare, come e quando per la sicurezza sul lavoro nelle piccole imprese.",
   "type": "module",
