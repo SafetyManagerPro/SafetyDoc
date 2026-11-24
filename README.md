@@ -25,8 +25,7 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
 9. **Documenti** – DVR, POS e DUVRI completi con campi da compilare nell'app (`data/lavorazioni.json`: fasi di cantiere e tipi di appalto), piano di emergenza, valutazione incendio (DM 3/9/2021), valutazioni di rumore, vibrazioni, movimentazione carichi (NIOSH) e rischio chimico con calcolo automatico (`js/calcoli.js`), incarico RSPP, richiesta visite al medico, permesso di lavoro a caldo, informazione art. 36, addestramento, elezione RLS, nomine, designazioni, informative (privacy, gravidanza, minori), stress, allergeni, verbali e registri compilati con i dati e stampabili in PDF (`js/modelli.js`).
 10. **Aiuto a fare** – firma sul telefono o sul tablet dei documenti (la copia firmata resta allegata e registra la
    voce del lavoratore) ed esempi tipici di attrezzature, prodotti e mansioni per settore (`data/settori.json`); regole di sicurezza ed
-   emergenza in 5 lingue straniere accanto all'italiano (`js/calcoli.js         calcoli di rumore, vibrazioni, NIOSH, rischio chimico e basso rischio incendio (modulo puro, testato)
-js/lingue.js`).
+   emergenza in 5 lingue straniere accanto all'italiano (`js/lingue.js`).
 11. **Controllo veloce** – subito dopo il questionario chiede, voce per voce, «Hai già fatto…?» con una data
    indicativa: chi è già in regola non parte con tutto rosso.
 12. **Chiedi aiuto** – il recapito del consulente o dell'associazione; da ogni voce si chiama o si scrive (telefono,
@@ -53,6 +52,7 @@ js/store.js           salvataggio nel browser (IndexedDB): l'unico file da sosti
 js/cifratura.js       cifratura dei backup (AES-GCM, PBKDF2)
 js/modelli.js         modelli di documenti stampabili, compresa la bozza di DVR (modulo puro, testato)
 js/allegati.js        foto e PDF allegati: riduzione e conversione per il backup
+js/calcoli.js         rumore, vibrazioni, NIOSH, rischio chimico, basso rischio incendio (modulo puro, testato)
 js/aiuto.js           link per chiedere aiuto al consulente (modulo puro, testato)
 js/calendario.js      scadenze esportate nel calendario del telefono (.ics) (modulo puro, testato)
 data/                 questionario, catalogo, requisiti dei lavoratori, pericoli del DVR tabella ATECO 2025 e tipi di attrezzature
