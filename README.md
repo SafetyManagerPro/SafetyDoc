@@ -3,10 +3,10 @@
 **Cosa fare, come e quando per la sicurezza della tua impresa.**
 
 safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno personale dedicato alla sicurezza e
-usano poco il computer. L'utente risponde a circa 20 domande semplici e ottiene il suo piano: ogni voce spiega
+usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.1.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.4.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -33,7 +33,7 @@ js/merge.js           formato di scambio e unione tra postazioni (modulo puro, t
 js/store.js           salvataggio nel browser (IndexedDB): l'unico file da sostituire per passare a Supabase
 js/cifratura.js       cifratura dei backup (AES-GCM, PBKDF2)
 js/modelli.js         modelli di documenti stampabili (modulo puro, testato)
-data/                 questionario e catalogo
+data/                 questionario, catalogo e requisiti dei lavoratori
 docs/                 documentazione tecnica
 test/                 test con il test runner di Node
 ```
