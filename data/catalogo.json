@@ -10,6 +10,27 @@
     "privacy": "Privacy e dati",
     "alimenti": "Alimenti e HACCP"
   },
+  "novita": [
+    {
+      "versione": "0.6.0",
+      "data": "2026-11-24",
+      "testo": "Nuove voci su appalti, cantieri, prodotti chimici, gravidanza e minori, infortuni e alimenti.",
+      "schede": [
+        "duvri",
+        "appalti-presso-clienti",
+        "pos",
+        "schede-sicurezza",
+        "lavoratrici-madri",
+        "lavoratori-minori",
+        "registro-eventi",
+        "registrazione-alimentare",
+        "haccp-autocontrollo",
+        "formazione-alimentaristi",
+        "allergeni",
+        "rintracciabilita"
+      ]
+    }
+  ],
   "schede": [
     {
       "id": "iscrizioni-base",

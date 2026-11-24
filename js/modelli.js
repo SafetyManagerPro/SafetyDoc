@@ -3,6 +3,7 @@
 // I testi sono bozze da verificare con il consulente prima dell'uso.
 
 import { valuta, nomeCompleto, ESITI_VISITA } from './engine.js';
+import { LINGUE, TESTI } from './lingue.js';
 
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -484,6 +485,39 @@ export const MODELLI = [
       </ol>
       ${luogoData(a, oggi)}
       ${firme(['Il titolare del trattamento', titolare(a)], ['Il responsabile, per accettazione', ''])}`
+  },
+  {
+    id: 'regole-lavoratore',
+    titolo: 'Regole di sicurezza per il lavoratore (anche in altre lingue)',
+    descrizione: 'Le regole essenziali e cosa fare in emergenza, in italiano e nella lingua del lavoratore, con firma per ricevuta.',
+    ambito: 'lavoratore',
+    attivaSe: { fatto: 'haDipendenti' },
+    genera: ({ anagrafica: a, oggi, lavoratore: l, lavoratori }) => {
+      const addetti = (ruolo) => (lavoratori || []).filter((x) => (x.ruoli || []).includes(ruolo)).map(nomeCompleto).join(', ');
+      const lingue = ['it', ...(l?.lingua && l.lingua !== 'it' && TESTI[l.lingua] ? [l.lingua] : [])];
+      const blocco = (cod) => {
+        const t = TESTI[cod];
+        return `<section class="doc__lingua" lang="${cod}" dir="${LINGUE[cod].dir}">
+          <h2>${esc(t.titolo)}${cod !== 'it' ? ` · ${esc(LINGUE[cod].nome)}` : ''}</h2>
+          <ol>${t.regole.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
+          <h3>${esc(t.emergenza)}</h3>
+          <ul>
+            <li><strong>${esc(t.chiama)}</strong></li>
+            <li>${esc(t.soccorso)}: ${v(addetti('primo_soccorso'), 20)}</li>
+            <li>${esc(t.incendio)}: ${v(addetti('antincendio'), 20)}</li>
+            <li>${esc(t.allarme)}</li>
+          </ul>
+          <p><em>${esc(t.ricevuta)}</em></p>
+        </section>`;
+      };
+      return `${intestazione(a)}
+        <h1>Regole di sicurezza</h1>
+        <p>Lavoratore: ${v(l ? nomeCompleto(l) : '', 24)}${l?.mansione ? ` · ${esc(l.mansione)}` : ''}</p>
+        ${lingue.map(blocco).join('')}
+        ${lingue.length > 1 ? '<p class="doc__nota">Traduzione di cortesia: in caso di dubbio vale il testo italiano.</p>' : ''}
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['Il lavoratore, per ricevuta', l ? nomeCompleto(l) : ''])}`;
+    }
   },
   {
     id: 'info-rischi-ditte',

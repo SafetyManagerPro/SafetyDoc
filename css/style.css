@@ -247,6 +247,8 @@ select.campo { appearance: auto; }
 .doc__tabella--campi td { height: 3em; }
 .doc__nota { font-size: 0.8rem; color: #444; }
 .doc__luogo { margin-top: 24px; }
+.doc__lingua { border-top: 1px solid #bbb; margin-top: 18px; padding-top: 4px; break-inside: avoid; }
+.doc__lingua[dir="rtl"] { text-align: right; }
 .doc__firme { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; margin-top: 28px; }
 .doc__firme p { margin: 0; font-size: 0.85rem; }
 .doc__nome { min-height: 1.4em; font-weight: 700; }
@@ -287,6 +289,8 @@ dialog.firma h2 { margin-top: 0; }
 .riquadro p { margin: 0 0 6px; }
 .riquadro p:last-child { margin-bottom: 0; }
 .riquadro--invito .btn { margin-top: 10px; }
+.novita { margin: 8px 0 0; padding-left: 20px; }
+.novita li { margin: 4px 0; }
 .aiuto-box { border-top: 1px solid var(--bordo); margin-top: 28px; padding-top: 4px; }
 .aiuto-box__azioni { display: flex; flex-wrap: wrap; gap: 8px; }
 .aiuto-box__azioni .btn { flex: 1 1 110px; }

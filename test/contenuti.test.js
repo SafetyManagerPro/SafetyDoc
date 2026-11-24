@@ -101,3 +101,36 @@ test('esempi per settore: un pacchetto per ogni attività e tipi di attrezzatura
     assert.equal(new Set(s.attrezzature.map((a) => a.nome)).size, s.attrezzature.length, `${k}: doppioni`);
   }
 });
+
+import { confrontaVersioni, domandeSenzaRisposta, schermataSenzaRisposta, novitaDaMostrare } from '../js/engine.js';
+import { LINGUE, TESTI } from '../js/lingue.js';
+
+test('versioni, novità e domande nuove', () => {
+  assert.ok(confrontaVersioni('0.10.0', '0.9.0') > 0);
+  assert.equal(confrontaVersioni('0.6.0', '0.6'), 0);
+  const catalogo = json('catalogo.json');
+  const n = novitaDaMostrare(catalogo, '0.5.0', ['duvri', 'dvr']);
+  assert.equal(n.length, 1);
+  assert.deepEqual(n[0].schede, ['duvri']);
+  assert.equal(novitaDaMostrare(catalogo, catalogo.versione, ['duvri']).length, 0);
+  const ids = new Set(catalogo.schede.map((s) => s.id));
+  for (const x of catalogo.novita) for (const id of x.schede) assert.ok(ids.has(id), id);
+  const vecchie = { __completato: true, nome_impresa: 'X', ateco: '', attivita: 'altro', forma_giuridica: 'individuale', artigiano: false, composizione: 'solo', sede: true, rischio_incendio: 'no', rifiuti_pericolosi: 'no' };
+  const mancanti = domandeSenzaRisposta(questionario, vecchie).map((d) => d.id);
+  assert.ok(mancanti.includes('alimenti') && mancanti.includes('lavori_presso_clienti'));
+  assert.ok(!mancanti.includes('minori'), 'solo per chi ha dipendenti');
+  const i = schermataSenzaRisposta(questionario, vecchie);
+  assert.ok(i > 0);
+  const tutte = Object.fromEntries(mancanti.map((id) => [id, false]));
+  assert.equal(schermataSenzaRisposta(questionario, { ...vecchie, ...tutte }), -1);
+});
+
+test('regole tradotte: stesse voci in tutte le lingue', () => {
+  for (const k of Object.keys(LINGUE)) {
+    assert.ok(TESTI[k], k);
+    assert.equal(TESTI[k].regole.length, TESTI.it.regole.length, k);
+    for (const campo of Object.keys(TESTI.it)) assert.ok(TESTI[k][campo], `${k}.${campo}`);
+  }
+  const html = generaDocumento('regole-lavoratore', { anagrafica, oggi: '2026-11-24', lavoratore: { nome: 'Ahmed', cognome: 'Karim', lingua: 'ar' }, lavoratori: [] }).html;
+  assert.ok(html.includes('dir="rtl"') && html.includes('Regole di sicurezza sul lavoro'));
+});
