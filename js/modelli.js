@@ -39,6 +39,64 @@ const titolare = (a) => a.titolare || '';
 
 export const MODELLI = [
   {
+    id: 'dvr-bozza',
+    titolo: 'Bozza del Documento di valutazione dei rischi (DVR)',
+    descrizione: 'Bozza secondo lo schema delle procedure standardizzate, già compilata con le tue risposte, i lavoratori e le misure suggerite. Da completare con il tuo RSPP.',
+    ambito: 'impresa',
+    attivaSe: { fatto: 'haDipendenti' },
+    genera: ({ anagrafica: a, oggi, dvr, ctx, lavoratori, attivita }) => {
+      const pericoli = (dvr?.pericoli || []).map((x) => ({ ...x, presente: ctx ? valuta(x.presenteSe, ctx) : false }));
+      const presenti = pericoli.filter((x) => x.presente);
+      const mansioni = [...new Set((lavoratori || []).map((l) => (l.mansione || '').trim()).filter(Boolean))];
+      const famiglie = [...new Set(pericoli.map((x) => x.famiglia))];
+      const n = ctx?.fatti?.lavoratori || '';
+      return `${intestazione(a)}
+        <h1>Documento di valutazione dei rischi</h1>
+        <p class="doc__rif">${esc(dvr?.riferimento || '')}</p>
+        <p class="doc__nota">BOZZA generata da safetyDoc il ${esc(data(oggi))}: va verificata, completata e firmata. Deve avere data certa.</p>
+
+        <h2>Modulo 1.1 · Descrizione generale dell'azienda</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Ragione sociale</th><td>${esc(a.ragioneSociale || '')}</td></tr>
+          <tr><th>Attività</th><td>${esc(attivita || '')}</td></tr>
+          <tr><th>Sede</th><td>${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
+          <tr><th>Datore di lavoro</th><td>${esc(a.titolare || '')}</td></tr>
+          <tr><th>RSPP</th><td>${esc(ctx?.risposte?.dl_rspp ? `${a.titolare || ''} (datore di lavoro)` : a.rspp || '')}</td></tr>
+          <tr><th>Medico competente</th><td>${esc(a.medico || '')}</td></tr>
+          <tr><th>RLS / RLST</th><td>${esc(a.rls || '')}</td></tr>
+          <tr><th>Numero di lavoratori</th><td>${esc(String(n))}</td></tr>
+        </tbody></table>
+
+        <h2>Modulo 1.2 · Lavorazioni e mansioni</h2>
+        <table class="doc__tabella"><thead><tr><th>Fasi di lavoro e luoghi</th><th>Attrezzature, materiali e prodotti</th><th>Mansioni</th></tr></thead>
+          <tbody><tr><td style="height:7em"></td><td></td><td>${mansioni.length ? mansioni.map(esc).join('<br>') : ''}</td></tr></tbody></table>
+
+        <h2>Modulo 2 · Individuazione dei pericoli</h2>
+        <table class="doc__tabella"><thead><tr><th>Famiglia</th><th>Pericolo</th><th>Presente</th></tr></thead><tbody>
+          ${famiglie
+            .map((f) =>
+              pericoli
+                .filter((x) => x.famiglia === f)
+                .map((x, i) => `<tr>${i === 0 ? `<td rowspan="${pericoli.filter((y) => y.famiglia === f).length}">${esc(f)}</td>` : ''}<td>${esc(x.pericolo)}</td><td>${x.presente ? 'SÌ' : 'NO'}</td></tr>`)
+                .join('')
+            )
+            .join('')}
+        </tbody></table>
+        <p class="doc__nota">Le risposte SÌ/NO derivano dal questionario di safetyDoc: vanno confermate con un sopralluogo.</p>
+
+        <h2>Modulo 3 · Valutazione dei rischi, misure attuate e programma di miglioramento</h2>
+        <table class="doc__tabella"><thead><tr><th>Pericolo</th><th>Misure di prevenzione e protezione (da confermare)</th><th>Misure di miglioramento</th><th>Incaricato</th><th>Entro il</th></tr></thead><tbody>
+          ${presenti
+            .map((x) => `<tr><td>${esc(x.pericolo)}</td><td><ul>${x.misure.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></td><td></td><td></td><td></td></tr>`)
+            .join('')}
+        </tbody></table>
+
+        <p>Il presente documento è stato elaborato dal datore di lavoro in collaborazione con il RSPP e il medico competente, previa consultazione del RLS.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', ctx?.risposte?.dl_rspp ? titolare(a) : a.rspp], ['Il medico competente', a.medico], ['L\'RLS, per consultazione', a.rls])}`;
+    }
+  },
+  {
     id: 'registro-formazione',
     titolo: 'Registro di formazione, visite e scadenze',
     descrizione: 'Riepilogo per ogni lavoratore di corsi, visite mediche e DPI, con le date. Da tenere pronto per i controlli.',

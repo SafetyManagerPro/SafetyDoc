@@ -16,9 +16,10 @@ import {
 import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
 import { cifra, decifra } from './cifratura.js';
 import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } from './modelli.js';
+import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.4.0';
+export const VERSIONE_APP = '0.5.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -31,6 +32,8 @@ const SCHEDA_MODELLI = {
   antincendio: ['designazione-addetti'],
   dpi: ['consegna-dpi'],
   'formazione-lavoratori': ['registro-formazione'],
+  dvr: ['dvr-bozza'],
+  'stress-lavoro-correlato': ['dvr-bozza'],
   'privacy-lavoratori': ['informativa-lavoratori', 'autorizzazione-trattamento'],
   privacy: ['informativa-clienti', 'nomina-responsabile-esterno'],
   'piano-emergenza': ['verbale-evacuazione'],
@@ -53,7 +56,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { questionario: null, catalogo: null, defLav: null, profilo: null, adempimenti: [], lavoratori: [], registri: [] };
+const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -250,8 +253,33 @@ async function schermataPiano() {
         <div class="lista">${g.voci.map(cardVoce).join('')}</div>`
         )
         .join('')}
+      <h2>Promemoria sul telefono</h2>
+      <p>Aggiungi tutte le scadenze al calendario del telefono: ti avviserà 30 e 7 giorni prima.</p>
+      <button class="btn btn--primario" id="calendario">Aggiungi le scadenze al calendario</button>
+      <p class="nota">Il file contiene anche i nomi dei lavoratori con le loro scadenze: salvalo solo nel tuo calendario. Quando aggiorni le date, ripeti l'operazione.</p>
       <a class="btn btn--secondario" href="#/domanda/0">Cambia le risposte</a>
     </section>`;
+  app.querySelector('#calendario').addEventListener('click', esportaCalendario);
+}
+
+async function esportaCalendario() {
+  const eventi = eventiScadenze({ piano: piano(), situazioni: haDipendenti() ? attivi().map(situazione) : [], nomeCompleto });
+  if (!eventi.length) return avviso('Non ci sono ancora scadenze: prima segna come fatte le voci del piano.');
+  const ics = generaIcs(eventi);
+  const nome = `scadenze-sicurezza-${oggiIso()}.ics`;
+  const blob = new Blob([ics], { type: 'text/calendar' });
+  const file = new File([blob], nome, { type: 'text/calendar' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'Scadenze sicurezza' });
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      scarica(blob, nome);
+    }
+  } else {
+    scarica(blob, nome);
+  }
+  avviso(`${eventi.length} ${eventi.length === 1 ? 'scadenza pronta' : 'scadenze pronte'} per il calendario.`);
 }
 
 async function schermataDomanda(indice) {
@@ -740,7 +768,18 @@ async function schermataDocumento(id, lavId) {
   const req = stato.defLav.requisiti.find((r) => r.modello === id);
   const registro = l && req ? storicoRegistri(l.id, req.id, stato.registri)[0] : null;
   const situazioni = id === 'registro-formazione' ? attivi().map(situazione) : null;
-  const { html } = generaDocumento(id, { anagrafica: anagrafica(), lavoratore: l, oggi: oggiIso(), registro, situazioni });
+  const opzioneAttivita = stato.questionario.domande.find((d) => d.id === 'attivita')?.opzioni?.find((o) => o.valore === risposte().attivita);
+  const { html } = generaDocumento(id, {
+    anagrafica: anagrafica(),
+    lavoratore: l,
+    oggi: oggiIso(),
+    registro,
+    situazioni,
+    dvr: stato.dvr,
+    ctx: ctx(),
+    lavoratori: attivi(),
+    attivita: opzioneAttivita?.etichetta || ''
+  });
 
   app.innerHTML = `
     <section class="pagina pagina--doc">
@@ -897,9 +936,10 @@ async function instrada() {
 
 async function avvia() {
   try {
-    const [q, c, l] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json'].map((u) => fetch(u).then((r) => r.json()))
+    const [q, c, l, d] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json'].map((u) => fetch(u).then((r) => r.json()))
     );
+    stato.dvr = d;
     stato.questionario = q;
     stato.catalogo = c;
     stato.defLav = l;

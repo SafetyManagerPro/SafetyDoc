@@ -1,6 +1,6 @@
 {
-  "versione": "0.4.0",
-  "aggiornato": "2026-11-23",
+  "versione": "0.5.0",
+  "aggiornato": "2026-11-24",
   "avvertenza": "Bozza da validare da un esperto prima dell'uso reale. Le voci con 'daVerificare' richiedono un controllo sulla norma vigente.",
   "categorie": {
     "impresa": "La tua impresa",
@@ -210,6 +210,29 @@
         "fatto": "haDipendenti"
       },
       "priorita": 1
+    },
+    {
+      "id": "stress-lavoro-correlato",
+      "categoria": "sicurezza",
+      "titolo": "Stress lavoro-correlato",
+      "priorita": 2,
+      "cosaE": "Lo stress legato all'organizzazione del lavoro (carichi, orari, conflitti, ruoli poco chiari) è un rischio da valutare come gli altri.",
+      "perche": "La valutazione dello stress lavoro-correlato è obbligatoria per tutti i datori di lavoro e fa parte del DVR.",
+      "riferimento": "D.Lgs. 81/2008 art. 28 c. 1 e 1-bis; indicazioni della Commissione consultiva del 17 novembre 2010",
+      "come": [
+        "Fai la valutazione preliminare con gli indicatori oggettivi: infortuni, assenze, turnover, orari, segnalazioni (puoi usare la lista di controllo INAIL).",
+        "Coinvolgi i lavoratori o l'RLS.",
+        "Se emergono problemi, adotta misure organizzative e verifica se funzionano.",
+        "Scrivi il risultato nel DVR."
+      ],
+      "chi": "Tu, con il tuo RSPP e il medico competente.",
+      "quando": "Con il DVR. Aggiornamento consigliato ogni 2-3 anni o quando cambia l'organizzazione.",
+      "notaScadenza": "La legge non fissa una scadenza: il controllo ogni 2 anni è un'indicazione di buona prassi.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 24,
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      }
     },
     {
       "id": "rspp",
