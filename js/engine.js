@@ -480,3 +480,36 @@ export function eventiPerAnno(eventi, anni) {
   }
   return r;
 }
+
+// ---------- novità ----------
+
+/** Confronto tra versioni "1.2.3": negativo, zero o positivo. */
+export function confrontaVersioni(a, b) {
+  const pa = String(a || '0').split('.').map(Number);
+  const pb = String(b || '0').split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
+
+/** Domande che l'impresa vede ma a cui non ha mai risposto (per esempio aggiunte in un aggiornamento). */
+export function domandeSenzaRisposta(questionario, risposte) {
+  return domandeVisibili(questionario, risposte).filter((d) => !['testo', 'ateco'].includes(d.tipo) && risposte[d.id] === undefined);
+}
+
+/** Indice della prima schermata, dopo "da", che contiene domande senza risposta; -1 se non ce ne sono. */
+export function schermataSenzaRisposta(questionario, risposte, da = 0) {
+  const mancanti = new Set(domandeSenzaRisposta(questionario, risposte).map((d) => d.id));
+  return schermate(questionario, risposte).findIndex((s, i) => i >= da && s.domande.some((d) => mancanti.has(d.id)));
+}
+
+/** Novità del catalogo successive alla versione già vista, con le sole schede che riguardano l'impresa. */
+export function novitaDaMostrare(catalogo, versioneVista, idAttive) {
+  const attive = new Set(idAttive);
+  return (catalogo.novita || [])
+    .filter((n) => confrontaVersioni(n.versione, versioneVista) > 0)
+    .map((n) => ({ ...n, schede: (n.schede || []).filter((id) => attive.has(id)) }))
+    .filter((n) => n.schede.length);
+}

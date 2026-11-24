@@ -26,10 +26,14 @@ import {
   situazioneEvento,
   urgenzeEventi,
   eventiPerAnno,
+  domandeSenzaRisposta,
+  schermataSenzaRisposta,
+  novitaDaMostrare,
   vociControlloIniziale,
   dataDaMese
 } from './engine.js';
 import { linkAiuto } from './aiuto.js';
+import { LINGUE } from './lingue.js';
 import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport } from './allegati.js';
 import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
 import { cifra, decifra } from './cifratura.js';
@@ -37,7 +41,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.10.0';
+export const VERSIONE_APP = '0.11.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -346,6 +350,7 @@ async function schermataOggi() {
   app.innerHTML = `
     <section class="pagina">
       ${await bannerBackup()}
+      ${await bannerNovita(p)}
       <p class="sopratitolo">${esc(nome || 'La tua impresa')}</p>
       <h1>${urgenti.length ? 'Cosa fare adesso' : 'Sei in regola'}</h1>
       <div class="contatori" role="list">
@@ -373,6 +378,7 @@ async function schermataOggi() {
       ${bloccoAiuto('la sicurezza della mia impresa')}
       ${richiestaInstallazione && !installata() ? `<p class="nota"><a href="#/dati/installa">Installa safetyDoc sul telefono</a> per aprirlo con un tocco.</p>` : ''}
     </section>`;
+  attivaNovita();
 }
 
 function bloccoLavoratoriOggi() {
@@ -560,7 +566,14 @@ async function schermataDomanda(indice) {
     if (ultima) nuove.__completato = true;
     await store.salvaRisposte(nuove);
     await ricarica();
+    if (soloNuoveDomande) {
+      const prossima = schermataSenzaRisposta(stato.questionario, nuove, posizione + 1);
+      if (prossima < 0) soloNuoveDomande = false;
+      location.hash = prossima >= 0 ? `#/domanda/${prossima}` : '#/';
+      return;
+    }
     const primaVolta = ultima && !stato.adempimenti.some((x) => !x.deleted);
+    if (primaVolta) await store.scriviMeta('catalogoVisto', stato.catalogo.versione);
     location.hash = primaVolta ? '#/controllo-iniziale/0' : ultima ? '#/' : `#/domanda/${posizione + 1}`;
   };
 
@@ -707,6 +720,42 @@ async function schermataScheda(id) {
     avviso('Segnato come da fare.');
     schermataScheda(id);
   });
+}
+
+// ---------- novità e domande nuove ----------
+
+// Chi usava l'app prima che esistessero le novità ha visto il catalogo 0.5.0.
+const VERSIONE_CATALOGO_INIZIALE = '0.5.0';
+let soloNuoveDomande = false;
+
+async function bannerNovita(p) {
+  const parti = [];
+  const mancanti = domandeSenzaRisposta(stato.questionario, risposte());
+  if (mancanti.length) {
+    parti.push(`<a class="banner banner--info" href="#/nuove-domande"><strong>${mancanti.length === 1 ? 'C\'è una domanda nuova' : `Ci sono ${mancanti.length} domande nuove`}</strong><span>Rispondi: servono per completare il tuo piano.</span></a>`);
+  }
+  const vista = (await store.leggiMeta('catalogoVisto')) || VERSIONE_CATALOGO_INIZIALE;
+  const novita = novitaDaMostrare(stato.catalogo, vista, p.map((v) => v.scheda.id));
+  if (novita.length) {
+    const titoli = novita.flatMap((n) => n.schede).map((id) => p.find((v) => v.scheda.id === id)).filter(Boolean);
+    parti.push(`<div class="riquadro riquadro--invito" id="novita"><p><strong>Novità nel tuo piano</strong> · ${esc(novita.map((n) => n.testo).join(' '))}</p>
+      <ul class="novita">${titoli.map((v) => `<li><a href="#/scheda/${esc(v.scheda.id)}">${esc(v.scheda.titolo)}</a></li>`).join('')}</ul>
+      <button class="btn btn--secondario" type="button" id="novita-viste">Ho visto, nascondi</button></div>`);
+  }
+  return parti.join('');
+}
+
+function attivaNovita() {
+  app.querySelector('#novita-viste')?.addEventListener('click', async () => {
+    await store.scriviMeta('catalogoVisto', stato.catalogo.versione);
+    app.querySelector('#novita')?.remove();
+  });
+}
+
+function vaiNuoveDomande() {
+  const i = schermataSenzaRisposta(stato.questionario, risposte());
+  soloNuoveDomande = i >= 0;
+  location.replace(i >= 0 ? `#/domanda/${i}` : '#/');
 }
 
 // ---------- partenza rapida per settore ----------
@@ -1324,6 +1373,10 @@ async function schermataModificaLavoratore(id) {
           <input class="campo" name="mansione" list="mansioni-tipiche" value="${esc(l.mansione || '')}"></label>
         <datalist id="mansioni-tipiche">${pacchettoSettore().mansioni.map((m) => `<option value="${esc(m)}">`).join('')}</datalist>
         <label>Data di assunzione<input class="campo" type="date" name="dataAssunzione" value="${esc(l.dataAssunzione || '')}"></label>
+        <label>Lingua per le regole di sicurezza <small>(se non capisce bene l'italiano)</small>
+          <select class="campo" name="lingua">${Object.entries(LINGUE)
+            .map(([k, x]) => `<option value="${k}" ${(l.lingua || 'it') === k ? 'selected' : ''}>${esc(x.nome)}</option>`)
+            .join('')}</select></label>
         <h2>Ruoli e lavori particolari</h2>
         <p class="aiuto">Tocca quelli che riguardano questa persona: aggiungono i corsi che le servono.</p>
         <div class="spunte">${ruoli
@@ -1358,6 +1411,7 @@ async function schermataModificaLavoratore(id) {
       cognome: String(f.get('cognome') || '').trim(),
       mansione: String(f.get('mansione') || '').trim(),
       dataAssunzione: f.get('dataAssunzione') || null,
+      lingua: f.get('lingua') || 'it',
       dataCessazione: f.get('dataCessazione') || null,
       ruoli: [...scelti, ...nascosti]
     });
@@ -1969,6 +2023,7 @@ async function instrada() {
   if (rotta === 'attrezzatura') return schermataAttrezzatura(param);
   if (rotta === 'attrezzatura-modifica') return schermataModificaAttrezzatura(param);
   if (rotta === 'controllo') return schermataControllo(param, extra);
+  if (rotta === 'nuove-domande') return vaiNuoveDomande();
   if (rotta === 'partenza') return schermataPartenza();
   if (rotta === 'prodotti') return schermataProdotti();
   if (rotta === 'prodotto') return schermataProdotto(param);
