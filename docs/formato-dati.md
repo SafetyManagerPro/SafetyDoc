@@ -49,17 +49,25 @@ Collezioni:
 - `registri`: una registrazione per corso, visita o consegna: `lavoratoreId`, `requisitoId`, `data`, `scadenzaManuale`,
   `esito` (solo per la visita: `idoneo`, `idoneo_prescrizioni`, `non_idoneo_temporaneo`, `non_idoneo`), `dettagli`,
   `note`. Per ogni lavoratore e requisito vale la registrazione con la data più recente. Nessun dato clinico.
+- `attrezzature`: `tipo` (id definiti in `data/attrezzature.json`), `nome`, `marcaModello`, `matricola`,
+  `annoFabbricazione`, `marcaturaCE`, `dismessa`.
+- `controlli`: una registrazione per manutenzione, controllo o verifica: `attrezzaturaId`, `controlloId`, `data`,
+  `scadenzaManuale`, `esito` (`positivo`, `con_interventi`, `negativo`), `note`. La periodicità delle verifiche
+  dipende da tipo, settore (edilizia, estrazione, siderurgia, porti) ed età della macchina (oltre 10 anni).
+- `allegati`: foto e PDF collegati a un'altra voce: `collegatoTipo` (`adempimento`, `registro`, `controllo`,
+  `attrezzatura`), `collegatoId`, `nome`, `tipo` (MIME), `dimensione`, `file` (Blob). Nel file di backup il
+  contenuto diventa `datiBase64`; si può scegliere di non includerlo.
 
 ## File di backup
 
 ```json
 {
   "formato": "safetydoc-export",
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "versioneApp": "0.1.0",
   "esportatoIl": "2026-11-23T18:00:00.000Z",
   "deviceId": "…",
-  "collezioni": { "profilo": [], "adempimenti": [], "lavoratori": [], "registri": [] }
+  "collezioni": { "profilo": [], "adempimenti": [], "lavoratori": [], "registri": [], "attrezzature": [], "controlli": [], "allegati": [] }
 }
 ```
 
@@ -69,8 +77,8 @@ con AES-GCM a 256 bit e chiave derivata con PBKDF2-SHA256 (310.000 iterazioni).
 **Unione all'import:** per ogni `id` vince il record con `updatedAt` più recente; a parità vince il `deviceId`
 maggiore, così due postazioni arrivano allo stesso risultato. Le cancellazioni sono record anch'esse, quindi un
 file vecchio non fa riapparire dati eliminati. Se `schemaVersion` è più alta di quella supportata, l'import viene
-rifiutato; i file più vecchi passano da `migra()` in `js/merge.js` (la versione 1 riceve le collezioni
-`lavoratori` e `registri` vuote).
+rifiutato; i file più vecchi passano da `migra()` in `js/merge.js` (le collezioni che mancano nei file
+delle versioni 1 e 2 vengono create vuote).
 
 ## Passaggio a un database
 

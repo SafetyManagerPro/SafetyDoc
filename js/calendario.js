@@ -78,7 +78,7 @@ export function generaIcs(eventi, { ora, nomeCalendario = 'safetyDoc – scadenz
 }
 
 /** Raccoglie le scadenze future (o già scadute) dal piano e dai lavoratori. */
-export function eventiScadenze({ piano, situazioni, nomeCompleto }) {
+export function eventiScadenze({ piano, situazioni, nomeCompleto, macchine }) {
   const eventi = [];
   for (const v of piano || []) {
     if (!v.prossimaScadenza) continue;
@@ -96,6 +96,17 @@ export function eventiScadenze({ piano, situazioni, nomeCompleto }) {
         uid: `lavoratore-${s.lavoratore.id}-${v.requisito.id}`,
         data: v.prossimaScadenza,
         titolo: `${nomeCompleto(s.lavoratore)}: ${v.requisito.titolo}`,
+        descrizione: 'Scadenza registrata in safetyDoc.'
+      });
+    }
+  }
+  for (const m of macchine || []) {
+    for (const v of m.voci) {
+      if (!v.prossimaScadenza) continue;
+      eventi.push({
+        uid: `attrezzatura-${m.attrezzatura.id}-${v.controllo.id}`,
+        data: v.prossimaScadenza,
+        titolo: `${m.attrezzatura.nome}: ${v.controllo.titolo}`,
         descrizione: 'Scadenza registrata in safetyDoc.'
       });
     }

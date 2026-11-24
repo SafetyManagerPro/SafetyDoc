@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.6.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.7.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -16,8 +16,12 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
 3. **Catalogo** – le schede degli adempimenti, ognuna con la sua regola di attivazione (`data/catalogo.json`).
 4. **Motore** – combina risposte e catalogo e calcola il piano e il semaforo (`js/engine.js`).
 5. **Lavoratori** – per ogni persona: formazione, visite mediche (solo il giudizio), DPI, privacy e corsi legati ai ruoli (`data/lavoratori.json`).
-6. **Documenti** – nomine, designazioni, verbale DPI, informative privacy, verbali e registri compilati con i dati e stampabili in PDF (`js/modelli.js`).
-7. **Dati** – salvati solo nel dispositivo; si esportano e importano come file JSON, anche protetto da password
+6. **Macchine e attrezzature** – manutenzioni e verifiche periodiche (Allegato VII) con periodicità calcolata per tipo,
+   settore ed età (`data/attrezzature.json`).
+7. **Allegati** – foto e PDF di attestati, verbali e libretti, collegati a ogni voce; le foto vengono rimpicciolite
+   (`js/allegati.js`).
+8. **Documenti** – nomine, designazioni, verbale DPI, informative privacy, verbali e registri compilati con i dati e stampabili in PDF (`js/modelli.js`).
+9. **Dati** – salvati solo nel dispositivo; si esportano e importano come file JSON, anche protetto da password
    (`js/store.js`, `js/merge.js`, `js/cifratura.js`).
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta.
@@ -35,8 +39,9 @@ js/merge.js           formato di scambio e unione tra postazioni (modulo puro, t
 js/store.js           salvataggio nel browser (IndexedDB): l'unico file da sostituire per passare a Supabase
 js/cifratura.js       cifratura dei backup (AES-GCM, PBKDF2)
 js/modelli.js         modelli di documenti stampabili, compresa la bozza di DVR (modulo puro, testato)
+js/allegati.js        foto e PDF allegati: riduzione e conversione per il backup
 js/calendario.js      scadenze esportate nel calendario del telefono (.ics) (modulo puro, testato)
-data/                 questionario, catalogo, requisiti dei lavoratori, pericoli del DVR e tabella ATECO 2025
+data/                 questionario, catalogo, requisiti dei lavoratori, pericoli del DVR tabella ATECO 2025 e tipi di attrezzature
 docs/                 documentazione tecnica
 test/                 test con il test runner di Node
 ```

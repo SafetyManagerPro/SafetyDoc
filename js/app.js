@@ -12,15 +12,21 @@ import {
   ruoliDisponibili,
   nomeCompleto,
   storicoRegistri,
-  ESITI_VISITA
+  ESITI_VISITA,
+  attrezzatureAttive,
+  situazioneAttrezzatura,
+  urgenzeAttrezzature,
+  tipoAttrezzatura,
+  storicoControlli
 } from './engine.js';
+import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport } from './allegati.js';
 import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
 import { cifra, decifra } from './cifratura.js';
 import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } from './modelli.js';
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.6.0';
+export const VERSIONE_APP = '0.7.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -57,7 +63,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, profilo: null, adempimenti: [], lavoratori: [], registri: [] };
+const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -93,6 +99,9 @@ async function ricarica() {
   stato.adempimenti = await store.tutti('adempimenti');
   stato.lavoratori = await store.tutti('lavoratori');
   stato.registri = await store.tutti('registri');
+  stato.attrezzature = await store.tutti('attrezzature');
+  stato.controlli = await store.tutti('controlli');
+  stato.allegati = await store.tutti('allegati');
 }
 
 const risposte = () => stato.profilo?.risposte || {};
@@ -107,6 +116,72 @@ function anagrafica() {
 }
 
 const attivi = () => lavoratoriAttivi(stato.lavoratori, oggiIso());
+
+const macchine = () => attrezzatureAttive(stato.attrezzature);
+
+function situazioneMacchina(a) {
+  return situazioneAttrezzatura({ attrezzatura: a, defAttr: stato.defAttr, controlli: stato.controlli, ctx: ctx(), oggi: oggiIso() });
+}
+
+// ---------- allegati ----------
+
+const allegatiDi = (tipo, id) => (id ? stato.allegati.filter((a) => !a.deleted && a.collegatoTipo === tipo && a.collegatoId === id) : []);
+
+function campoAllegato() {
+  return `<label>Allega foto o PDF <small>(attestato, verbale, documento firmato: puoi anche scattare una foto)</small>
+    <input class="campo" type="file" name="allegato" accept="image/*,application/pdf" multiple></label>`;
+}
+
+async function salvaAllegatiDa(form, tipo, id) {
+  const files = [...(form.querySelector('input[name="allegato"]')?.files || [])];
+  let n = 0;
+  for (const f of files) {
+    try {
+      const p = await preparaFile(f);
+      await store.salva('allegati', { collegatoTipo: tipo, collegatoId: id, nome: p.nome, tipo: p.tipo, dimensione: p.dimensione, file: p.file });
+      n++;
+    } catch (e) {
+      avviso(e.message);
+    }
+  }
+  return n;
+}
+
+function elencoAllegati(tipo, id) {
+  const lista = allegatiDi(tipo, id);
+  if (!lista.length) return '';
+  return `<ul class="allegati">${lista
+    .map(
+      (a) => `<li><button type="button" class="allegato" data-apri="${esc(a.id)}"><span class="allegato__tipo">${a.tipo?.startsWith('image/') ? 'Foto' : 'PDF'}</span> ${esc(a.nome)} <small>${esc(dimensioneLeggibile(a.dimensione))}</small></button>
+        <button type="button" class="btn btn--testo btn--piccolo" data-togli="${esc(a.id)}">Elimina</button></li>`
+    )
+    .join('')}</ul>`;
+}
+
+function attivaAllegati(ridisegna) {
+  for (const b of app.querySelectorAll('[data-apri]')) {
+    b.addEventListener('click', () => {
+      const a = stato.allegati.find((x) => x.id === b.dataset.apri);
+      if (!a?.file) return avviso('Questo file non è presente su questo dispositivo.');
+      const url = URL.createObjectURL(a.file);
+      const link = Object.assign(document.createElement('a'), { href: url, target: '_blank', rel: 'noopener' });
+      if (!a.tipo?.startsWith('image/') && a.tipo !== 'application/pdf') link.download = a.nome;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    });
+  }
+  for (const b of app.querySelectorAll('[data-togli]')) {
+    b.addEventListener('click', async () => {
+      if (!confirm('Eliminare questo allegato?')) return;
+      const a = stato.allegati.find((x) => x.id === b.dataset.togli);
+      await store.elimina('allegati', { ...a, file: null });
+      await ricarica();
+      ridisegna();
+    });
+  }
+}
 
 function situazione(l) {
   return situazioneLavoratore({ lavoratore: l, defLavoratori: stato.defLav, registri: stato.registri, ctx: ctx(), oggi: oggiIso() });
@@ -123,7 +198,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { scheda: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti' };
+const SEZIONE = { scheda: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -206,6 +281,7 @@ async function schermataOggi() {
       }
       <a class="btn btn--secondario" href="#/piano">Vedi il piano completo</a>
       ${haDipendenti() ? bloccoLavoratoriOggi() : ''}
+      ${bloccoMacchineOggi()}
     </section>`;
 }
 
@@ -265,7 +341,7 @@ async function schermataPiano() {
 }
 
 async function esportaCalendario() {
-  const eventi = eventiScadenze({ piano: piano(), situazioni: haDipendenti() ? attivi().map(situazione) : [], nomeCompleto });
+  const eventi = eventiScadenze({ piano: piano(), situazioni: haDipendenti() ? attivi().map(situazione) : [], nomeCompleto, macchine: macchine().map(situazioneMacchina) });
   if (!eventi.length) return avviso('Non ci sono ancora scadenze: prima segna come fatte le voci del piano.');
   const ics = generaIcs(eventi);
   const nome = `scadenze-sicurezza-${oggiIso()}.ics`;
@@ -504,6 +580,8 @@ async function schermataScheda(id) {
         <label>Note <small>(facoltative: chi l'ha fatto, dove trovi il documento)</small>
           <textarea class="campo" name="note" rows="3">${esc(st?.note || '')}</textarea>
         </label>
+        ${elencoAllegati('adempimento', st?.id)}
+        ${campoAllegato()}
         <button class="btn btn--primario btn--grande" type="submit">Fatto</button>
         ${st?.fatto ? `<button class="btn btn--testo" type="button" id="annulla">Segna di nuovo come da fare</button>` : ''}
       </form>`
@@ -512,10 +590,11 @@ async function schermataScheda(id) {
 
   const form = app.querySelector('#registra');
   if (!form) return;
+  attivaAllegati(() => schermataScheda(id));
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const f = new FormData(form);
-    await store.salvaAdempimento({
+    const salvato = await store.salvaAdempimento({
       ...(st || {}),
       schedaId: id,
       fatto: true,
@@ -523,6 +602,7 @@ async function schermataScheda(id) {
       scadenzaManuale: f.get('scadenzaManuale') || null,
       note: f.get('note') || ''
     });
+    await salvaAllegatiDa(form, 'adempimento', salvato.id);
     await ricarica();
     avviso('Salvato.');
     schermataScheda(id);
@@ -749,6 +829,7 @@ async function schermataRegistro(lavId, reqId) {
         }
         ${req.conDettagli ? `<label>${esc(req.conDettagli)}<textarea class="campo" name="dettagli" rows="3"></textarea></label>` : ''}
         <label>Note <small>(ente del corso, numero attestato, dove trovi il documento)</small><textarea class="campo" name="note" rows="2"></textarea></label>
+        ${campoAllegato()}
         <button class="btn btn--primario btn--grande" type="submit">Salva</button>
       </form>
       ${
@@ -759,7 +840,8 @@ async function schermataRegistro(lavId, reqId) {
                   r.esito ? ` · ${esc(ESITI_VISITA[r.esito])}` : ''
                 }${r.dettagli ? `<br>${esc(r.dettagli)}` : ''}${r.note ? `<br><small>${esc(r.note)}</small>` : ''}
                 ${req.modello ? `<br><a href="#/documento/${esc(req.modello)}/${esc(l.id)}">Stampa il documento</a>` : ''}
-                <button class="btn btn--testo btn--piccolo" data-elimina="${esc(r.id)}" type="button">Elimina</button></li>`
+                ${elencoAllegati('registro', r.id)}
+                <button class="btn btn--testo btn--piccolo" data-elimina="${esc(r.id)}" type="button">Elimina la registrazione</button></li>`
               )
               .join('')}</ul>`
           : ''
@@ -769,7 +851,7 @@ async function schermataRegistro(lavId, reqId) {
   app.querySelector('#registra').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const f = new FormData(ev.target);
-    await store.salva('registri', {
+    const salvato = await store.salva('registri', {
       lavoratoreId: l.id,
       requisitoId: req.id,
       data: f.get('data'),
@@ -778,16 +860,239 @@ async function schermataRegistro(lavId, reqId) {
       dettagli: String(f.get('dettagli') || '').trim(),
       note: String(f.get('note') || '').trim()
     });
+    await salvaAllegatiDa(ev.target, 'registro', salvato.id);
     await ricarica();
     avviso('Salvato.');
     schermataRegistro(lavId, reqId);
   });
+  attivaAllegati(() => schermataRegistro(lavId, reqId));
   for (const b of app.querySelectorAll('[data-elimina]')) {
     b.addEventListener('click', async () => {
       if (!confirm('Eliminare questa registrazione?')) return;
       await store.elimina('registri', storico.find((r) => r.id === b.dataset.elimina));
       await ricarica();
       schermataRegistro(lavId, reqId);
+    });
+  }
+}
+
+// ---------- macchine e attrezzature ----------
+
+function bloccoMacchineOggi() {
+  const lista = macchine();
+  if (!lista.length) {
+    return `<h2>Macchine e attrezzature</h2>
+      <p>Inserisci scale, utensili, macchine e mezzi: ti ricorderemo manutenzioni e verifiche obbligatorie.</p>
+      <a class="btn btn--secondario" href="#/attrezzatura-modifica/nuova">Aggiungi una macchina o attrezzatura</a>`;
+  }
+  const urg = urgenzeAttrezzature({ attrezzature: stato.attrezzature, defAttr: stato.defAttr, controlli: stato.controlli, ctx: ctx(), oggi: oggiIso() });
+  return `<h2>Macchine e attrezzature</h2>
+    <p>${urg.length ? `${urg.length} ${urg.length === 1 ? 'controllo da fare o in scadenza' : 'controlli da fare o in scadenza'}.` : `Tutte le ${lista.length} attrezzature sono in regola.`}</p>
+    ${urg.length ? `<div class="lista">${urg.slice(0, 3).map(cardUrgenzaMacchina).join('')}</div>` : ''}
+    <a class="btn btn--secondario" href="#/attrezzature">Vedi tutte le attrezzature</a>`;
+}
+
+function cardUrgenzaMacchina(u) {
+  const e = ETICHETTE[u.colore];
+  const scad = u.prossimaScadenza ? ` · ${dataLeggibile(u.prossimaScadenza)}` : '';
+  return `<a class="voce voce--${u.colore}" href="#/controllo/${esc(u.attrezzatura.id)}/${esc(u.controllo.id)}">
+      <span class="voce__segno" aria-hidden="true">${e.icona}</span>
+      <span class="voce__testo"><span class="voce__titolo">${esc(u.attrezzatura.nome)}: ${esc(u.controllo.titolo)}</span>
+      <span class="voce__stato">${esc(u.motivo)}${esc(scad)}</span></span>
+      <span class="voce__freccia" aria-hidden="true">›</span></a>`;
+}
+
+async function schermataAttrezzature() {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const ordine = { rosso: 0, giallo: 1, verde: 2 };
+  const sit = macchine().map(situazioneMacchina).sort((a, b) => ordine[a.colore] - ordine[b.colore] || (a.attrezzatura.nome || '').localeCompare(b.attrezzatura.nome || '', 'it'));
+  app.innerHTML = `
+    <section class="pagina">
+      <h1>Macchine e attrezzature</h1>
+      <p class="lead">Per ognuna: manutenzione, controlli e verifiche obbligatorie. Il semaforo ti dice cosa fare.</p>
+      ${
+        sit.length
+          ? `<div class="lista">${sit
+              .map((s) => {
+                const e = ETICHETTE[s.colore];
+                const testo = s.colore === 'verde' ? 'In regola' : [s.conteggi.rosso ? `${s.conteggi.rosso} da fare` : '', s.conteggi.giallo ? `${s.conteggi.giallo} in scadenza` : ''].filter(Boolean).join(' · ');
+                return `<a class="voce voce--${s.colore}" href="#/attrezzatura/${esc(s.attrezzatura.id)}">
+                  <span class="voce__segno" aria-hidden="true">${e.icona}</span>
+                  <span class="voce__testo"><span class="voce__titolo">${esc(s.attrezzatura.nome)}</span>
+                  <span class="voce__stato">${esc(s.tipo?.etichetta || '')} · ${esc(testo)}</span></span>
+                  <span class="voce__freccia" aria-hidden="true">›</span></a>`;
+              })
+              .join('')}</div>`
+          : '<p>Non hai ancora inserito nessuna attrezzatura.</p>'
+      }
+      <a class="btn btn--primario btn--grande" href="#/attrezzatura-modifica/nuova">Aggiungi una macchina o attrezzatura</a>
+      <p class="nota">Usa solo attrezzature con marcatura CE e libretto d'uso, e tienile in buono stato (artt. 70 e 71 del D.Lgs. 81/2008).</p>
+    </section>`;
+}
+
+async function schermataAttrezzatura(id) {
+  const a = stato.attrezzature.find((x) => x.id === id && !x.deleted);
+  if (!a) return (location.hash = '#/attrezzature');
+  const s = situazioneMacchina(a);
+  const dettagli = [a.marcaModello, a.matricola ? `matricola ${a.matricola}` : '', a.annoFabbricazione ? `anno ${a.annoFabbricazione}` : ''].filter(Boolean).join(' · ');
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/attrezzature">‹ Attrezzature</a>
+      <h1>${esc(a.nome)}</h1>
+      <p class="lead">${esc(s.tipo?.etichetta || '')}${dettagli ? `<br><small>${esc(dettagli)}</small>` : ''}</p>
+      ${a.marcaturaCE === false ? '<p class="esito esito--errore">Senza marcatura CE l\'attrezzatura va messa a norma (Allegato V del D.Lgs. 81/2008) o non va usata.</p>' : ''}
+      ${s.tipo?.patentino ? '<p class="riquadro">Per usarla serve il patentino dell\'operatore: segnalalo nella scheda del lavoratore (ruolo «Usa piattaforme, gru, muletti…»).</p>' : ''}
+      <h2>Controlli</h2>
+      <div class="lista">${s.voci
+        .map((v) => {
+          const e = ETICHETTE[v.colore];
+          const det = [v.registro ? `fatto il ${dataLeggibile(v.registro.data)}` : '', v.prossimaScadenza ? `scade il ${dataLeggibile(v.prossimaScadenza)}` : '', v.controllo.periodicitaMesi && v.controllo.tipoScadenza === 'periodica' ? `ogni ${v.controllo.periodicitaMesi} mesi` : '']
+            .filter(Boolean)
+            .join(' · ');
+          return `<a class="voce voce--${v.colore}" href="#/controllo/${esc(a.id)}/${esc(v.controllo.id)}">
+            <span class="voce__segno" aria-hidden="true">${e.icona}</span>
+            <span class="voce__testo"><span class="voce__titolo">${esc(v.controllo.titolo)}</span><span class="voce__stato">${esc(v.motivo)}${det ? ` · ${esc(det)}` : ''}</span></span>
+            <span class="voce__freccia" aria-hidden="true">›</span></a>`;
+        })
+        .join('')}</div>
+      <h2>Libretto e documenti</h2>
+      ${elencoAllegati('attrezzatura', a.id) || '<p>Nessun documento allegato.</p>'}
+      <form id="documenti-macchina">${campoAllegato()}<button class="btn btn--secondario" type="submit">Allega</button></form>
+      <a class="btn btn--secondario" href="#/attrezzatura-modifica/${esc(a.id)}">Modifica i dati</a>
+    </section>`;
+  attivaAllegati(() => schermataAttrezzatura(id));
+  app.querySelector('#documenti-macchina').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const n = await salvaAllegatiDa(ev.target, 'attrezzatura', a.id);
+    await ricarica();
+    if (n) avviso('Documento allegato.');
+    schermataAttrezzatura(id);
+  });
+}
+
+async function schermataModificaAttrezzatura(id) {
+  const nuova = id === 'nuova';
+  const a = nuova ? { marcaturaCE: true } : stato.attrezzature.find((x) => x.id === id && !x.deleted);
+  if (!a) return (location.hash = '#/attrezzature');
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="${nuova ? '#/attrezzature' : `#/attrezzatura/${esc(a.id)}`}">‹ Indietro</a>
+      <h1>${nuova ? 'Nuova attrezzatura' : `Modifica ${esc(a.nome)}`}</h1>
+      <form id="attrezzatura">
+        <label>Che cos'è?
+          <select class="campo" name="tipo" required>
+            <option value="">Scegli…</option>
+            ${stato.defAttr.tipi.map((t) => `<option value="${esc(t.id)}" ${a.tipo === t.id ? 'selected' : ''}>${esc(t.etichetta)}</option>`).join('')}
+          </select></label>
+        <label>Nome per riconoscerla <small>(es. «Scala alluminio 3 m», «Flessibile Bosch»)</small>
+          <input class="campo" name="nome" required value="${esc(a.nome || '')}"></label>
+        <label>Marca e modello<input class="campo" name="marcaModello" value="${esc(a.marcaModello || '')}"></label>
+        <label>Matricola o numero di serie<input class="campo" name="matricola" value="${esc(a.matricola || '')}"></label>
+        <label>Anno di fabbricazione <small>(serve per alcune verifiche)</small>
+          <input class="campo" name="annoFabbricazione" type="number" inputmode="numeric" min="1950" max="${oggiIso().slice(0, 4)}" value="${esc(a.annoFabbricazione || '')}"></label>
+        <label>Ha la marcatura CE?
+          <select class="campo" name="marcaturaCE">
+            <option value="si" ${a.marcaturaCE !== false ? 'selected' : ''}>Sì</option>
+            <option value="no" ${a.marcaturaCE === false ? 'selected' : ''}>No o non so</option>
+          </select></label>
+        ${nuova ? '' : `<label class="spunta-semplice"><input type="checkbox" name="dismessa" ${a.dismessa ? 'checked' : ''}> Non la uso più (dismessa o venduta)</label>`}
+        <button class="btn btn--primario btn--grande" type="submit">Salva</button>
+        ${nuova ? '' : '<button class="btn btn--testo" type="button" id="elimina">Elimina</button>'}
+      </form>
+    </section>`;
+  app.querySelector('#attrezzatura').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const salvata = await store.salva('attrezzature', {
+      ...a,
+      tipo: f.get('tipo'),
+      nome: String(f.get('nome') || '').trim(),
+      marcaModello: String(f.get('marcaModello') || '').trim(),
+      matricola: String(f.get('matricola') || '').trim(),
+      annoFabbricazione: f.get('annoFabbricazione') ? Number(f.get('annoFabbricazione')) : null,
+      marcaturaCE: f.get('marcaturaCE') !== 'no',
+      dismessa: f.get('dismessa') === 'on'
+    });
+    await ricarica();
+    avviso('Attrezzatura salvata.');
+    location.hash = salvata.dismessa ? '#/attrezzature' : `#/attrezzatura/${salvata.id}`;
+  });
+  app.querySelector('#elimina')?.addEventListener('click', async () => {
+    if (!confirm(`Eliminare ${a.nome}? Se non la usi più, è meglio segnarla come dismessa.`)) return;
+    await store.elimina('attrezzature', a);
+    await ricarica();
+    location.hash = '#/attrezzature';
+  });
+}
+
+async function schermataControllo(attrId, controlloId) {
+  const a = stato.attrezzature.find((x) => x.id === attrId && !x.deleted);
+  if (!a) return (location.hash = '#/attrezzature');
+  const s = situazioneMacchina(a);
+  const voce = s.voci.find((v) => v.controllo.id === controlloId);
+  if (!voce) return (location.hash = `#/attrezzatura/${attrId}`);
+  const c = voce.controllo;
+  const storico = storicoControlli(a.id, c.id, stato.controlli);
+  const e = ETICHETTE[voce.colore];
+  const chiedeScadenza = c.tipoScadenza === 'manuale' || c.tipoScadenza === 'periodica';
+  app.innerHTML = `
+    <section class="pagina scheda">
+      <a class="indietro" href="#/attrezzatura/${esc(a.id)}">‹ ${esc(a.nome)}</a>
+      <p class="pill pill--${voce.colore}"><span aria-hidden="true">${e.icona}</span> ${esc(voce.motivo)}${voce.prossimaScadenza ? ` · ${dataLeggibile(voce.prossimaScadenza)}` : ''}</p>
+      <h1>${esc(c.titolo)}</h1>
+      ${c.aiuto ? `<p class="lead">${esc(c.aiuto)}</p>` : ''}
+      ${c.id === 'verifica-periodica' ? `<p><a href="#/scheda/attrezzature-abilitazione">Come funzionano le verifiche ›</a></p>` : ''}
+      <form class="registra" id="registra">
+        <h2>Registra</h2>
+        <label>Data<input class="campo" type="date" name="data" required max="${oggiIso()}" value="${oggiIso()}"></label>
+        ${
+          chiedeScadenza
+            ? `<label>Prossima scadenza ${c.tipoScadenza === 'periodica' && c.periodicitaMesi ? `<small>(se la lasci vuota la calcoliamo: ogni ${c.periodicitaMesi} mesi)</small>` : '<small>(dal libretto, dal verbale o dalla ditta)</small>'}
+          <input class="campo" type="date" name="scadenzaManuale"></label>`
+            : ''
+        }
+        <label>Esito<select class="campo" name="esito"><option value="positivo">Tutto a posto</option><option value="con_interventi">Fatti interventi o riparazioni</option><option value="negativo">Non idonea: non usarla finché non è riparata</option></select></label>
+        <label>Note <small>(chi l'ha fatto, numero del verbale)</small><textarea class="campo" name="note" rows="2"></textarea></label>
+        ${campoAllegato()}
+        <button class="btn btn--primario btn--grande" type="submit">Salva</button>
+      </form>
+      ${
+        storico.length
+          ? `<h2>Storico</h2><ul class="storico">${storico
+              .map(
+                (r) => `<li><strong>${dataLeggibile(r.data)}</strong>${r.scadenzaManuale ? ` · scadenza ${dataLeggibile(r.scadenzaManuale)}` : ''}${
+                  r.esito === 'negativo' ? ' · <strong class="testo-rosso">non idonea</strong>' : r.esito === 'con_interventi' ? ' · con interventi' : ''
+                }${r.note ? `<br><small>${esc(r.note)}</small>` : ''}
+                ${elencoAllegati('controllo', r.id)}
+                <button class="btn btn--testo btn--piccolo" data-elimina="${esc(r.id)}" type="button">Elimina la registrazione</button></li>`
+              )
+              .join('')}</ul>`
+          : ''
+      }
+    </section>`;
+  attivaAllegati(() => schermataControllo(attrId, controlloId));
+  app.querySelector('#registra').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const salvato = await store.salva('controlli', {
+      attrezzaturaId: a.id,
+      controlloId: c.id,
+      data: f.get('data'),
+      scadenzaManuale: f.get('scadenzaManuale') || null,
+      esito: f.get('esito') || null,
+      note: String(f.get('note') || '').trim()
+    });
+    await salvaAllegatiDa(ev.target, 'controllo', salvato.id);
+    await ricarica();
+    avviso(f.get('esito') === 'negativo' ? 'Salvato. Non usare questa attrezzatura finché non è riparata.' : 'Salvato.');
+    schermataControllo(attrId, controlloId);
+  });
+  for (const b of app.querySelectorAll('[data-elimina]')) {
+    b.addEventListener('click', async () => {
+      if (!confirm('Eliminare questa registrazione?')) return;
+      await store.elimina('controlli', storico.find((r) => r.id === b.dataset.elimina));
+      await ricarica();
+      schermataControllo(attrId, controlloId);
     });
   }
 }
@@ -847,6 +1152,7 @@ async function schermataDocumento(id, lavId) {
     dvr: stato.dvr,
     ctx: ctx(),
     lavoratori: attivi(),
+    attrezzature: macchine().map((a) => ({ nome: a.nome, tipo: tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta })),
     attivita: opzioneAttivita?.etichetta || ''
   });
 
@@ -875,6 +1181,12 @@ async function schermataDati() {
       <label>Password per proteggere il file <small>(consigliata: il file contiene dati dei lavoratori)</small>
         <input class="campo" type="password" id="pwdExport" autocomplete="new-password">
       </label>
+      ${(() => {
+        const vivi = stato.allegati.filter((a) => !a.deleted && a.file);
+        if (!vivi.length) return '';
+        const peso = vivi.reduce((t, a) => t + (a.dimensione || 0), 0);
+        return `<label class="spunta-semplice"><input type="checkbox" id="conAllegati" checked> Includi foto e documenti allegati (${vivi.length}, circa ${esc(dimensioneLeggibile(Math.round(peso * 1.37)))})</label>`;
+      })()}
       <button class="btn btn--primario btn--grande" id="esporta">Salva copia</button>
 
       <h2>Carica una copia</h2>
@@ -923,12 +1235,14 @@ async function schermataDati() {
 async function esporta() {
   const collezioni = {};
   for (const c of COLLEZIONI) collezioni[c] = await store.tutti(c);
+  const conAllegati = document.getElementById('conAllegati')?.checked !== false;
+  collezioni.allegati = conAllegati ? await Promise.all(collezioni.allegati.map(allegatoPerExport)) : [];
   let contenuto = creaExport({ collezioni, deviceId: await store.idPostazione(), versioneApp: VERSIONE_APP });
   const pwd = document.getElementById('pwdExport').value;
   if (pwd) contenuto = await cifra(contenuto, pwd);
 
   const nome = `safetydoc-${(risposte().nome_impresa || 'impresa').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${oggiIso()}${pwd ? '-protetto' : ''}.json`;
-  const blob = new Blob([JSON.stringify(contenuto, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(contenuto)], { type: 'application/json' });
   const file = new File([blob], nome, { type: 'application/json' });
 
   if (navigator.canShare?.({ files: [file] })) {
@@ -970,7 +1284,8 @@ async function importa(file) {
     const righe = [];
     let conflitti = 0;
     for (const c of COLLEZIONI) {
-      const { daSalvare, riepilogo } = unisciCollezione(await store.tutti(c), dati.collezioni[c] || []);
+      const importati = c === 'allegati' ? (dati.collezioni[c] || []).map(allegatoDaImport) : dati.collezioni[c] || [];
+      const { daSalvare, riepilogo } = unisciCollezione(await store.tutti(c), importati);
       await store.scriviMolti(c, daSalvare);
       conflitti += riepilogo.conflitti.length;
       const n = (x, uno, tanti) => `${x} ${x === 1 ? uno : tanti}`;
@@ -1004,6 +1319,10 @@ async function instrada() {
   if (rotta === 'lavoratore') return schermataLavoratore(param);
   if (rotta === 'lavoratore-modifica') return schermataModificaLavoratore(param);
   if (rotta === 'registro') return schermataRegistro(param, extra);
+  if (rotta === 'attrezzature') return schermataAttrezzature();
+  if (rotta === 'attrezzatura') return schermataAttrezzatura(param);
+  if (rotta === 'attrezzatura-modifica') return schermataModificaAttrezzatura(param);
+  if (rotta === 'controllo') return schermataControllo(param, extra);
   if (rotta === 'documenti') return schermataDocumenti();
   if (rotta === 'documento') return schermataDocumento(param, extra);
   return schermataOggi();
@@ -1011,9 +1330,10 @@ async function instrada() {
 
 async function avvia() {
   try {
-    const [q, c, l, d, a] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json'].map((u) => fetch(u).then((r) => r.json()))
+    const [q, c, l, d, a, t] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json'].map((u) => fetch(u).then((r) => r.json()))
     );
+    stato.defAttr = t;
     stato.dvr = d;
     stato.ateco = a;
     stato.questionario = q;

@@ -1,0 +1,365 @@
+{
+  "versione": "0.7.0",
+  "aggiornato": "2026-11-24",
+  "riferimento": "D.Lgs. 81/2008 artt. 69-73 e Allegato VII; DM 11 aprile 2011",
+  "tipi": [
+    {
+      "id": "ple",
+      "etichetta": "Piattaforma di lavoro elevabile (cestello, ragno, pantografo)",
+      "patentino": true,
+      "controlli": [
+        {
+          "id": "prima-verifica",
+          "titolo": "Messa in servizio e prima verifica",
+          "aiuto": "Comunicazione di messa in servizio all'INAIL e prima verifica periodica. Dopo, le verifiche le fa INAIL o un soggetto abilitato scelto da te.",
+          "tipoScadenza": "una_tantum"
+        },
+        {
+          "id": "verifica-periodica",
+          "titolo": "Verifica periodica (Allegato VII)",
+          "aiuto": "Verifica obbligatoria fatta da INAIL, ASL/ARPA o da un soggetto abilitato. Conserva il verbale. Per i ponti sviluppabili azionati a mano la verifica è ogni 2 anni.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 12
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "telescopico",
+      "etichetta": "Sollevatore telescopico",
+      "patentino": true,
+      "controlli": [
+        {
+          "id": "prima-verifica",
+          "titolo": "Messa in servizio e prima verifica",
+          "aiuto": "Comunicazione di messa in servizio all'INAIL e prima verifica periodica. Dopo, le verifiche le fa INAIL o un soggetto abilitato scelto da te.",
+          "tipoScadenza": "una_tantum"
+        },
+        {
+          "id": "verifica-periodica",
+          "titolo": "Verifica periodica (Allegato VII)",
+          "aiuto": "Verifica obbligatoria fatta da INAIL, ASL/ARPA o da un soggetto abilitato. Conserva il verbale.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 12
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "gru_mobile",
+      "etichetta": "Gru su autocarro, gru mobile o trasferibile (oltre 200 kg)",
+      "patentino": true,
+      "controlli": [
+        {
+          "id": "prima-verifica",
+          "titolo": "Messa in servizio e prima verifica",
+          "aiuto": "Comunicazione di messa in servizio all'INAIL e prima verifica periodica. Dopo, le verifiche le fa INAIL o un soggetto abilitato scelto da te.",
+          "tipoScadenza": "una_tantum"
+        },
+        {
+          "id": "verifica-periodica",
+          "titolo": "Verifica periodica (Allegato VII)",
+          "aiuto": "Verifica obbligatoria fatta da INAIL, ASL/ARPA o da un soggetto abilitato. Conserva il verbale. Ogni anno in edilizia e settori simili o se ha più di 10 anni, altrimenti ogni 2 anni.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 24,
+          "periodicitaRegole": [
+            {
+              "se": {
+                "fatto": "settoreSollevamentoGravoso"
+              },
+              "mesi": 12
+            },
+            {
+              "se": {
+                "fatto": "oltre10anni"
+              },
+              "mesi": 12
+            }
+          ]
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "sollevamento_fisso",
+      "etichetta": "Gru fissa, carroponte, argano o paranco (oltre 200 kg)",
+      "controlli": [
+        {
+          "id": "prima-verifica",
+          "titolo": "Messa in servizio e prima verifica",
+          "aiuto": "Comunicazione di messa in servizio all'INAIL e prima verifica periodica. Dopo, le verifiche le fa INAIL o un soggetto abilitato scelto da te.",
+          "tipoScadenza": "una_tantum"
+        },
+        {
+          "id": "verifica-periodica",
+          "titolo": "Verifica periodica (Allegato VII)",
+          "aiuto": "Verifica obbligatoria fatta da INAIL, ASL/ARPA o da un soggetto abilitato. Conserva il verbale. Da 1 a 3 anni secondo settore ed età.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 36,
+          "periodicitaRegole": [
+            {
+              "se": {
+                "all": [
+                  {
+                    "fatto": "settoreSollevamentoGravoso"
+                  },
+                  {
+                    "fatto": "oltre10anni"
+                  }
+                ]
+              },
+              "mesi": 12
+            },
+            {
+              "se": {
+                "fatto": "settoreSollevamentoGravoso"
+              },
+              "mesi": 24
+            },
+            {
+              "se": {
+                "fatto": "oltre10anni"
+              },
+              "mesi": 24
+            }
+          ]
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "montacarichi",
+      "etichetta": "Montacarichi o ascensore da cantiere",
+      "controlli": [
+        {
+          "id": "prima-verifica",
+          "titolo": "Messa in servizio e prima verifica",
+          "aiuto": "Comunicazione di messa in servizio all'INAIL e prima verifica periodica. Dopo, le verifiche le fa INAIL o un soggetto abilitato scelto da te.",
+          "tipoScadenza": "una_tantum"
+        },
+        {
+          "id": "verifica-periodica",
+          "titolo": "Verifica periodica (Allegato VII)",
+          "aiuto": "Verifica obbligatoria fatta da INAIL, ASL/ARPA o da un soggetto abilitato. Conserva il verbale.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 12
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "ponte_sospeso",
+      "etichetta": "Ponte sospeso con argani",
+      "controlli": [
+        {
+          "id": "prima-verifica",
+          "titolo": "Messa in servizio e prima verifica",
+          "aiuto": "Comunicazione di messa in servizio all'INAIL e prima verifica periodica. Dopo, le verifiche le fa INAIL o un soggetto abilitato scelto da te.",
+          "tipoScadenza": "una_tantum"
+        },
+        {
+          "id": "verifica-periodica",
+          "titolo": "Verifica periodica (Allegato VII)",
+          "aiuto": "Verifica obbligatoria fatta da INAIL, ASL/ARPA o da un soggetto abilitato. Conserva il verbale.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 24
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "carrello",
+      "etichetta": "Carrello elevatore (muletto)",
+      "patentino": true,
+      "controlli": [
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        },
+        {
+          "id": "controllo",
+          "titolo": "Controllo prima dell'uso",
+          "aiuto": "Non ha verifiche periodiche INAIL, ma serve il patentino dell'operatore e la manutenzione secondo il libretto.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 12
+        }
+      ]
+    },
+    {
+      "id": "pressione",
+      "etichetta": "Compressore con serbatoio o altro recipiente a pressione",
+      "controlli": [
+        {
+          "id": "verifica-periodica",
+          "titolo": "Verifica periodica (se soggetto)",
+          "aiuto": "Dipende dalla categoria del recipiente: di solito ogni 3 o 4 anni, con verifica di integrità ogni 10. Molti piccoli compressori sono esclusi: controlla la dichiarazione del costruttore. Scrivi tu la prossima scadenza.",
+          "tipoScadenza": "manuale"
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ],
+      "daVerificare": true
+    },
+    {
+      "id": "caldaia",
+      "etichetta": "Caldaia per riscaldamento oltre 116 kW",
+      "controlli": [
+        {
+          "id": "prima-verifica",
+          "titolo": "Messa in servizio e prima verifica",
+          "aiuto": "Comunicazione di messa in servizio all'INAIL e prima verifica periodica. Dopo, le verifiche le fa INAIL o un soggetto abilitato scelto da te.",
+          "tipoScadenza": "una_tantum"
+        },
+        {
+          "id": "verifica-periodica",
+          "titolo": "Verifica periodica (Allegato VII)",
+          "aiuto": "Verifica obbligatoria fatta da INAIL, ASL/ARPA o da un soggetto abilitato. Conserva il verbale.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 60
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "ponteggio",
+      "etichetta": "Ponteggio",
+      "controlli": [
+        {
+          "id": "controllo",
+          "titolo": "Controllo degli elementi e PiMUS",
+          "aiuto": "Usa solo ponteggi con autorizzazione ministeriale e libretto. Prima di ogni montaggio controlla gli elementi e prepara il PiMUS; dopo forti venti o lunghe interruzioni ricontrolla.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "trabattello",
+      "etichetta": "Trabattello",
+      "controlli": [
+        {
+          "id": "controllo",
+          "titolo": "Controllo dello stato",
+          "aiuto": "Controlla che sia integra e con tutte le protezioni. Non c'è una scadenza di legge: un controllo all'anno è buona prassi.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 12
+        }
+      ]
+    },
+    {
+      "id": "scala",
+      "etichetta": "Scala portatile",
+      "controlli": [
+        {
+          "id": "controllo",
+          "titolo": "Controllo dello stato",
+          "aiuto": "Controlla che sia integra e con tutte le protezioni. Non c'è una scadenza di legge: un controllo all'anno è buona prassi.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 12
+        }
+      ]
+    },
+    {
+      "id": "macchina",
+      "etichetta": "Macchina fissa (sega, pialla, pressa, tornio, impastatrice)",
+      "controlli": [
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        },
+        {
+          "id": "controllo",
+          "titolo": "Controllo dello stato",
+          "aiuto": "Controlla che sia integra e con tutte le protezioni. Non c'è una scadenza di legge: un controllo all'anno è buona prassi.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 12
+        }
+      ]
+    },
+    {
+      "id": "utensile",
+      "etichetta": "Utensile elettrico portatile (flessibile, trapano, avvitatore)",
+      "controlli": [
+        {
+          "id": "controllo",
+          "titolo": "Controllo dello stato",
+          "aiuto": "Controlla che sia integra e con tutte le protezioni. Non c'è una scadenza di legge: un controllo all'anno è buona prassi.",
+          "tipoScadenza": "periodica",
+          "periodicitaMesi": 12
+        }
+      ]
+    },
+    {
+      "id": "veicolo",
+      "etichetta": "Furgone o autocarro aziendale",
+      "controlli": [
+        {
+          "id": "revisione",
+          "titolo": "Revisione del veicolo",
+          "aiuto": "Scrivi la data della prossima revisione indicata sulla carta di circolazione.",
+          "tipoScadenza": "manuale"
+        },
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    },
+    {
+      "id": "altro",
+      "etichetta": "Altra attrezzatura",
+      "controlli": [
+        {
+          "id": "manutenzione",
+          "titolo": "Manutenzione secondo il libretto",
+          "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
+          "tipoScadenza": "manuale"
+        }
+      ]
+    }
+  ]
+}

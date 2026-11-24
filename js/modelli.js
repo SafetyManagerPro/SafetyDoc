@@ -44,7 +44,7 @@ export const MODELLI = [
     descrizione: 'Bozza secondo lo schema delle procedure standardizzate, già compilata con le tue risposte, i lavoratori e le misure suggerite. Da completare con il tuo RSPP.',
     ambito: 'impresa',
     attivaSe: { fatto: 'haDipendenti' },
-    genera: ({ anagrafica: a, oggi, dvr, ctx, lavoratori, attivita }) => {
+    genera: ({ anagrafica: a, oggi, dvr, ctx, lavoratori, attivita, attrezzature }) => {
       const pericoli = (dvr?.pericoli || []).map((x) => ({ ...x, presente: ctx ? valuta(x.presenteSe, ctx) : false }));
       const presenti = pericoli.filter((x) => x.presente);
       const mansioni = [...new Set((lavoratori || []).map((l) => (l.mansione || '').trim()).filter(Boolean))];
@@ -71,7 +71,7 @@ export const MODELLI = [
 
         <h2>Modulo 1.2 · Lavorazioni e mansioni</h2>
         <table class="doc__tabella"><thead><tr><th>Fasi di lavoro e luoghi</th><th>Attrezzature, materiali e prodotti</th><th>Mansioni</th></tr></thead>
-          <tbody><tr><td style="height:7em"></td><td></td><td>${mansioni.length ? mansioni.map(esc).join('<br>') : ''}</td></tr></tbody></table>
+          <tbody><tr><td style="height:7em"></td><td>${(attrezzature || []).map((x) => esc(x.nome + (x.tipo ? ` (${x.tipo})` : ''))).join('<br>')}</td><td>${mansioni.length ? mansioni.map(esc).join('<br>') : ''}</td></tr></tbody></table>
 
         <h2>Modulo 2 · Individuazione dei pericoli</h2>
         <table class="doc__tabella"><thead><tr><th>Famiglia</th><th>Pericolo</th><th>Presente</th></tr></thead><tbody>

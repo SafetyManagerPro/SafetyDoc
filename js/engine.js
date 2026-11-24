@@ -75,6 +75,12 @@ export function derivaFatti(risposte, questionario, ateco) {
     oreFormazioneSpecifica: ore[classeRischio] ?? null,
     ateco: atecoValido,
     attivitaRegolamentata: Boolean(opzione?.regolamentata),
+    // Allegato VII: costruzioni, siderurgia, porti ed estrazione hanno verifiche più frequenti
+    settoreSollevamentoGravoso:
+      ['B', 'F'].includes(atecoValido?.sezione) ||
+      atecoValido?.divisione === '24' ||
+      /^52\.22/.test(atecoValido?.codice || '') ||
+      (!atecoValido && ['edilizia', 'impianti'].includes(valoreAttivita)),
     rischiConSorveglianza: RISCHI_CON_SORVEGLIANZA.some((k) => r[k] === true)
   };
 }
@@ -305,4 +311,59 @@ export function urgenzeLavoratori({ lavoratori, defLavoratori, registri, ctx, og
       (a.prossimaScadenza || '0000').localeCompare(b.prossimaScadenza || '0000') ||
       nomeCompleto(a.lavoratore).localeCompare(nomeCompleto(b.lavoratore), 'it')
   );
+}
+
+// ---------- attrezzature ----------
+
+export function tipoAttrezzatura(defAttr, tipoId) {
+  return defAttr?.tipi?.find((t) => t.id === tipoId) || defAttr?.tipi?.find((t) => t.id === 'altro');
+}
+
+export function attrezzatureAttive(attrezzature) {
+  return (attrezzature || [])
+    .filter((a) => !a.deleted && !a.dismessa)
+    .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'it'));
+}
+
+/** Contesto per una singola attrezzatura: aggiunge l'età della macchina ai fatti dell'impresa. */
+function contestoAttrezzatura(attrezzatura, ctx, oggi) {
+  const anno = Number(attrezzatura.annoFabbricazione);
+  const annoOggi = Number((oggi || new Date().toISOString()).slice(0, 4));
+  return { risposte: ctx.risposte, fatti: { ...ctx.fatti, oltre10anni: Boolean(anno) && annoOggi - anno > 10 } };
+}
+
+export function ultimoControllo(attrezzaturaId, controlloId, controlli) {
+  return storicoControlli(attrezzaturaId, controlloId, controlli)[0] || null;
+}
+
+export function storicoControlli(attrezzaturaId, controlloId, controlli) {
+  return (controlli || [])
+    .filter((c) => c.attrezzaturaId === attrezzaturaId && c.controlloId === controlloId && !c.deleted)
+    .sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+}
+
+/** Situazione di un'attrezzatura: ogni controllo con il suo semaforo e la periodicità calcolata. */
+export function situazioneAttrezzatura({ attrezzatura, defAttr, controlli, ctx, oggi }) {
+  const giorno = (oggi || new Date().toISOString()).slice(0, 10);
+  const tipo = tipoAttrezzatura(defAttr, attrezzatura.tipo);
+  const c2 = contestoAttrezzatura(attrezzatura, ctx, giorno);
+  const voci = (tipo?.controlli || []).map((def) => {
+    const mesi = periodicitaPer(def, c2);
+    const controllo = { ...def, periodicitaMesi: mesi ?? def.periodicitaMesi };
+    const reg = ultimoControllo(attrezzatura.id, def.id, controlli);
+    const stato = reg ? { fatto: true, dataFatto: reg.data, scadenzaManuale: reg.scadenzaManuale || null } : null;
+    return { controllo, registro: reg, ...semaforo(controllo, stato, c2, giorno) };
+  });
+  voci.sort((a, b) => ORDINE[a.colore] - ORDINE[b.colore] || (a.prossimaScadenza || '9999').localeCompare(b.prossimaScadenza || '9999'));
+  const c = conteggi(voci);
+  return { attrezzatura, tipo, voci, conteggi: c, colore: c.rosso ? 'rosso' : c.giallo ? 'giallo' : 'verde' };
+}
+
+export function urgenzeAttrezzature({ attrezzature, defAttr, controlli, ctx, oggi }) {
+  const out = [];
+  for (const a of attrezzatureAttive(attrezzature)) {
+    const sit = situazioneAttrezzatura({ attrezzatura: a, defAttr, controlli, ctx, oggi });
+    for (const v of sit.voci) if (v.colore === 'rosso' || v.colore === 'giallo') out.push({ attrezzatura: a, ...v });
+  }
+  return out.sort((a, b) => ORDINE[a.colore] - ORDINE[b.colore] || (a.prossimaScadenza || '0000').localeCompare(b.prossimaScadenza || '0000'));
 }
