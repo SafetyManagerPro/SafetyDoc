@@ -80,6 +80,12 @@ file vecchio non fa riapparire dati eliminati. Se `schemaVersion` è più alta d
 rifiutato; i file più vecchi passano da `migra()` in `js/merge.js` (le collezioni che mancano nei file
 delle versioni 1 e 2 vengono create vuote).
 
+## Servizio online
+
+Account, dispositivi e ticket sono su Supabase (vedi `supabase/migrations/`): non fanno parte del file di backup.
+La sessione è salvata nel browser (`localStorage`, chiavi `safetydoc-sessione` e `safetydoc-accesso`); in `meta`
+la chiave `proprietario` ricorda l'account che ha usato il dispositivo.
+
 ## Passaggio a un database
 
 Le collezioni diventano tabelle con le stesse colonne. Basta sostituire `js/store.js` con un'implementazione su

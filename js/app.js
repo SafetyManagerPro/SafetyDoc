@@ -22,6 +22,9 @@ import {
   dataDaMese
 } from './engine.js';
 import { linkAiuto } from './aiuto.js';
+import * as cloud from './cloud.js';
+import { CONFIG } from './config.js';
+import { accessoOfflineValido, contestoTicket, STATI_TICKET } from './accesso.js';
 import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport } from './allegati.js';
 import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
 import { cifra, decifra } from './cifratura.js';
@@ -29,7 +32,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.8.0';
+export const VERSIONE_APP = '0.9.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -66,7 +69,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], allegati: [] };
+const stato = { utente: null, messaggioAccesso: '', questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -195,21 +198,20 @@ function situazione(l) {
 const consulente = () => stato.profilo?.consulente || {};
 
 /** Riquadro "Chiedi aiuto": link pronti a chi aiuta l'impresa, oppure invito a inserirne il recapito. */
-function bloccoAiuto(argomento) {
+function bloccoAiuto(argomento, schedaId = '') {
   const c = consulente();
   const link = linkAiuto({ contatto: c, impresa: anagrafica().ragioneSociale || risposte().nome_impresa, titolare: anagrafica().titolare, argomento });
-  if (!Object.keys(link).length) {
-    return `<div class="aiuto-box"><h2>Hai un dubbio?</h2>
-      <p>Inserisci il recapito del tuo consulente o della tua associazione di categoria: da qui potrai chiamarlo o scrivergli con un tocco.</p>
-      <a class="btn btn--secondario" href="#/dati/consulente">Aggiungi chi ti aiuta</a></div>`;
-  }
-  return `<div class="aiuto-box"><h2>Hai un dubbio? Chiedi ${c.nome ? `a ${esc(c.nome)}` : 'aiuto'}</h2>
+  const ticket = `<a class="btn btn--primario" href="#/ticket/nuovo/${esc(schedaId)}">Scrivi una domanda all'${esc(CONFIG.nomeAssistenza)}</a>
+    <p class="nota">Ti rispondono qui nell'app. Trovi le tue domande in <a href="#/assistenza">Assistenza</a>.</p>`;
+  const diretto = Object.keys(link).length
+    ? `<p>Oppure contatta direttamente ${c.nome ? esc(c.nome) : 'chi ti aiuta'}:</p>
     <div class="aiuto-box__azioni">
       ${link.telefono ? `<a class="btn btn--secondario" href="${esc(link.telefono)}">Chiama</a>` : ''}
       ${link.whatsapp ? `<a class="btn btn--secondario" href="${esc(link.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
       ${link.email ? `<a class="btn btn--secondario" href="${esc(link.email)}">Email</a>` : ''}
-    </div>
-    <p class="nota">Il messaggio è già scritto e indica solo l'argomento, senza dati dei lavoratori.</p></div>`;
+    </div>`
+    : `<p class="nota">Puoi anche <a href="#/dati/consulente">aggiungere il recapito del tuo consulente</a> per chiamarlo con un tocco.</p>`;
+  return `<div class="aiuto-box"><h2>Hai un dubbio?</h2>${ticket}${diretto}</div>`;
 }
 
 // ---------- installazione come app ----------
@@ -262,7 +264,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { scheda: 'piano', 'controllo-iniziale': 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
+const SEZIONE = { scheda: 'piano', 'controllo-iniziale': 'piano', assistenza: '', ticket: '', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -324,6 +326,7 @@ async function schermataOggi() {
 
   app.innerHTML = `
     <section class="pagina">
+      <div id="banner-ticket"></div>
       ${await bannerBackup()}
       <p class="sopratitolo">${esc(nome || 'La tua impresa')}</p>
       <h1>${urgenti.length ? 'Cosa fare adesso' : 'Sei in regola'}</h1>
@@ -350,6 +353,22 @@ async function schermataOggi() {
       ${bloccoAiuto('la sicurezza della mia impresa')}
       ${richiestaInstallazione && !installata() ? `<p class="nota"><a href="#/dati/installa">Installa safetyDoc sul telefono</a> per aprirlo con un tocco.</p>` : ''}
     </section>`;
+  bannerTicket();
+}
+
+/** Avviso di risposte arrivate (o, per gli operatori, di domande in attesa). Non blocca la schermata. */
+async function bannerTicket() {
+  if (!stato.utente || stato.utente.offline) return;
+  try {
+    const elenco = stato.utente.operatore ? await cloud.ticketTutti('aperto') : (await cloud.ticketMiei()).filter((t) => t.stato === 'risposto');
+    const box = document.getElementById('banner-ticket');
+    if (!box || !elenco.length) return;
+    box.innerHTML = stato.utente.operatore
+      ? `<a class="banner banner--info" href="#/assistenza"><strong>${elenco.length} ${elenco.length === 1 ? 'domanda' : 'domande'} in attesa di risposta</strong><span>Tocca per aprire l'assistenza.</span></a>`
+      : `<a class="banner banner--info" href="${elenco.length === 1 ? `#/ticket/${esc(elenco[0].id)}` : '#/assistenza'}"><strong>Hai ${elenco.length === 1 ? 'una risposta' : `${elenco.length} risposte`} dall'${esc(CONFIG.nomeAssistenza)}</strong><span>Tocca per leggere.</span></a>`;
+  } catch {
+    /* senza connessione non mostriamo nulla */
+  }
 }
 
 function bloccoLavoratoriOggi() {
@@ -656,7 +675,7 @@ async function schermataScheda(id) {
         ${st?.fatto ? `<button class="btn btn--testo" type="button" id="annulla">Segna di nuovo come da fare</button>` : ''}
       </form>`
       }
-      ${bloccoAiuto(scheda.titolo)}
+      ${bloccoAiuto(scheda.titolo, id)}
     </section>`;
 
   const form = app.querySelector('#registra');
@@ -1425,6 +1444,16 @@ async function schermataDati(sezione) {
         <button class="btn btn--primario" type="submit">Salva il contatto</button>
       </form>
 
+      <h2>Il tuo account</h2>
+      ${
+        stato.utente
+          ? `<p>Hai fatto l'accesso come <strong>${esc(stato.utente.email || '')}</strong>${stato.utente.operatore ? ' (operatore dell\'assistenza)' : ''}.</p>
+        <a class="btn btn--secondario" href="#/assistenza">${stato.utente.operatore ? 'Apri l\'assistenza' : 'Le tue domande all\'assistenza'}</a>
+        <button class="btn btn--testo" id="esci">Esci dall'account</button>
+        <p class="nota">Uscendo, i dati restano su questo dispositivo e tornano visibili al prossimo accesso.</p>`
+          : ''
+      }
+
       <h2 id="installa-app">Installa l'app</h2>
       ${bloccoInstallazione()}
 
@@ -1453,6 +1482,13 @@ async function schermataDati(sezione) {
     avviso('Contatto salvato.');
   });
   attivaInstallazione();
+  app.querySelector('#esci')?.addEventListener('click', async () => {
+    if (!confirm('Vuoi uscire dal tuo account? Per rientrare serviranno email e password.')) return;
+    await cloud.esci();
+    stato.utente = null;
+    location.hash = '#/';
+    instrada();
+  });
   const ancora = { consulente: 'consulente', installa: 'installa-app' }[sezione];
   if (ancora) app.querySelector(`#${ancora}`)?.scrollIntoView();
   app.querySelector('#esporta').addEventListener('click', esporta);
@@ -1534,12 +1570,264 @@ async function importa(file) {
   }
 }
 
+// ---------- accesso ----------
+
+async function verificaAccesso() {
+  const s = cloud.sessione();
+  if (!s) return null;
+  try {
+    const r = await cloud.rpc('sd_controlla_dispositivo', { p_device_id_hash: await cloud.impronta(await store.idPostazione()), p_app_version: VERSIONE_APP });
+    if (!r?.allowed) {
+      stato.messaggioAccesso = r?.message || 'Accesso non autorizzato.';
+      if (r?.status === 'device_not_registered') return registraDispositivo(s);
+      cloud.salvaAccesso(null);
+      return null;
+    }
+    const a = { userId: s.user.id, email: s.user.email, operatore: Boolean(r.operatore), ultimoOk: new Date().toISOString() };
+    cloud.salvaAccesso(a);
+    return a;
+  } catch (e) {
+    if (e.stato === 0) {
+      const a = cloud.accesso();
+      return a?.userId === s.user.id && accessoOfflineValido(a, new Date(), CONFIG.giorniSenzaConnessione) ? { ...a, offline: true } : null;
+    }
+    stato.messaggioAccesso = e.message;
+    return null;
+  }
+}
+
+async function registraDispositivo(s) {
+  const r = await cloud.rpc('sd_registra_dispositivo', {
+    p_device_id_hash: await cloud.impronta(await store.idPostazione()),
+    p_device_label: cloud.nomeDispositivo(),
+    p_app_version: VERSIONE_APP
+  });
+  if (!r?.allowed) {
+    stato.messaggioAccesso = r?.message || 'Questo dispositivo non è autorizzato.';
+    return null;
+  }
+  const a = { userId: s.user.id, email: s.user.email, operatore: Boolean(r.operatore), ultimoOk: new Date().toISOString() };
+  cloud.salvaAccesso(a);
+  return a;
+}
+
+function schermataAccesso() {
+  document.querySelector('.nav').hidden = true;
+  const offline = !navigator.onLine;
+  app.innerHTML = `
+    <section class="pagina benvenuto">
+      <p class="sopratitolo">safetyDoc</p>
+      <h1>Accedi</h1>
+      <p class="lead">La sicurezza della tua impresa, passo per passo. Entra con l'email e la password che ti ha dato l'${esc(CONFIG.nomeAssistenza)}.</p>
+      ${stato.messaggioAccesso ? `<p class="esito esito--errore">${esc(stato.messaggioAccesso)}</p>` : ''}
+      ${offline ? `<p class="esito esito--errore">Sei senza connessione: per il primo accesso serve internet.</p>` : ''}
+      <form id="accesso">
+        <label>Email<input class="campo" type="email" name="email" autocomplete="username" required></label>
+        <label>Password<input class="campo" type="password" name="password" autocomplete="current-password" required></label>
+        <button class="btn btn--primario btn--grande" type="submit">Entra</button>
+      </form>
+      <p class="nota">Non hai un account o hai dimenticato la password? Chiedi all'${esc(CONFIG.nomeAssistenza)}.</p>
+      <p class="nota">I dati della tua impresa restano su questo dispositivo: l'account serve per proteggere l'accesso e per scrivere all'assistenza. Versione ${VERSIONE_APP}.</p>
+    </section>`;
+  const form = app.querySelector('#accesso');
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const bottone = form.querySelector('button');
+    bottone.disabled = true;
+    bottone.textContent = 'Accesso in corso…';
+    const f = new FormData(form);
+    try {
+      const s = await cloud.accedi(String(f.get('email')), String(f.get('password')));
+      const a = await registraDispositivo(s);
+      if (!a) {
+        await cloud.esci();
+        return schermataAccesso();
+      }
+      const proprietario = await store.leggiMeta('proprietario');
+      if (proprietario && proprietario !== a.userId && (stato.adempimenti.length || stato.lavoratori.length)) {
+        if (!confirm('Su questo dispositivo ci sono già i dati di un altro account. Vuoi continuare e vederli con questo account?')) {
+          await cloud.esci();
+          return schermataAccesso();
+        }
+      }
+      await store.scriviMeta('proprietario', a.userId);
+      stato.utente = a;
+      stato.messaggioAccesso = '';
+      instrada();
+    } catch (e) {
+      stato.messaggioAccesso = e.message;
+      schermataAccesso();
+    }
+  });
+}
+
+// ---------- assistenza (ticket) ----------
+
+function dataOra(iso) {
+  return new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function serveConnessione() {
+  app.innerHTML = `<section class="pagina"><h1>Assistenza</h1>
+    <p class="esito esito--errore">Per l'assistenza serve la connessione a internet.</p>
+    <a class="btn btn--secondario" href="#/">Torna a Oggi</a></section>`;
+}
+
+async function schermataAssistenza(filtro) {
+  const op = stato.utente?.operatore;
+  app.innerHTML = `<section class="pagina"><h1>Assistenza</h1><p>Caricamento…</p></section>`;
+  let elenco;
+  try {
+    elenco = op ? await cloud.ticketTutti(filtro === 'tutti' ? '' : filtro || 'aperto') : await cloud.ticketMiei();
+  } catch (e) {
+    return e.stato === 0 ? serveConnessione() : avviso(e.message);
+  }
+  const card = (t) => `<a class="voce voce--${t.stato === 'risposto' ? (op ? 'verde' : 'giallo') : t.stato === 'aperto' ? (op ? 'rosso' : 'info') : 'verde'}" href="#/ticket/${esc(t.id)}">
+      <span class="voce__segno" aria-hidden="true">${t.stato === 'chiuso' ? '✓' : t.stato === 'risposto' ? '✉' : '?'}</span>
+      <span class="voce__testo">
+        <span class="voce__titolo">${esc(t.argomento)}</span>
+        <span class="voce__stato">${op ? `${esc(t.impresa || t.user_email || '')} · ` : ''}${esc(STATI_TICKET[t.stato])} · ${esc(dataOra(t.updated_at))}</span>
+      </span>
+      <span class="voce__freccia" aria-hidden="true">›</span>
+    </a>`;
+  const filtri = [
+    ['aperto', 'Da rispondere'],
+    ['risposto', 'Risposti'],
+    ['chiuso', 'Chiusi'],
+    ['tutti', 'Tutti']
+  ];
+  app.innerHTML = `
+    <section class="pagina">
+      <h1>${op ? 'Assistenza alle imprese' : 'Le tue domande'}</h1>
+      ${
+        op
+          ? `<div class="filtri">${filtri
+              .map(([v, et]) => `<a class="filtro" aria-current="${(filtro || 'aperto') === v}" href="#/assistenza/${v}">${et}</a>`)
+              .join('')}</div>`
+          : `<p class="lead">Fai una domanda su cosa applicare o come farlo: ti risponde l'${esc(CONFIG.nomeAssistenza)}, qui nell'app.</p>
+             <a class="btn btn--primario" href="#/ticket/nuovo/">Fai una nuova domanda</a>`
+      }
+      ${elenco.length ? `<div class="lista">${elenco.map(card).join('')}</div>` : `<p>${op ? 'Nessuna domanda in questo elenco.' : 'Non hai ancora fatto domande.'}</p>`}
+    </section>`;
+}
+
+async function schermataNuovoTicket(schedaId) {
+  const scheda = schedaId ? stato.catalogo.schede.find((x) => x.id === schedaId) : null;
+  const voce = scheda ? piano().find((v) => v.scheda.id === scheda.id) : null;
+  const a = anagrafica();
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="${scheda ? `#/scheda/${esc(scheda.id)}` : '#/assistenza'}">‹ Indietro</a>
+      <h1>Fai una domanda</h1>
+      <p class="lead">Scrivi il tuo dubbio con parole semplici. Ti risponde l'${esc(CONFIG.nomeAssistenza)}.</p>
+      <form id="ticket">
+        <label>Argomento<input class="campo" name="argomento" maxlength="200" required value="${esc(scheda?.titolo || '')}" placeholder="Per esempio: corso antincendio"></label>
+        <label>La tua domanda<textarea class="campo" name="testo" rows="6" maxlength="4000" required placeholder="Per esempio: ho assunto un apprendista, quali corsi deve fare e entro quando?"></textarea></label>
+        <label>Telefono per richiamarti <small>(facoltativo)</small><input class="campo" name="contatto" type="tel" autocomplete="tel" value="${esc(a.contatto || '')}"></label>
+        <p class="riquadro">Non scrivere nomi dei lavoratori né informazioni sulla loro salute. Insieme alla domanda inviamo il nome dell'impresa, il codice ATECO, il numero di lavoratori e la voce del piano, così chi risponde conosce la tua situazione.</p>
+        <button class="btn btn--primario btn--grande" type="submit">Invia la domanda</button>
+      </form>
+    </section>`;
+  const form = app.querySelector('#ticket');
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(form);
+    const bottone = form.querySelector('button');
+    bottone.disabled = true;
+    try {
+      const t = await cloud.apriTicket({
+        argomento: String(f.get('argomento')).trim(),
+        testo: String(f.get('testo')).trim(),
+        contatto: String(f.get('contatto') || '').trim(),
+        schedaId: scheda?.id,
+        impresa: a.ragioneSociale || risposte().nome_impresa || '',
+        contesto: contestoTicket({ fatti: ctx().fatti, risposte: risposte(), scheda, voce, versioneApp: VERSIONE_APP })
+      });
+      avviso('Domanda inviata. Ti avviseremo qui quando arriva la risposta.');
+      location.hash = `#/ticket/${t.id}`;
+    } catch (e) {
+      bottone.disabled = false;
+      avviso(e.stato === 0 ? 'Serve la connessione a internet per inviare la domanda.' : e.message);
+    }
+  });
+}
+
+async function schermataTicket(id, schedaId) {
+  if (id === 'nuovo') return schermataNuovoTicket(schedaId);
+  const op = stato.utente?.operatore;
+  let t;
+  try {
+    t = await cloud.ticket(id);
+  } catch (e) {
+    return e.stato === 0 ? serveConnessione() : avviso(e.message);
+  }
+  if (!t) return (location.hash = '#/assistenza');
+  const contesto = Object.entries(t.contesto || {}).filter(([k]) => k !== 'versioneApp');
+  const ETICHETTE_CONTESTO = { ateco: 'ATECO', classeRischio: 'Rischio', lavoratori: 'Lavoratori', composizione: 'Composizione', attivita: 'Attività', scheda: 'Voce del piano', statoVoce: 'Stato della voce' };
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/assistenza">‹ Assistenza</a>
+      <p class="pill pill--${t.stato === 'chiuso' ? 'verde' : t.stato === 'risposto' ? 'giallo' : 'info'}">${esc(STATI_TICKET[t.stato])}</p>
+      <h1>${esc(t.argomento)}</h1>
+      ${
+        op
+          ? `<dl class="dettagli">
+          <div><dt>Impresa</dt><dd>${esc(t.impresa || '—')}</dd></div>
+          <div><dt>Account</dt><dd>${esc(t.user_email || '—')}</dd></div>
+          ${t.contatto ? `<div><dt>Telefono</dt><dd><a href="tel:${esc(t.contatto.replace(/[^\d+]/g, ''))}">${esc(t.contatto)}</a></dd></div>` : ''}
+          ${contesto.map(([k, v]) => `<div><dt>${esc(ETICHETTE_CONTESTO[k] || k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}
+        </dl>
+        ${t.scheda_id ? `<a class="btn btn--testo" href="#/scheda/${esc(t.scheda_id)}">Apri la scheda della voce</a>` : ''}`
+          : ''
+      }
+      <div class="messaggi">
+        ${t.messaggi
+          .map(
+            (m) => `<div class="messaggio ${m.da_operatore ? 'messaggio--operatore' : ''}">
+          <p class="messaggio__chi">${m.da_operatore ? esc(CONFIG.nomeAssistenza) : op ? esc(t.impresa || 'Impresa') : 'Tu'} · ${esc(dataOra(m.created_at))}</p>
+          <p class="messaggio__testo">${esc(m.testo)}</p></div>`
+          )
+          .join('')}
+      </div>
+      <form id="risposta">
+        <label>${op ? 'Rispondi' : t.stato === 'chiuso' ? 'Scrivi per riaprire la domanda' : 'Aggiungi un messaggio'}
+          <textarea class="campo" name="testo" rows="4" maxlength="4000" required></textarea></label>
+        <button class="btn btn--primario" type="submit">Invia</button>
+      </form>
+      ${t.stato !== 'chiuso' ? `<button class="btn btn--testo" id="chiudi">${op ? 'Chiudi la domanda' : 'Ho risolto: chiudi la domanda'}</button>` : ''}
+    </section>`;
+  app.querySelector('#risposta').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const testo = String(new FormData(ev.target).get('testo')).trim();
+    if (!testo) return;
+    try {
+      await cloud.scriviMessaggio(t.id, testo);
+      avviso('Messaggio inviato.');
+      schermataTicket(t.id);
+    } catch (e) {
+      avviso(e.stato === 0 ? 'Serve la connessione a internet.' : e.message);
+    }
+  });
+  app.querySelector('#chiudi')?.addEventListener('click', async () => {
+    try {
+      await cloud.impostaStato(t.id, 'chiuso');
+      avviso('Domanda chiusa.');
+      schermataTicket(t.id);
+    } catch (e) {
+      avviso(e.message);
+    }
+  });
+}
+
 // ---------- avvio ----------
 
 async function instrada() {
   const [, rotta, param, extra] = (location.hash || '#/').split('/').map((x) => (x ? decodeURIComponent(x) : x));
-  aggiornaNav(rotta || '');
   window.scrollTo(0, 0);
+  if (!stato.utente) return schermataAccesso();
+  aggiornaNav(rotta || '');
+  if (rotta === 'assistenza') return schermataAssistenza(param);
+  if (rotta === 'ticket') return schermataTicket(param, extra);
   if (rotta === 'domanda') return schermataDomanda(param);
   if (rotta === 'piano') return schermataPiano();
   if (rotta === 'scheda') return schermataScheda(param || '');
@@ -1570,6 +1858,7 @@ async function avvia() {
     stato.catalogo = c;
     stato.defLav = l;
     await ricarica();
+    stato.utente = await verificaAccesso();
     store.chiediMemoriaPersistente();
     addEventListener('hashchange', instrada);
     await instrada();
