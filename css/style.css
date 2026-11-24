@@ -294,6 +294,9 @@ dialog.firma h2 { margin-top: 0; }
 .firma__tela { display: block; width: 100%; aspect-ratio: 600 / 260; background: #fff; border: 2px dashed var(--bordo); border-radius: 8px; touch-action: none; }
 .firma__azioni { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px; }
 .firma__azioni .btn { width: auto; flex: 1 1 auto; margin: 0; }
+.aggiornamento { position: fixed; left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 30; display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--superficie); color: var(--testo); border: 2px solid var(--primario); border-radius: var(--raggio); box-shadow: 0 6px 20px rgb(0 0 0 / 0.2); }
+.aggiornamento .btn { width: auto; margin: 0; }
+@media print { .aggiornamento { display: none; } }
 .barra-firma { position: sticky; bottom: calc(72px + env(safe-area-inset-bottom)); display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 12px; margin: 12px 0; background: var(--superficie); border: 2px solid var(--primario); border-radius: var(--raggio); box-shadow: 0 4px 16px rgb(0 0 0 / 0.15); }
 
 @media print {

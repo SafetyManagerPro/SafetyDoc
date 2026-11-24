@@ -1,16 +1,35 @@
 {
+  "id": "./",
   "name": "safetyDoc – Sicurezza sul lavoro",
   "short_name": "safetyDoc",
-  "description": "Cosa fare, come e quando per la sicurezza della tua impresa.",
+  "description": "Cosa fare, come e quando per la sicurezza della tua impresa: adempimenti, lavoratori, macchine, documenti e scadenze, anche senza connessione.",
   "lang": "it",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#f6f4ef",
   "theme_color": "#1f5f4a",
+  "categories": ["business", "productivity", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "screenshots/telefono-oggi.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Cosa fare adesso: le cose più urgenti con il semaforo" },
+    { "src": "screenshots/telefono-piano.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Il piano completo degli adempimenti" },
+    { "src": "screenshots/computer-documento.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "Documenti già compilati e pronti da stampare" }
+  ],
+  "shortcuts": [
+    { "name": "Cosa fare adesso", "short_name": "Oggi", "url": "./#/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Piano completo", "short_name": "Piano", "url": "./#/piano", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Documenti", "short_name": "Documenti", "url": "./#/documenti", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Registra un infortunio o quasi incidente", "short_name": "Registra evento", "url": "./#/evento/nuovo", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

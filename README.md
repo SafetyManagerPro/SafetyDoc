@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.14.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.15.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -45,8 +45,9 @@ Le domande nuove del questionario vengono chieste da sole a chi aveva già rispo
 
 ```
 index.html            pagina unica dell'app
-manifest.webmanifest  installazione come app (PWA)
-sw.js                 funzionamento senza connessione
+manifest.webmanifest  installazione come app (PWA): icone anche maskable, scorciatoie, schermate di anteprima
+sw.js                 funzionamento senza connessione: tutti i file in cache, rete prima con attesa massima di 4 s
+icons/, screenshots/  icone (anche per iPhone) e schermate mostrate al momento dell'installazione
 css/style.css         grafica: telefono prima di tutto, testo grande, tema scuro
 js/app.js             schermate e navigazione
 js/engine.js          regole, piano, semaforo (modulo puro, testato)
@@ -64,6 +65,16 @@ test/                 test con il test runner di Node
 ```
 
 Nessuna dipendenza e nessun passo di build: i file si pubblicano così come sono.
+
+## App installabile (PWA)
+
+safetyDoc è una Progressive Web App: si apre da https://safetydoc.vercel.app e si installa sul telefono o sul
+computer (Android e PC: pulsante «Installa»; iPhone: Condividi → Aggiungi alla schermata Home). Dopo la prima
+apertura funziona anche **senza connessione**, compresa la stampa dei libretti PDF. Quando esce una versione nuova
+l'app mostra «È pronta una nuova versione» con il pulsante Aggiorna.
+
+Regola per gli sviluppi: ogni file nuovo usato dall'app va aggiunto all'elenco `FILE` di `sw.js` e la versione
+della cache va alzata insieme a `VERSIONE_APP`. Il test `test/pwa.test.js` blocca le dimenticanze.
 
 ## Provarlo
 

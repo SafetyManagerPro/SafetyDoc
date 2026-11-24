@@ -42,7 +42,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.14.0';
+export const VERSIONE_APP = '0.15.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -2300,9 +2300,37 @@ async function avvia() {
     console.error(e);
     app.innerHTML = `<section class="pagina"><h1>Qualcosa non ha funzionato</h1><p>Ricarica la pagina. Se il problema continua, il browser potrebbe non essere supportato.</p></section>`;
   }
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+  registraServiceWorker();
+}
+
+/** Installa il service worker (uso senza connessione) e avvisa quando c'è una nuova versione. */
+async function registraServiceWorker() {
+  if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+  try {
+    const reg = await navigator.serviceWorker.register('sw.js');
+    let controllata = Boolean(navigator.serviceWorker.controller);
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (controllata) mostraAggiornamento();
+      controllata = true;
+    });
+    // Quando l'app torna in primo piano controlla se è uscita una nuova versione.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {});
+    });
+  } catch {
+    /* senza service worker l'app funziona lo stesso, ma solo con la connessione */
   }
+}
+
+function mostraAggiornamento() {
+  if (document.getElementById('aggiornamento')) return;
+  const box = document.createElement('div');
+  box.id = 'aggiornamento';
+  box.className = 'aggiornamento';
+  box.setAttribute('role', 'status');
+  box.innerHTML = `<span>È pronta una nuova versione di safetyDoc.</span><button class="btn btn--primario" type="button">Aggiorna</button>`;
+  box.querySelector('button').addEventListener('click', () => location.reload());
+  document.body.append(box);
 }
 
 avvia();

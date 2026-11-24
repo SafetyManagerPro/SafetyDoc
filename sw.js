@@ -1,9 +1,12 @@
-// Service worker: rende l'app utilizzabile anche senza connessione.
-// Cambiare VERSIONE a ogni rilascio per aggiornare i file in cache.
-const VERSIONE = 'safetydoc-v0.14.0';
+// Service worker: rende safetyDoc un'app installabile che funziona anche senza connessione.
+// Cambiare VERSIONE a ogni rilascio: i file vengono scaricati di nuovo e la vecchia cache eliminata.
+// Il test test/pwa.test.js controlla che qui ci siano tutti i file usati dall'app.
+const VERSIONE = 'safetydoc-v0.15.0';
+
 const FILE = [
   './',
   'index.html',
+  'manifest.webmanifest',
   'css/style.css',
   'js/app.js',
   'js/engine.js',
@@ -16,6 +19,8 @@ const FILE = [
   'js/aiuto.js',
   'js/lingue.js',
   'js/calcoli.js',
+  'js/vendor/pdfjs/pdf.min.mjs',
+  'js/vendor/pdfjs/pdf.worker.min.mjs',
   'data/questionario.json',
   'data/catalogo.json',
   'data/lavoratori.json',
@@ -24,34 +29,71 @@ const FILE = [
   'data/attrezzature.json',
   'data/settori.json',
   'data/lavorazioni.json',
-  'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-192.png',
-  'icons/icon-512.png'
+  'icons/icon-512.png',
+  'icons/icon-maskable-192.png',
+  'icons/icon-maskable-512.png',
+  'icons/apple-touch-icon.png'
 ];
 
+// Oltre questo tempo senza risposta dalla rete si usa la copia salvata (connessione lenta o instabile).
+const ATTESA_RETE_MS = 4000;
+
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSIONE).then((c) => c.addAll(FILE)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches
+      .open(VERSIONE)
+      .then((c) => c.addAll(FILE.map((f) => new Request(f, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys()
-      .then((chiavi) => Promise.all(chiavi.filter((k) => k !== VERSIONE).map((k) => caches.delete(k))))
+    caches
+      .keys()
+      .then((chiavi) => Promise.all(chiavi.filter((k) => k.startsWith('safetydoc-') && k !== VERSIONE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
-// Rete prima, cache come riserva: così catalogo e app restano aggiornati quando c'è connessione.
+function conTempoMassimo(promessa, ms) {
+  return new Promise((ok, ko) => {
+    const t = setTimeout(() => ko(new Error('tempo scaduto')), ms);
+    promessa.then(
+      (r) => {
+        clearTimeout(t);
+        ok(r);
+      },
+      (err) => {
+        clearTimeout(t);
+        ko(err);
+      }
+    );
+  });
+}
+
+// Rete prima (così app e catalogo restano aggiornati), copia salvata se la rete manca o è troppo lenta.
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  const req = e.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  const pagina = req.mode === 'navigate';
+  const dallaRete = fetch(req).then((risposta) => {
+    if (risposta.ok && risposta.type === 'basic') {
+      const copia = risposta.clone();
+      caches.open(VERSIONE).then((c) => c.put(pagina ? 'index.html' : req, copia));
+    }
+    return risposta;
+  });
   e.respondWith(
-    fetch(e.request)
-      .then((risposta) => {
-        const copia = risposta.clone();
-        caches.open(VERSIONE).then((c) => c.put(e.request, copia));
-        return risposta;
-      })
-      .catch(() => caches.match(e.request).then((r) => r || caches.match('index.html')))
+    conTempoMassimo(dallaRete, ATTESA_RETE_MS)
+      .catch(async () => (await caches.match(pagina ? 'index.html' : req, { ignoreSearch: pagina })) || dallaRete)
+      .catch(async () => (pagina ? caches.match('index.html') : Response.error()))
   );
+  e.waitUntil(dallaRete.catch(() => {}));
+});
+
+self.addEventListener('message', (e) => {
+  if (e.data === 'versione') e.source?.postMessage({ versione: VERSIONE });
 });
