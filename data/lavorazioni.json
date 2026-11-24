@@ -1,0 +1,740 @@
+{
+  "versione": "0.1.0",
+  "nota": "Fasi di lavoro e tipi di appalto con rischi e misure tipiche: base da adattare al singolo cantiere o appalto.",
+  "fasiCantiere": [
+    {
+      "id": "allestimento",
+      "titolo": "Allestimento e smobilizzo del cantiere",
+      "attrezzature": [
+        "Autocarro",
+        "Utensili manuali",
+        "Trapano"
+      ],
+      "rischi": [
+        "Investimento da mezzi",
+        "Movimentazione manuale dei carichi",
+        "Tagli e abrasioni",
+        "Elettrocuzione da allacci provvisori"
+      ],
+      "misure": [
+        "Recinzione e cartello di cantiere",
+        "Viabilità separata per mezzi e pedoni",
+        "Quadro elettrico di cantiere con differenziale e dichiarazione di conformità",
+        "Servizi igienici e baracche come da PSC"
+      ],
+      "dpi": [
+        "Casco",
+        "Scarpe antinfortunistiche",
+        "Guanti",
+        "Indumenti ad alta visibilità"
+      ]
+    },
+    {
+      "id": "demolizioni",
+      "titolo": "Demolizioni e rimozioni",
+      "attrezzature": [
+        "Martello demolitore",
+        "Smerigliatrice",
+        "Mazza e scalpello",
+        "Carriola"
+      ],
+      "rischi": [
+        "Crollo di strutture",
+        "Caduta di materiali dall'alto",
+        "Polveri (anche silice)",
+        "Rumore e vibrazioni",
+        "Proiezione di schegge"
+      ],
+      "misure": [
+        "Verifica preventiva della stabilità e programma delle demolizioni",
+        "Demolire dall'alto verso il basso, mai sotto chi lavora",
+        "Bagnare le macerie per ridurre le polveri",
+        "Convogliare le macerie con canali chiusi",
+        "Verificare prima l'assenza di amianto"
+      ],
+      "dpi": [
+        "Casco",
+        "Occhiali",
+        "Maschera FFP2/FFP3",
+        "Otoprotettori",
+        "Guanti antivibrazione",
+        "Scarpe antinfortunistiche"
+      ]
+    },
+    {
+      "id": "scavi",
+      "titolo": "Scavi e movimento terra",
+      "attrezzature": [
+        "Escavatore",
+        "Pala",
+        "Autocarro"
+      ],
+      "rischi": [
+        "Seppellimento per franamento delle pareti",
+        "Caduta nello scavo",
+        "Investimento e ribaltamento dei mezzi",
+        "Contatto con sottoservizi (gas, elettricità)"
+      ],
+      "misure": [
+        "Armare le pareti oltre 1,5 m o dare la giusta pendenza",
+        "Parapetti o sbarramenti sul ciglio",
+        "Non depositare materiali sul ciglio",
+        "Individuare i sottoservizi prima di scavare",
+        "Operatori dei mezzi con abilitazione"
+      ],
+      "dpi": [
+        "Casco",
+        "Scarpe antinfortunistiche",
+        "Indumenti ad alta visibilità"
+      ]
+    },
+    {
+      "id": "strutture",
+      "titolo": "Strutture in cemento armato (casseforme, ferro, getti)",
+      "attrezzature": [
+        "Betoniera",
+        "Sega circolare",
+        "Piegaferri",
+        "Vibratore per calcestruzzo",
+        "Gru"
+      ],
+      "rischi": [
+        "Caduta dall'alto",
+        "Caduta di carichi sospesi",
+        "Punture e tagli da ferri d'armatura",
+        "Contatto con cemento (dermatiti)",
+        "Rumore e vibrazioni"
+      ],
+      "misure": [
+        "Parapetti e impalcati prima dei getti",
+        "Proteggere le estremità dei ferri sporgenti",
+        "Imbracature dei carichi verificate, nessuno sotto il carico",
+        "Pulizia della pelle e creme barriera"
+      ],
+      "dpi": [
+        "Casco",
+        "Guanti",
+        "Scarpe antinfortunistiche",
+        "Occhiali",
+        "Otoprotettori"
+      ]
+    },
+    {
+      "id": "murature",
+      "titolo": "Murature e tramezzature",
+      "attrezzature": [
+        "Betoniera",
+        "Taglierina o sega per laterizi",
+        "Trabattello",
+        "Ponte su cavalletti"
+      ],
+      "rischi": [
+        "Caduta dall'alto",
+        "Movimentazione manuale dei carichi",
+        "Polveri durante i tagli",
+        "Contatto con malte"
+      ],
+      "misure": [
+        "Ponteggio o trabattello con parapetti",
+        "Ponti su cavalletti solo fino a 2 m",
+        "Taglio a umido o con aspirazione",
+        "Pallet e ausili per i blocchi pesanti"
+      ],
+      "dpi": [
+        "Casco",
+        "Guanti",
+        "Scarpe antinfortunistiche",
+        "Occhiali",
+        "Maschera FFP2"
+      ]
+    },
+    {
+      "id": "intonaci",
+      "titolo": "Intonaci, rasature e massetti",
+      "attrezzature": [
+        "Intonacatrice",
+        "Betoniera",
+        "Staggia",
+        "Trabattello"
+      ],
+      "rischi": [
+        "Caduta dall'alto",
+        "Contatto con malte e additivi",
+        "Rumore",
+        "Posture incongrue"
+      ],
+      "misure": [
+        "Opere provvisionali con parapetti",
+        "Leggere le schede di sicurezza dei prodotti",
+        "Pause e alternanza delle posizioni"
+      ],
+      "dpi": [
+        "Guanti resistenti agli alcali",
+        "Occhiali",
+        "Scarpe antinfortunistiche"
+      ]
+    },
+    {
+      "id": "impianti-elettrici",
+      "titolo": "Impianti elettrici",
+      "attrezzature": [
+        "Trapano e scanalatrice",
+        "Scale",
+        "Utensili isolati",
+        "Strumenti di misura"
+      ],
+      "rischi": [
+        "Elettrocuzione",
+        "Caduta dall'alto da scale",
+        "Polveri durante le tracce",
+        "Tagli"
+      ],
+      "misure": [
+        "Lavorare fuori tensione, sezionando e segnalando",
+        "Personale PES/PAV",
+        "Scanalatrice con aspirazione",
+        "Scale a norma e vincolate"
+      ],
+      "dpi": [
+        "Guanti isolanti",
+        "Occhiali",
+        "Maschera FFP2",
+        "Scarpe isolanti"
+      ]
+    },
+    {
+      "id": "impianti-idraulici",
+      "titolo": "Impianti idraulici, termici e gas",
+      "attrezzature": [
+        "Cannello",
+        "Filettatrice",
+        "Trapano",
+        "Saldatrice per tubi"
+      ],
+      "rischi": [
+        "Ustioni e incendio durante le saldature",
+        "Esposizione a fumi",
+        "Tagli",
+        "Posture incongrue"
+      ],
+      "misure": [
+        "Estintore vicino a ogni lavoro con fiamma",
+        "Allontanare i materiali infiammabili",
+        "Aerare i locali",
+        "Bombole vincolate e chiuse dopo l'uso"
+      ],
+      "dpi": [
+        "Guanti",
+        "Occhiali o maschera per saldatura",
+        "Scarpe antinfortunistiche"
+      ]
+    },
+    {
+      "id": "cartongesso",
+      "titolo": "Pareti e controsoffitti in cartongesso",
+      "attrezzature": [
+        "Avvitatore",
+        "Taglierino",
+        "Trabattello",
+        "Sollevatore per lastre"
+      ],
+      "rischi": [
+        "Caduta dall'alto",
+        "Tagli",
+        "Polveri durante la carteggiatura",
+        "Movimentazione delle lastre"
+      ],
+      "misure": [
+        "Trabattello con parapetti al posto delle scale",
+        "Lastre movimentate in due o con sollevatore",
+        "Carteggiatura con aspirazione"
+      ],
+      "dpi": [
+        "Guanti",
+        "Occhiali",
+        "Maschera FFP2",
+        "Scarpe antinfortunistiche"
+      ]
+    },
+    {
+      "id": "pavimenti",
+      "titolo": "Pavimenti e rivestimenti",
+      "attrezzature": [
+        "Tagliapiastrelle",
+        "Smerigliatrice",
+        "Miscelatore",
+        "Levigatrice"
+      ],
+      "rischi": [
+        "Polveri (silice) durante i tagli",
+        "Rumore e vibrazioni",
+        "Posture in ginocchio",
+        "Contatto con colle e adesivi"
+      ],
+      "misure": [
+        "Taglio a umido",
+        "Ginocchiere e pause",
+        "Aerazione con colle a solvente"
+      ],
+      "dpi": [
+        "Ginocchiere",
+        "Guanti",
+        "Occhiali",
+        "Otoprotettori",
+        "Maschera FFP3 per tagli a secco"
+      ]
+    },
+    {
+      "id": "tinteggiature",
+      "titolo": "Tinteggiature e verniciature",
+      "attrezzature": [
+        "Rullo e pennelli",
+        "Pistola a spruzzo",
+        "Scale e trabattello"
+      ],
+      "rischi": [
+        "Inalazione di vapori e nebbie",
+        "Contatto con prodotti chimici",
+        "Caduta dall'alto",
+        "Incendio con prodotti infiammabili"
+      ],
+      "misure": [
+        "Preferire prodotti all'acqua",
+        "Aerare gli ambienti",
+        "Niente fiamme o fumo vicino ai solventi",
+        "Trabattello invece delle scale"
+      ],
+      "dpi": [
+        "Maschera con filtri adatti",
+        "Guanti",
+        "Occhiali",
+        "Tuta"
+      ]
+    },
+    {
+      "id": "coperture",
+      "titolo": "Lavori su coperture e tetti",
+      "attrezzature": [
+        "Ponteggio",
+        "Linea vita",
+        "Piattaforma elevabile",
+        "Montacarichi"
+      ],
+      "rischi": [
+        "Caduta dall'alto dal bordo o per sfondamento",
+        "Caduta di materiali",
+        "Esposizione a caldo e freddo"
+      ],
+      "misure": [
+        "Parapetti perimetrali o ponteggio",
+        "Linea vita e imbracatura",
+        "Tavole per camminare su coperture non portanti",
+        "Sospendere i lavori con vento forte, pioggia o ghiaccio"
+      ],
+      "dpi": [
+        "Imbracatura",
+        "Casco con sottogola",
+        "Scarpe antiscivolo",
+        "Guanti"
+      ]
+    },
+    {
+      "id": "ponteggi",
+      "titolo": "Montaggio, uso e smontaggio di ponteggi",
+      "attrezzature": [
+        "Ponteggio",
+        "Argano",
+        "Chiavi"
+      ],
+      "rischi": [
+        "Caduta dall'alto durante il montaggio",
+        "Caduta di elementi",
+        "Ribaltamento del ponteggio"
+      ],
+      "misure": [
+        "PiMUS e squadra formata (corso ponteggiatori)",
+        "Montaggio secondo lo schema e il libretto",
+        "Ancoraggi verificati",
+        "Verifica dopo vento forte e lunghi fermi"
+      ],
+      "dpi": [
+        "Imbracatura",
+        "Casco con sottogola",
+        "Guanti",
+        "Scarpe antinfortunistiche"
+      ]
+    },
+    {
+      "id": "serramenti",
+      "titolo": "Posa di serramenti e infissi",
+      "attrezzature": [
+        "Trapano",
+        "Avvitatore",
+        "Ventose",
+        "Schiuma poliuretanica"
+      ],
+      "rischi": [
+        "Caduta dall'alto dalle aperture",
+        "Movimentazione di carichi ingombranti",
+        "Tagli da vetri"
+      ],
+      "misure": [
+        "Parapetti provvisori sulle aperture",
+        "Movimentare in due o con ventose",
+        "Leggere la scheda della schiuma"
+      ],
+      "dpi": [
+        "Guanti antitaglio",
+        "Scarpe antinfortunistiche",
+        "Occhiali"
+      ]
+    },
+    {
+      "id": "verde",
+      "titolo": "Lavori di giardinaggio e potatura",
+      "attrezzature": [
+        "Motosega",
+        "Decespugliatore",
+        "Tagliasiepi",
+        "Piattaforma elevabile"
+      ],
+      "rischi": [
+        "Tagli",
+        "Proiezione di materiali",
+        "Caduta dall'alto",
+        "Rumore e vibrazioni",
+        "Punture di insetti"
+      ],
+      "misure": [
+        "Distanza di sicurezza dalle altre persone",
+        "Formazione per motosega",
+        "PLE con operatore abilitato"
+      ],
+      "dpi": [
+        "Pantaloni e guanti antitaglio",
+        "Visiera",
+        "Otoprotettori",
+        "Casco"
+      ]
+    }
+  ],
+  "tipiAppalto": [
+    {
+      "id": "manutenzione",
+      "titolo": "Manutenzione di impianti e macchine",
+      "rischiIntrodotti": [
+        "Uso di utensili e attrezzi",
+        "Elettrocuzione",
+        "Caduta dall'alto su scale",
+        "Rumore"
+      ],
+      "interferenze": [
+        {
+          "attivita": "Interventi su impianti in tensione o in pressione",
+          "rischio": "Elettrocuzione o rilascio di energia per persone del committente",
+          "probabilita": 2,
+          "magnitudo": 4,
+          "misure": "Sezionamento, blocco e cartello «lavori in corso» concordati con il committente",
+          "acura": "Entrambi"
+        },
+        {
+          "attivita": "Lavoro in aree frequentate",
+          "rischio": "Urti, inciampi su attrezzi e cavi",
+          "probabilita": 2,
+          "magnitudo": 2,
+          "misure": "Delimitare l'area e tenere i passaggi liberi",
+          "acura": "Appaltatore"
+        },
+        {
+          "attivita": "Uso di scale e piattaforme",
+          "rischio": "Caduta di oggetti su chi passa sotto",
+          "probabilita": 2,
+          "magnitudo": 3,
+          "misure": "Area sottostante delimitata",
+          "acura": "Appaltatore"
+        }
+      ],
+      "costi": [
+        {
+          "voce": "Delimitazione e segnaletica dell'area",
+          "unita": "a corpo"
+        },
+        {
+          "voce": "Cartelli di blocco e lucchetti",
+          "unita": "a corpo"
+        },
+        {
+          "voce": "Riunione di coordinamento",
+          "unita": "ora"
+        }
+      ]
+    },
+    {
+      "id": "pulizie",
+      "titolo": "Pulizie e sanificazione",
+      "rischiIntrodotti": [
+        "Prodotti chimici",
+        "Pavimenti bagnati",
+        "Movimentazione di carichi",
+        "Uso di macchine per pulizie"
+      ],
+      "interferenze": [
+        {
+          "attivita": "Lavaggio dei pavimenti in orario di lavoro",
+          "rischio": "Scivolamento di lavoratori e clienti",
+          "probabilita": 3,
+          "magnitudo": 2,
+          "misure": "Cartello «pavimento bagnato», lavaggio a zone o fuori orario",
+          "acura": "Appaltatore"
+        },
+        {
+          "attivita": "Uso di detergenti e disinfettanti",
+          "rischio": "Inalazione o contatto per le persone presenti",
+          "probabilita": 2,
+          "magnitudo": 2,
+          "misure": "Prodotti con scheda di sicurezza, aerazione, mai mescolare prodotti",
+          "acura": "Appaltatore"
+        },
+        {
+          "attivita": "Pulizia vicino a macchine e impianti",
+          "rischio": "Avviamento accidentale",
+          "probabilita": 1,
+          "magnitudo": 4,
+          "misure": "Pulire solo macchine ferme e concordate",
+          "acura": "Entrambi"
+        }
+      ],
+      "costi": [
+        {
+          "voce": "Cartelli pavimento bagnato",
+          "unita": "numero"
+        },
+        {
+          "voce": "Riunione di coordinamento",
+          "unita": "ora"
+        }
+      ]
+    },
+    {
+      "id": "impianti",
+      "titolo": "Installazione o modifica di impianti (elettrici, termici, idraulici, gas)",
+      "rischiIntrodotti": [
+        "Elettrocuzione",
+        "Lavori a caldo (saldature)",
+        "Polveri e rumore",
+        "Caduta dall'alto"
+      ],
+      "interferenze": [
+        {
+          "attivita": "Lavori a caldo",
+          "rischio": "Incendio nei locali del committente",
+          "probabilita": 2,
+          "magnitudo": 4,
+          "misure": "Permesso di lavoro a caldo, estintore vicino, rimozione dei materiali combustibili, controllo dopo la fine",
+          "acura": "Entrambi"
+        },
+        {
+          "attivita": "Sospensione di energia elettrica, gas o acqua",
+          "rischio": "Fermo improvviso di macchine e impianti di emergenza",
+          "probabilita": 2,
+          "magnitudo": 3,
+          "misure": "Interruzioni concordate in anticipo con il committente",
+          "acura": "Entrambi"
+        },
+        {
+          "attivita": "Tracce e forature",
+          "rischio": "Polveri e rumore nei locali occupati",
+          "probabilita": 3,
+          "magnitudo": 2,
+          "misure": "Aspirazione, orari concordati, compartimentare con teli",
+          "acura": "Appaltatore"
+        }
+      ],
+      "costi": [
+        {
+          "voce": "Estintore aggiuntivo",
+          "unita": "numero"
+        },
+        {
+          "voce": "Teli di compartimentazione",
+          "unita": "m²"
+        },
+        {
+          "voce": "Delimitazione dell'area",
+          "unita": "a corpo"
+        },
+        {
+          "voce": "Riunione di coordinamento",
+          "unita": "ora"
+        }
+      ]
+    },
+    {
+      "id": "edili",
+      "titolo": "Piccoli lavori edili e di ristrutturazione",
+      "rischiIntrodotti": [
+        "Caduta dall'alto",
+        "Polveri",
+        "Rumore e vibrazioni",
+        "Movimentazione di carichi",
+        "Mezzi in movimento"
+      ],
+      "interferenze": [
+        {
+          "attivita": "Lavori in quota o su opere provvisionali",
+          "rischio": "Caduta di materiali su persone del committente",
+          "probabilita": 2,
+          "magnitudo": 4,
+          "misure": "Area sottostante interdetta, mantovane o reti",
+          "acura": "Appaltatore"
+        },
+        {
+          "attivita": "Demolizioni, tagli e forature",
+          "rischio": "Polveri e rumore nei locali occupati",
+          "probabilita": 3,
+          "magnitudo": 2,
+          "misure": "Compartimentazione, aspirazione, orari concordati",
+          "acura": "Appaltatore"
+        },
+        {
+          "attivita": "Movimentazione di materiali e mezzi",
+          "rischio": "Investimento e urti",
+          "probabilita": 2,
+          "magnitudo": 3,
+          "misure": "Percorsi separati e segnalati, moviere quando serve",
+          "acura": "Appaltatore"
+        },
+        {
+          "attivita": "Vie di esodo",
+          "rischio": "Uscite di emergenza ostruite",
+          "probabilita": 2,
+          "magnitudo": 4,
+          "misure": "Non ingombrare mai uscite e percorsi di esodo",
+          "acura": "Appaltatore"
+        }
+      ],
+      "costi": [
+        {
+          "voce": "Recinzione o delimitazione",
+          "unita": "m"
+        },
+        {
+          "voce": "Teli di compartimentazione",
+          "unita": "m²"
+        },
+        {
+          "voce": "Segnaletica",
+          "unita": "a corpo"
+        },
+        {
+          "voce": "Riunione di coordinamento",
+          "unita": "ora"
+        }
+      ]
+    },
+    {
+      "id": "trasporti",
+      "titolo": "Consegne, trasporti e movimentazione merci",
+      "rischiIntrodotti": [
+        "Mezzi in movimento",
+        "Carico e scarico",
+        "Carrelli elevatori"
+      ],
+      "interferenze": [
+        {
+          "attivita": "Manovre di mezzi nel cortile o nel piazzale",
+          "rischio": "Investimento di persone",
+          "probabilita": 2,
+          "magnitudo": 4,
+          "misure": "Velocità a passo d'uomo, moviere, percorsi pedonali separati",
+          "acura": "Entrambi"
+        },
+        {
+          "attivita": "Carico e scarico con carrello elevatore",
+          "rischio": "Caduta dei carichi, investimento",
+          "probabilita": 2,
+          "magnitudo": 3,
+          "misure": "Area di carico delimitata, carrellisti abilitati",
+          "acura": "Entrambi"
+        }
+      ],
+      "costi": [
+        {
+          "voce": "Segnaletica orizzontale e verticale",
+          "unita": "a corpo"
+        },
+        {
+          "voce": "Riunione di coordinamento",
+          "unita": "ora"
+        }
+      ]
+    },
+    {
+      "id": "verde",
+      "titolo": "Manutenzione del verde",
+      "rischiIntrodotti": [
+        "Macchine da taglio",
+        "Rumore",
+        "Proiezione di materiali",
+        "Prodotti fitosanitari"
+      ],
+      "interferenze": [
+        {
+          "attivita": "Taglio dell'erba e delle siepi",
+          "rischio": "Proiezione di sassi e detriti su persone e veicoli",
+          "probabilita": 3,
+          "magnitudo": 2,
+          "misure": "Area delimitata, sospendere al passaggio di persone",
+          "acura": "Appaltatore"
+        },
+        {
+          "attivita": "Potature in altezza",
+          "rischio": "Caduta di rami",
+          "probabilita": 2,
+          "magnitudo": 3,
+          "misure": "Area sottostante interdetta",
+          "acura": "Appaltatore"
+        },
+        {
+          "attivita": "Trattamenti con prodotti",
+          "rischio": "Esposizione delle persone presenti",
+          "probabilita": 2,
+          "magnitudo": 3,
+          "misure": "Trattamenti fuori orario, cartelli di avviso",
+          "acura": "Appaltatore"
+        }
+      ],
+      "costi": [
+        {
+          "voce": "Delimitazione dell'area",
+          "unita": "a corpo"
+        },
+        {
+          "voce": "Cartelli di avviso",
+          "unita": "numero"
+        }
+      ]
+    },
+    {
+      "id": "altro",
+      "titolo": "Altro servizio o lavoro",
+      "rischiIntrodotti": [],
+      "interferenze": [
+        {
+          "attivita": "Presenza contemporanea di lavoratori delle due imprese",
+          "rischio": "Urti, interferenze sui percorsi",
+          "probabilita": 2,
+          "magnitudo": 2,
+          "misure": "Orari e aree concordati",
+          "acura": "Entrambi"
+        }
+      ],
+      "costi": [
+        {
+          "voce": "Riunione di coordinamento",
+          "unita": "ora"
+        }
+      ]
+    }
+  ]
+}

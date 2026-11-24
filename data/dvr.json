@@ -1,5 +1,5 @@
 {
-  "versione": "0.5.0",
+  "versione": "0.3.0",
   "aggiornato": "2026-11-24",
   "riferimento": "Procedure standardizzate per la valutazione dei rischi (DM 30 novembre 2012), art. 29 c. 5 del D.Lgs. 81/2008",
   "pericoli": [
@@ -16,7 +16,16 @@
         "Pavimenti integri e non scivolosi, scale con corrimano",
         "Illuminazione adeguata, anche di emergenza",
         "Servizi igienici, spogliatoi e acqua potabile"
-      ]
+      ],
+      "danno": "Scivolamenti, inciampi, cadute in piano, urti; disagio per microclima e illuminazione",
+      "probabilita": 2,
+      "magnitudo": 2,
+      "dpi": [
+        "Scarpe con suola antiscivolo"
+      ],
+      "sorveglianza": false,
+      "formazione": "Informazione sui percorsi e sulle uscite",
+      "norma": "D.Lgs. 81/2008 Titolo II e Allegato IV"
     },
     {
       "id": "lavoro-esterno",
@@ -39,7 +48,17 @@
         "Indumenti adatti al clima, pause e acqua nelle giornate calde",
         "Coordinamento con il committente (DUVRI o POS)"
       ],
-      "schedaId": "pos"
+      "schedaId": "pos",
+      "danno": "Infortuni per rischi del luogo non noti, colpo di calore, ipotermia, radiazione solare",
+      "probabilita": 2,
+      "magnitudo": 3,
+      "dpi": [
+        "Indumenti adatti al clima",
+        "Copricapo e crema solare per lavori all'aperto"
+      ],
+      "sorveglianza": false,
+      "formazione": "Informazione sui rischi dei luoghi esterni e sul caldo",
+      "norma": "D.Lgs. 81/2008 artt. 26 e 96; ordinanze regionali sul caldo"
     },
     {
       "id": "attrezzature",
@@ -54,7 +73,18 @@
         "Manutenzione secondo il libretto e registrata",
         "Informazione e formazione sull'uso"
       ],
-      "schedaId": "dvr"
+      "schedaId": "dvr",
+      "danno": "Tagli, schiacciamenti, trascinamenti, proiezione di schegge, elettrocuzione",
+      "probabilita": 2,
+      "magnitudo": 3,
+      "dpi": [
+        "Guanti contro i rischi meccanici",
+        "Occhiali",
+        "Scarpe antinfortunistiche"
+      ],
+      "sorveglianza": false,
+      "formazione": "Formazione e addestramento all'uso di ogni attrezzatura (art. 73)",
+      "norma": "D.Lgs. 81/2008 Titolo III, Allegati V e VI"
     },
     {
       "id": "attrezzature-abilitazione",
@@ -69,7 +99,19 @@
         "Verifiche periodiche dell'Allegato VII",
         "Controlli prima dell'uso"
       ],
-      "schedaId": "attrezzature-abilitazione"
+      "schedaId": "attrezzature-abilitazione",
+      "danno": "Ribaltamento, schiacciamento, investimento, caduta dall'alto dal cestello",
+      "probabilita": 2,
+      "magnitudo": 4,
+      "dpi": [
+        "Casco",
+        "Imbracatura (PLE)",
+        "Scarpe antinfortunistiche",
+        "Indumenti ad alta visibilità"
+      ],
+      "sorveglianza": false,
+      "formazione": "Abilitazione degli operatori (Accordo Stato-Regioni)",
+      "norma": "D.Lgs. 81/2008 artt. 71 e 73, Allegato VII"
     },
     {
       "id": "elettrico-impianto",
@@ -84,7 +126,14 @@
         "Verifica periodica della messa a terra (DPR 462/2001)",
         "Interruttori differenziali provati periodicamente"
       ],
-      "schedaId": "impianti-elettrici"
+      "schedaId": "impianti-elettrici",
+      "danno": "Elettrocuzione per contatti diretti o indiretti, incendio di origine elettrica",
+      "probabilita": 1,
+      "magnitudo": 4,
+      "dpi": [],
+      "sorveglianza": false,
+      "formazione": "Informazione sull'uso corretto di prese e prolunghe",
+      "norma": "D.Lgs. 81/2008 artt. 80-86; DM 37/2008; DPR 462/2001"
     },
     {
       "id": "lavori-elettrici",
@@ -99,7 +148,18 @@
         "Lavori fuori tensione con procedure di sezionamento",
         "Attrezzi isolati e DPI adatti"
       ],
-      "schedaId": "lavori-elettrici"
+      "schedaId": "lavori-elettrici",
+      "danno": "Elettrocuzione, ustioni da arco elettrico",
+      "probabilita": 2,
+      "magnitudo": 4,
+      "dpi": [
+        "Guanti isolanti",
+        "Visiera contro l'arco elettrico",
+        "Calzature isolanti"
+      ],
+      "sorveglianza": false,
+      "formazione": "Formazione CEI 11-27 e attribuzione PES/PAV/PEI",
+      "norma": "D.Lgs. 81/2008 artt. 82-83; norma CEI 11-27"
     },
     {
       "id": "quota",
@@ -114,7 +174,18 @@
         "Imbracatura e ancoraggi quando le protezioni collettive non bastano",
         "Addestramento ai DPI anticaduta"
       ],
-      "schedaId": "lavori-quota"
+      "schedaId": "lavori-quota",
+      "danno": "Caduta dall'alto con lesioni gravi o mortali, caduta di materiali",
+      "probabilita": 2,
+      "magnitudo": 4,
+      "dpi": [
+        "Casco con sottogola",
+        "Imbracatura e cordino con assorbitore",
+        "Scarpe antinfortunistiche"
+      ],
+      "sorveglianza": false,
+      "formazione": "Formazione e addestramento ai DPI di terza categoria e al montaggio delle opere provvisionali",
+      "norma": "D.Lgs. 81/2008 Titolo IV Capo II"
     },
     {
       "id": "confinati",
@@ -130,7 +201,18 @@
         "Misurazione dell'aria prima e durante l'ingresso",
         "Mai entrare da soli"
       ],
-      "schedaId": "ambienti-confinati"
+      "schedaId": "ambienti-confinati",
+      "danno": "Asfissia, intossicazione, annegamento, seppellimento, esplosione",
+      "probabilita": 1,
+      "magnitudo": 4,
+      "dpi": [
+        "Autorespiratore o maschera con filtri adatti",
+        "Imbracatura con recupero",
+        "Rilevatore di gas"
+      ],
+      "sorveglianza": true,
+      "formazione": "Formazione e addestramento specifici, prove di recupero",
+      "norma": "DPR 177/2011; D.Lgs. 81/2008 artt. 66 e 121"
     },
     {
       "id": "incendio",
@@ -144,7 +226,14 @@
         "Addetti antincendio formati",
         "Istruzioni di emergenza e numeri utili esposti"
       ],
-      "schedaId": "antincendio"
+      "schedaId": "antincendio",
+      "danno": "Ustioni, intossicazione da fumi, panico durante l'evacuazione",
+      "probabilita": 2,
+      "magnitudo": 3,
+      "dpi": [],
+      "sorveglianza": false,
+      "formazione": "Formazione degli addetti antincendio e informazione a tutti sulle procedure",
+      "norma": "DM 1, 2 e 3 settembre 2021; D.Lgs. 81/2008 artt. 43-46"
     },
     {
       "id": "atex",
@@ -159,7 +248,17 @@
         "Pulizia dagli accumuli di polvere, ventilazione",
         "Impianti adatti alle zone classificate"
       ],
-      "schedaId": "atex"
+      "schedaId": "atex",
+      "danno": "Esplosione con ustioni e traumi gravi",
+      "probabilita": 1,
+      "magnitudo": 4,
+      "dpi": [
+        "Indumenti antistatici",
+        "Calzature antistatiche"
+      ],
+      "sorveglianza": false,
+      "formazione": "Formazione sulle zone classificate e sulle procedure",
+      "norma": "D.Lgs. 81/2008 Titolo XI"
     },
     {
       "id": "rumore",
@@ -174,7 +273,16 @@
         "Scelta di macchine meno rumorose",
         "Cuffie o tappi sopra 80 dB(A)"
       ],
-      "schedaId": "rumore-vibrazioni"
+      "schedaId": "rumore-vibrazioni",
+      "danno": "Ipoacusia da rumore, acufeni, disturbi extrauditivi",
+      "probabilita": 3,
+      "magnitudo": 2,
+      "dpi": [
+        "Cuffie o tappi auricolari"
+      ],
+      "sorveglianza": true,
+      "formazione": "Formazione sull'uso dei DPI uditivi sopra 80 dB(A)",
+      "norma": "D.Lgs. 81/2008 Titolo VIII Capo II"
     },
     {
       "id": "vibrazioni",
@@ -189,7 +297,16 @@
         "Utensili a basse vibrazioni e manutenuti",
         "Turnazione e pause"
       ],
-      "schedaId": "rumore-vibrazioni"
+      "schedaId": "rumore-vibrazioni",
+      "danno": "Disturbi vascolari, osteoarticolari e neurologici a mani e braccia; lombalgie",
+      "probabilita": 2,
+      "magnitudo": 2,
+      "dpi": [
+        "Guanti antivibrazione"
+      ],
+      "sorveglianza": true,
+      "formazione": "Informazione sull'uso corretto degli utensili e sulle pause",
+      "norma": "D.Lgs. 81/2008 Titolo VIII Capo III"
     },
     {
       "id": "chimico",
@@ -205,7 +322,18 @@
         "Guanti, maschere e occhiali adatti",
         "Conservazione corretta dei prodotti"
       ],
-      "schedaId": "rischio-chimico"
+      "schedaId": "rischio-chimico",
+      "danno": "Irritazioni e allergie a pelle e vie respiratorie, intossicazioni, ustioni chimiche",
+      "probabilita": 2,
+      "magnitudo": 3,
+      "dpi": [
+        "Guanti adatti al prodotto",
+        "Maschera con filtri adatti",
+        "Occhiali o visiera"
+      ],
+      "sorveglianza": true,
+      "formazione": "Formazione sulle etichette, sulle schede di sicurezza e sull'uso dei DPI",
+      "norma": "D.Lgs. 81/2008 Titolo IX Capo I; Reg. CE 1907/2006 e 1272/2008"
     },
     {
       "id": "cancerogeni",
@@ -220,7 +348,17 @@
         "Pulizia con aspiratore, mai con aria compressa",
         "Maschere FFP3, registro degli esposti"
       ],
-      "schedaId": "cancerogeni"
+      "schedaId": "cancerogeni",
+      "danno": "Tumori (naso e seni paranasali per legno duro, polmone per silice)",
+      "probabilita": 2,
+      "magnitudo": 4,
+      "dpi": [
+        "Maschera FFP3",
+        "Tuta monouso"
+      ],
+      "sorveglianza": true,
+      "formazione": "Formazione specifica sui cancerogeni",
+      "norma": "D.Lgs. 81/2008 Titolo IX Capo II, Allegato XLII"
     },
     {
       "id": "amianto",
@@ -235,7 +373,17 @@
         "Interventi solo da imprese iscritte all'Albo cat. 10",
         "Piano di lavoro all'ASL"
       ],
-      "schedaId": "amianto"
+      "schedaId": "amianto",
+      "danno": "Asbestosi, mesotelioma, tumore del polmone",
+      "probabilita": 1,
+      "magnitudo": 4,
+      "dpi": [
+        "Maschera FFP3 o superiore",
+        "Tuta monouso con cappuccio"
+      ],
+      "sorveglianza": true,
+      "formazione": "Formazione specifica (corso amianto)",
+      "norma": "D.Lgs. 81/2008 Titolo IX Capo III; L. 257/1992"
     },
     {
       "id": "biologici",
@@ -250,7 +398,18 @@
         "Guanti e DPI, strumenti sterili o monouso",
         "Vaccinazioni consigliate dal medico competente"
       ],
-      "schedaId": "agenti-biologici"
+      "schedaId": "agenti-biologici",
+      "danno": "Infezioni, allergie, intossicazioni",
+      "probabilita": 2,
+      "magnitudo": 3,
+      "dpi": [
+        "Guanti monouso",
+        "Mascherina",
+        "Occhiali o visiera"
+      ],
+      "sorveglianza": true,
+      "formazione": "Formazione sulle procedure igieniche e sui DPI",
+      "norma": "D.Lgs. 81/2008 Titolo X"
     },
     {
       "id": "mmc",
@@ -265,7 +424,17 @@
         "Carrelli e ausili per i pesi",
         "Formazione sul sollevamento corretto"
       ],
-      "schedaId": "movimentazione-carichi"
+      "schedaId": "movimentazione-carichi",
+      "danno": "Lesioni della schiena (lombalgie, ernie), disturbi muscolo-scheletrici degli arti superiori",
+      "probabilita": 3,
+      "magnitudo": 2,
+      "dpi": [
+        "Guanti",
+        "Scarpe antinfortunistiche"
+      ],
+      "sorveglianza": true,
+      "formazione": "Formazione e addestramento alle corrette tecniche di movimentazione",
+      "norma": "D.Lgs. 81/2008 Titolo VI, Allegato XXXIII; norme ISO 11228"
     },
     {
       "id": "vdt",
@@ -280,7 +449,14 @@
         "Pause di 15 minuti ogni 2 ore",
         "Sorveglianza sanitaria"
       ],
-      "schedaId": "videoterminali"
+      "schedaId": "videoterminali",
+      "danno": "Affaticamento visivo, disturbi muscolo-scheletrici a collo e schiena",
+      "probabilita": 3,
+      "magnitudo": 1,
+      "dpi": [],
+      "sorveglianza": true,
+      "formazione": "Informazione sulla postazione e sulle pause",
+      "norma": "D.Lgs. 81/2008 Titolo VII, Allegato XXXIV"
     },
     {
       "id": "stress",
@@ -294,7 +470,14 @@
         "Coinvolgimento dei lavoratori o dell'RLS",
         "Misure organizzative se emergono criticità"
       ],
-      "schedaId": "stress-lavoro-correlato"
+      "schedaId": "stress-lavoro-correlato",
+      "danno": "Disturbi psicofisici, calo dell'attenzione, aumento degli infortuni",
+      "probabilita": 2,
+      "magnitudo": 2,
+      "dpi": [],
+      "sorveglianza": false,
+      "formazione": "Informazione sull'organizzazione del lavoro",
+      "norma": "D.Lgs. 81/2008 art. 28 c. 1-bis; Accordo europeo 8/10/2004"
     },
     {
       "id": "notturno",
@@ -309,7 +492,14 @@
         "Divieto di alcol sul lavoro",
         "Organizzazione dei turni e delle pause"
       ],
-      "schedaId": "notturno-guida"
+      "schedaId": "notturno-guida",
+      "danno": "Disturbi del sonno, affaticamento, incidenti stradali",
+      "probabilita": 2,
+      "magnitudo": 3,
+      "dpi": [],
+      "sorveglianza": true,
+      "formazione": "Informazione su turni, guida sicura e divieto di alcol",
+      "norma": "D.Lgs. 66/2003; D.Lgs. 81/2008 art. 41 c. 4"
     },
     {
       "id": "strada",
@@ -324,7 +514,16 @@
         "Indumenti ad alta visibilità",
         "Formazione specifica"
       ],
-      "schedaId": "lavori-stradali"
+      "schedaId": "lavori-stradali",
+      "danno": "Investimento da veicoli",
+      "probabilita": 2,
+      "magnitudo": 4,
+      "dpi": [
+        "Indumenti ad alta visibilità (classe 3)"
+      ],
+      "sorveglianza": false,
+      "formazione": "Formazione segnaletica stradale (DI 22/01/2019)",
+      "norma": "DI 22 gennaio 2019; Codice della strada"
     },
     {
       "id": "interferenze",
@@ -339,7 +538,14 @@
         "Informazione sui rischi della sede",
         "DUVRI quando previsto"
       ],
-      "schedaId": "duvri"
+      "schedaId": "duvri",
+      "danno": "Infortuni dovuti alla presenza contemporanea di più imprese",
+      "probabilita": 2,
+      "magnitudo": 3,
+      "dpi": [],
+      "sorveglianza": false,
+      "formazione": "Informazione alle ditte esterne e ai propri lavoratori",
+      "norma": "D.Lgs. 81/2008 art. 26"
     },
     {
       "id": "tutele",
@@ -353,7 +559,14 @@
         "Spostamento a mansioni compatibili",
         "Visita medica per i minori"
       ],
-      "schedaId": "lavoratrici-madri"
+      "schedaId": "lavoratrici-madri",
+      "danno": "Danni alla salute di lavoratrici in gravidanza o allattamento, di minori e di lavoratori con limitazioni",
+      "probabilita": 2,
+      "magnitudo": 3,
+      "dpi": [],
+      "sorveglianza": true,
+      "formazione": "Informazione alle lavoratrici e ai genitori dei minori",
+      "norma": "D.Lgs. 151/2001; L. 977/1967"
     },
     {
       "id": "differenze",
@@ -365,7 +578,86 @@
       "misure": [
         "Informazione e formazione comprensibili (anche in altre lingue se serve)",
         "Attenzione a lavoratori nuovi, giovani o con contratti brevi"
-      ]
+      ],
+      "danno": "Maggior rischio per chi è nuovo, giovane, straniero o con contratti brevi",
+      "probabilita": 2,
+      "magnitudo": 2,
+      "dpi": [],
+      "sorveglianza": false,
+      "formazione": "Formazione comprensibile, anche in altre lingue, e affiancamento",
+      "norma": "D.Lgs. 81/2008 art. 28 c. 1"
     }
-  ]
+  ],
+  "criteri": {
+    "probabilita": [
+      {
+        "valore": 1,
+        "etichetta": "Improbabile",
+        "descrizione": "Il danno può verificarsi solo per una concomitanza di eventi poco probabili; non sono noti episodi."
+      },
+      {
+        "valore": 2,
+        "etichetta": "Poco probabile",
+        "descrizione": "Il danno può verificarsi solo in circostanze sfortunate; sono noti rari episodi."
+      },
+      {
+        "valore": 3,
+        "etichetta": "Probabile",
+        "descrizione": "Il danno può verificarsi anche se non in modo automatico; sono noti episodi in azienda o nel settore."
+      },
+      {
+        "valore": 4,
+        "etichetta": "Molto probabile",
+        "descrizione": "Esiste una correlazione diretta tra la carenza e il danno; si sono già verificati danni."
+      }
+    ],
+    "magnitudo": [
+      {
+        "valore": 1,
+        "etichetta": "Lieve",
+        "descrizione": "Infortunio o disturbo rapidamente reversibile."
+      },
+      {
+        "valore": 2,
+        "etichetta": "Medio",
+        "descrizione": "Infortunio o malattia con inabilità reversibile."
+      },
+      {
+        "valore": 3,
+        "etichetta": "Grave",
+        "descrizione": "Infortunio o malattia con effetti di invalidità parziale."
+      },
+      {
+        "valore": 4,
+        "etichetta": "Gravissimo",
+        "descrizione": "Infortunio o malattia con effetti letali o di invalidità totale."
+      }
+    ],
+    "livelli": [
+      {
+        "da": 1,
+        "a": 2,
+        "etichetta": "Basso",
+        "azione": "Mantenere le misure e migliorare quando possibile"
+      },
+      {
+        "da": 3,
+        "a": 4,
+        "etichetta": "Medio-basso",
+        "azione": "Misure di miglioramento a medio termine"
+      },
+      {
+        "da": 6,
+        "a": 8,
+        "etichetta": "Medio-alto",
+        "azione": "Misure da programmare a breve termine"
+      },
+      {
+        "da": 9,
+        "a": 16,
+        "etichetta": "Alto",
+        "azione": "Misure da attuare subito"
+      }
+    ]
+  }
 }

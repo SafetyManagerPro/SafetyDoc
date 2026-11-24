@@ -91,3 +91,12 @@ delle versioni precedenti vengono create vuote).
 
 Le collezioni diventano tabelle con le stesse colonne. Basta sostituire `js/store.js` con un'implementazione su
 Supabase (eventualmente con sincronizzazione offline); le imprese migrano importando il loro ultimo backup.
+
+## Dati dei documenti
+
+- `data/dvr.json`: per ogni pericolo `danno`, `probabilita` e `magnitudo` tipiche (scala 1-4, da confermare), `dpi`,
+  `sorveglianza`, `formazione`, `norma`; in `criteri` le scale e i livelli di rischio R = P × D.
+- `data/lavorazioni.json`: `fasiCantiere` (attrezzature, rischi, misure, DPI) per il POS e `tipiAppalto`
+  (rischi introdotti, interferenze con P e D, voci di costo) per il DUVRI.
+- I campi compilati nei documenti (cantiere, ditta, lavorazioni) si salvano in `meta` con chiave
+  `opzioni:<documento>` (più `:<lavoratore>` per i documenti personali).

@@ -134,3 +134,50 @@ test('regole tradotte: stesse voci in tutte le lingue', () => {
   const html = generaDocumento('regole-lavoratore', { anagrafica, oggi: '2026-11-24', lavoratore: { nome: 'Ahmed', cognome: 'Karim', lingua: 'ar' }, lavoratori: [] }).html;
   assert.ok(html.includes('dir="rtl"') && html.includes('Regole di sicurezza sul lavoro'));
 });
+
+const lavorazioni = json('lavorazioni.json');
+
+test('dati per DVR, POS e DUVRI completi e coerenti', () => {
+  for (const p of dvr.pericoli) {
+    for (const k of ['danno', 'probabilita', 'magnitudo', 'dpi', 'formazione', 'norma']) assert.ok(p[k] !== undefined, `${p.id}.${k}`);
+    assert.ok(p.probabilita >= 1 && p.probabilita <= 4 && p.magnitudo >= 1 && p.magnitudo <= 4, p.id);
+  }
+  for (let R = 1; R <= 16; R++) if ([1, 2, 3, 4, 6, 8, 9, 12, 16].includes(R)) assert.ok(dvr.criteri.livelli.some((l) => R >= l.da && R <= l.a), `R=${R} senza livello`);
+  for (const f of lavorazioni.fasiCantiere) for (const k of ['attrezzature', 'rischi', 'misure', 'dpi']) assert.ok(f[k].length, `${f.id}.${k}`);
+  for (const t of lavorazioni.tipiAppalto) assert.ok(t.interferenze.length && t.costi.length, t.id);
+});
+
+test('POS dettagliato con cantiere, lavorazioni scelte e lavoratori', () => {
+  const ctx = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 2, cantiere: true }, questionario, ateco);
+  const lavoratori = [{ id: 'l1', nome: 'Mario', cognome: 'Bianchi', mansione: 'Muratore', ruoli: ['preposto', 'primo_soccorso'] }, { id: 'l2', nome: 'Gianni', cognome: 'Neri', mansione: 'Manovale', ruoli: [] }];
+  const html = generaDocumento('pos-bozza', {
+    anagrafica, oggi: '2026-11-24', ctx, lavoratori, lavorazioni, ruoli: { preposto: 'Preposto' },
+    macchine: [{ attrezzatura: { nome: 'Betoniera', tipo: 'macchina' }, tipo: { etichetta: 'Macchina' }, colore: 'verde', voci: [] }],
+    opzioni: { indirizzo: 'Via Roma 1, Avellino', cse: 'Ing. Verdi', fasi: ['murature', 'ponteggi'], lavoratori: ['l1'], capocantiere: 'l1' }
+  }).html;
+  for (const x of ['Via Roma 1, Avellino', 'Ing. Verdi', 'Murature e tramezzature', 'Montaggio, uso e smontaggio di ponteggi', 'PiMUS', 'Betoniera', 'Casco', 'Allegato XV']) assert.ok(html.includes(x), `manca ${x}`);
+  assert.ok(!html.includes('Gianni'), 'solo i lavoratori scelti');
+  assert.ok(!html.includes('Scavi e movimento terra'), 'solo le fasi scelte');
+});
+
+test('DUVRI dettagliato: interferenze del tipo di appalto, costi e applicabilità', () => {
+  const ctx = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 3, appalti_in_sede: true, sede: true }, questionario, ateco);
+  const base = { anagrafica, oggi: '2026-11-24', ctx, dvr, lavoratori: [], lavorazioni };
+  const html = generaDocumento('duvri-bozza', { ...base, opzioni: { tipo: 'impianti', appaltatore: 'Elettro Sud srl', uominiGiorno: '12' } }).html;
+  for (const x of ['Elettro Sud srl', 'Lavori a caldo', 'Permesso di lavoro a caldo', 'Estintore aggiuntivo', 'Il DUVRI è obbligatorio', 'R = P × D']) assert.ok(html.includes(x), `manca ${x}`);
+  const breve = generaDocumento('duvri-bozza', { ...base, opzioni: { tipo: 'pulizie', uominiGiorno: '3' } }).html;
+  assert.ok(breve.includes('non sarebbe obbligatorio'));
+});
+
+test('nuovi documenti: emergenza, informazione, addestramento, elezione RLS', () => {
+  const ctx = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 3, carichi: true }, questionario, ateco);
+  const lavoratori = [{ id: 'l1', nome: 'Anna', cognome: 'Verdi', mansione: 'Commessa', ruoli: ['antincendio'] }];
+  const em = generaDocumento('piano-emergenza-doc', { anagrafica, oggi: '2026-11-24', lavoratori, opzioni: { raccolta: 'Parcheggio' } }).html;
+  assert.ok(em.includes('Parcheggio') && em.includes('Verdi') && em.includes('Fuga di gas'));
+  const inf = generaDocumento('informazione-art36', { anagrafica, oggi: '2026-11-24', lavoratore: lavoratori[0], lavoratori, dvr, ctx }).html;
+  assert.ok(inf.includes('Movimentazione manuale') && inf.includes('art. 36'));
+  const add = generaDocumento('verbale-addestramento', { anagrafica, oggi: '2026-11-24', lavoratore: lavoratori[0], attrezzature: [{ nome: 'Transpallet' }], opzioni: {} }).html;
+  assert.ok(add.includes('Transpallet'));
+  const rls = generaDocumento('verbale-elezione-rls', { anagrafica, oggi: '2026-11-24', lavoratori, opzioni: { modalita: 'territoriale' } }).html;
+  assert.ok(rls.includes('territoriale') && !rls.includes('accettazione'));
+});
