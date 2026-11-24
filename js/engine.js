@@ -16,19 +16,64 @@ const RISCHI_CON_SORVEGLIANZA = [
   'biologici'
 ];
 
+/**
+ * Interpreta un codice ATECO (es. "43.21.01", "432101", "43.21") con la tabella data/ateco.json.
+ * Restituisce divisione, sezione, classe di rischio per la formazione e il settore suggerito.
+ */
+export function cercaAteco(codice, ateco) {
+  const cifre = String(codice ?? '').replace(/[^0-9]/g, '');
+  if (cifre.length < 2 || !ateco?.divisioni) return null;
+  const divisione = cifre.slice(0, 2);
+  const info = ateco.divisioni[divisione];
+  if (!info) return { valido: false, cifre };
+  const gruppi = [cifre.slice(0, 2), cifre.slice(2, 4), cifre.slice(4, 6)].filter(Boolean);
+  const normalizzato = gruppi.join('.');
+  // settore suggerito: il prefisso più lungo presente in tabella (es. 43.2 prima di 43)
+  let settore = null;
+  for (const lung of [6, 5, 4, 3, 2]) {
+    if (cifre.length < lung) continue;
+    const pref = cifre.slice(0, 2) + (lung > 2 ? '.' + cifre.slice(2, lung) : '');
+    if (ateco.settori?.[pref]) {
+      settore = ateco.settori[pref];
+      break;
+    }
+  }
+  return {
+    valido: true,
+    codice: normalizzato,
+    divisione,
+    descrizione: info.descrizione,
+    sezione: info.sezione,
+    descrizioneSezione: ateco.sezioni?.[info.sezione] || '',
+    classe: info.classe,
+    ore: ateco.oreFormazioneSpecifica?.[info.classe] ?? null,
+    settore
+  };
+}
+
 /** Fatti derivati dalle risposte, usabili nelle regole con {"fatto": "..."} */
-export function derivaFatti(risposte, questionario) {
+export function derivaFatti(risposte, questionario, ateco) {
   const r = risposte || {};
   const haDipendenti = r.composizione === 'dipendenti';
   const lavoratori = haDipendenti ? Math.max(1, Number(r.numero_lavoratori) || 1) : 0;
 
   const domandaAttivita = questionario?.domande?.find((d) => d.id === 'attivita');
-  const opzione = domandaAttivita?.opzioni?.find((o) => o.valore === r.attivita);
+  const atecoInfo = r.ateco ? cercaAteco(r.ateco, ateco) : null;
+  const atecoValido = atecoInfo?.valido ? atecoInfo : null;
+  const valoreAttivita = r.attivita || atecoValido?.settore;
+  const opzione = domandaAttivita?.opzioni?.find((o) => o.valore === valoreAttivita);
+
+  // La classe di rischio per la formazione segue il codice ATECO; se manca, il settore scelto.
+  const classeRischio = atecoValido?.classe ?? opzione?.classeRischio ?? 'da_verificare';
+  const ore = { basso: 4, medio: 8, alto: 12, ...(ateco?.oreFormazioneSpecifica || {}) };
 
   return {
     haDipendenti,
     lavoratori,
-    classeRischio: opzione?.classeRischio ?? 'da_verificare',
+    classeRischio,
+    fonteClasse: atecoValido ? 'ateco' : opzione ? 'attivita' : null,
+    oreFormazioneSpecifica: ore[classeRischio] ?? null,
+    ateco: atecoValido,
     attivitaRegolamentata: Boolean(opzione?.regolamentata),
     rischiConSorveglianza: RISCHI_CON_SORVEGLIANZA.some((k) => r[k] === true)
   };
@@ -66,9 +111,9 @@ export function valuta(regola, ctx) {
   return false;
 }
 
-export function creaContesto(risposte, questionario) {
+export function creaContesto(risposte, questionario, ateco) {
   const r = risposte || {};
-  return { risposte: r, fatti: derivaFatti(r, questionario) };
+  return { risposte: r, fatti: derivaFatti(r, questionario, ateco) };
 }
 
 /** Domande da mostrare, tenendo conto di "mostraSe". */
@@ -151,8 +196,8 @@ export function semaforo(scheda, stato, ctx, oggi) {
 }
 
 /** Il piano dell'impresa: le schede attive con il loro semaforo, ordinate per urgenza. */
-export function generaPiano({ catalogo, questionario, risposte, adempimenti, oggi }) {
-  const ctx = creaContesto(risposte, questionario);
+export function generaPiano({ catalogo, questionario, risposte, adempimenti, oggi, ateco }) {
+  const ctx = creaContesto(risposte, questionario, ateco);
   const giorno = (oggi || new Date().toISOString()).slice(0, 10);
 
   return catalogo.schede
