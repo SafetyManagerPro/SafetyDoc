@@ -1,5 +1,5 @@
 {
-  "versione": "0.3.0",
+  "versione": "0.4.0",
   "aggiornato": "2026-11-23",
   "avvertenza": "Bozza da validare da un esperto prima dell'uso reale. Le voci con 'daVerificare' richiedono un controllo sulla norma vigente.",
   "categorie": {
@@ -865,6 +865,91 @@
       "priorita": 1
     },
     {
+      "id": "atex",
+      "categoria": "lavorazioni",
+      "titolo": "Rischio di esplosione (ATEX)",
+      "priorita": 1,
+      "cosaE": "Polveri fini di legno o farina, vapori di vernici e solventi o fughe di gas possono formare un'atmosfera che esplode con una scintilla.",
+      "perche": "Il datore di lavoro deve valutare questo rischio e, se c'è, redigere il documento sulla protezione contro le esplosioni.",
+      "riferimento": "D.Lgs. 81/2008 Titolo XI (artt. 287-297); DPR 462/2001 (verifiche impianti in luoghi con pericolo di esplosione)",
+      "come": [
+        "Fai valutare da un tecnico se nel tuo locale ci sono zone a rischio di esplosione.",
+        "Se ci sono: documento sulla protezione contro le esplosioni, cartelli e impianti elettrici adatti a quelle zone.",
+        "Tieni puliti i locali da accumuli di polvere e ventila dove usi vernici o solventi.",
+        "Fai verificare l'impianto elettrico delle zone a rischio ogni 2 anni."
+      ],
+      "chi": "Tu, con un tecnico esperto in atmosfere esplosive.",
+      "quando": "Prima di iniziare e quando cambiano impianti, prodotti o quantità.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "all": [
+          {
+            "q": "atex",
+            "eq": true
+          },
+          {
+            "fatto": "haDipendenti"
+          }
+        ]
+      }
+    },
+    {
+      "id": "agenti-biologici",
+      "categoria": "lavorazioni",
+      "titolo": "Agenti biologici (virus, batteri, funghi)",
+      "priorita": 2,
+      "cosaE": "Contatto con sangue, pelle, animali, rifiuti, fogne o acque sporche può trasmettere infezioni (epatiti, tetano, leptospirosi, micosi).",
+      "perche": "Il datore di lavoro deve valutare il rischio biologico e proteggere i lavoratori, anche con vaccinazioni quando servono.",
+      "riferimento": "D.Lgs. 81/2008 Titolo X (artt. 266-286)",
+      "come": [
+        "Scrivi nel DVR la valutazione del rischio biologico.",
+        "Dai guanti, mascherine e indumenti adatti, e un posto dove lavarsi e cambiarsi.",
+        "Sterilizza o usa strumenti monouso dove si può tagliare la pelle (acconciatura, estetica, tatuaggio).",
+        "Chiedi al medico competente quali vaccinazioni consigliare (per esempio antitetanica).",
+        "Smaltisci correttamente taglienti e materiali sporchi."
+      ],
+      "chi": "Tu, con il tuo RSPP e il medico competente.",
+      "quando": "Prima di iniziare e quando cambiano le attività.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "all": [
+          {
+            "q": "biologici",
+            "eq": true
+          },
+          {
+            "fatto": "haDipendenti"
+          }
+        ]
+      }
+    },
+    {
+      "id": "lavori-stradali",
+      "categoria": "lavorazioni",
+      "titolo": "Lavori su strada aperta al traffico",
+      "priorita": 1,
+      "cosaE": "Chi lavora su strade aperte al traffico deve mettere la segnaletica di cantiere secondo regole precise ed essere formato per farlo.",
+      "perche": "Essere investiti mentre si lavora in strada è tra gli infortuni più gravi.",
+      "riferimento": "Decreto Interministeriale 22 gennaio 2019; Codice della strada art. 21; D.Lgs. 81/2008 art. 37",
+      "come": [
+        "Fai frequentare il corso specifico per la segnaletica stradale a chi lavora in strada (corso per addetti e corso per preposti).",
+        "Usa solo segnaletica e schemi previsti dal disciplinare.",
+        "Fai indossare indumenti ad alta visibilità.",
+        "Prima di iniziare chiedi l'autorizzazione o l'ordinanza all'ente proprietario della strada."
+      ],
+      "chi": "Un ente formatore per i corsi; tu per l'organizzazione.",
+      "quando": "Prima di iniziare. Aggiornamento ogni 4 anni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 48,
+      "attivaSe": {
+        "q": "strada",
+        "eq": true
+      },
+      "daVerificare": [
+        "Durata dei corsi e dell'aggiornamento dopo l'Accordo Stato-Regioni 59/2025."
+      ]
+    },
+    {
       "id": "rischio-chimico",
       "categoria": "lavorazioni",
       "titolo": "Prodotti chimici, polveri e fumi",
@@ -886,6 +971,63 @@
         "eq": true
       },
       "priorita": 2
+    },
+    {
+      "id": "amianto",
+      "categoria": "lavorazioni",
+      "titolo": "Amianto",
+      "priorita": 1,
+      "cosaE": "L'amianto (eternit) si trova in coperture, tubazioni, canne fumarie e pavimenti di edifici costruiti prima del 1992. Toccarlo, romperlo o forarlo libera fibre che causano tumori anche dopo decenni.",
+      "perche": "Lavorare su materiali con amianto senza essere un'impresa autorizzata è vietato e mette in pericolo te, i lavoratori e le persone vicine.",
+      "riferimento": "L. 257/1992; D.Lgs. 81/2008 Titolo IX Capo III (artt. 246-261); DPR 8 agosto 1994; D.Lgs. 152/2006 art. 212 (Albo gestori cat. 10)",
+      "come": [
+        "Prima di lavorare su un edificio vecchio chiedi al committente se c'è amianto, o fai fare un'analisi del materiale.",
+        "Se c'è o hai il dubbio: fermati e non toccarlo.",
+        "Rimozione e bonifica le può fare solo un'impresa iscritta all'Albo gestori ambientali in categoria 10, con lavoratori formati.",
+        "L'impresa che rimuove presenta all'ASL il piano di lavoro almeno 30 giorni prima.",
+        "Chi lavora sull'amianto deve fare il corso abilitante (30 ore per gli operatori, 50 per chi dirige) e la sorveglianza sanitaria."
+      ],
+      "chi": "Un'impresa specializzata e autorizzata.",
+      "quando": "Prima di ogni lavoro su edifici costruiti prima del 1992.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "q": "amianto",
+        "eq": true
+      },
+      "daVerificare": [
+        "Durata e periodicità dell'aggiornamento del corso amianto in Regione Campania."
+      ]
+    },
+    {
+      "id": "cancerogeni",
+      "categoria": "lavorazioni",
+      "titolo": "Polveri che causano tumori (legno duro, silice)",
+      "priorita": 1,
+      "cosaE": "Tagliare o levigare legno duro, pietra, cemento, mattoni o quarzo produce polveri classificate come cancerogene: polveri di legno duro e silice cristallina respirabile.",
+      "perche": "Per queste polveri ci sono obblighi in più: ridurre al minimo l'esposizione, sorveglianza sanitaria e registro degli esposti.",
+      "riferimento": "D.Lgs. 81/2008 Titolo IX Capo II (artt. 233-245) e Allegato XLII-XLIII",
+      "come": [
+        "Usa macchine e utensili con aspirazione collegata, o lavora a umido quando si può.",
+        "Pulisci con aspiratore, mai con aria compressa o scopa a secco.",
+        "Dai mascherine adatte (almeno FFP2, meglio FFP3) e fai l'addestramento all'uso.",
+        "Scrivi nel DVR la valutazione specifica e tieni il registro degli esposti con il medico competente.",
+        "Informa e forma i lavoratori su questi rischi."
+      ],
+      "chi": "Tu, con il tuo RSPP e il medico competente.",
+      "quando": "Valutazione da aggiornare almeno ogni 3 anni o quando cambiano le lavorazioni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 36,
+      "attivaSe": {
+        "all": [
+          {
+            "q": "polveri_cancerogene",
+            "eq": true
+          },
+          {
+            "fatto": "haDipendenti"
+          }
+        ]
+      }
     },
     {
       "id": "rumore-vibrazioni",
@@ -1092,6 +1234,31 @@
       },
       "daVerificare": [
         "Autorizzazioni generali e procedure vigenti in Regione Campania."
+      ]
+    },
+    {
+      "id": "scarichi-idrici",
+      "categoria": "ambiente",
+      "titolo": "Scarichi di acque di lavorazione",
+      "priorita": 2,
+      "cosaE": "Le acque usate per lavorare (lavaggi, laboratori, tintorie) non sono come quelle del bagno: per scaricarle serve di regola un'autorizzazione.",
+      "perche": "Scaricare acque di lavorazione senza autorizzazione, o superando i limiti, è sanzionato e nei casi più gravi è un reato.",
+      "riferimento": "D.Lgs. 152/2006 artt. 101, 124, 137; DPR 59/2013 (AUA); DPR 227/2011",
+      "come": [
+        "Fai verificare da un tecnico se le tue acque sono assimilabili a quelle domestiche o sono acque industriali.",
+        "Per le acque industriali chiedi l'autorizzazione allo scarico (di solito con l'AUA tramite SUAP) al gestore della fognatura o all'ente competente.",
+        "Se l'autorizzazione lo chiede, installa e mantieni pulito il pozzetto o il disoleatore e fai le analisi.",
+        "Non scaricare mai oli, solventi o vernici nei lavandini, nei tombini o sul terreno: sono rifiuti."
+      ],
+      "chi": "Tu, con un consulente ambientale.",
+      "quando": "Prima di iniziare. Poi secondo le scadenze dell'autorizzazione.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "scarichi",
+        "eq": true
+      },
+      "daVerificare": [
+        "Regolamento del gestore del servizio idrico della provincia."
       ]
     },
     {

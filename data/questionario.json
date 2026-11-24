@@ -1,5 +1,5 @@
 {
-  "versione": "0.3.0",
+  "versione": "0.4.0",
   "aggiornato": "2026-11-23",
   "domande": [
     {
@@ -163,7 +163,9 @@
       "mostraSe": {
         "q": "composizione",
         "eq": "dipendenti"
-      }
+      },
+      "gruppo": "personale",
+      "breve": "Lavoratori minorenni o lavoratrici in gravidanza o allattamento"
     },
     {
       "id": "appalti_in_sede",
@@ -173,23 +175,51 @@
       "mostraSe": {
         "q": "composizione",
         "eq": "dipendenti"
-      }
+      },
+      "gruppo": "personale",
+      "breve": "Altre ditte lavorano nella mia sede"
+    },
+    {
+      "id": "videoterminali",
+      "tipo": "sino",
+      "testo": "Qualcuno lavora al computer per 20 ore a settimana o più?",
+      "aiuto": "Conta il tempo davanti allo schermo, pause escluse.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      },
+      "gruppo": "personale",
+      "breve": "Qualcuno usa il computer 20 ore a settimana o più"
+    },
+    {
+      "id": "notte_guida",
+      "tipo": "sino",
+      "testo": "Qualcuno lavora di notte o guida mezzi per lavoro?",
+      "aiuto": "Vale anche per furgoni e mezzi da cantiere.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      },
+      "gruppo": "personale",
+      "breve": "Qualcuno lavora di notte o guida mezzi per lavoro"
+    },
+    {
+      "id": "gps",
+      "tipo": "sino",
+      "testo": "Hai localizzatori GPS su furgoni, auto o telefoni dati ai lavoratori?",
+      "aiuto": "Anche quelli installati dall'assicurazione o dal noleggio.",
+      "mostraSe": {
+        "q": "composizione",
+        "eq": "dipendenti"
+      },
+      "gruppo": "personale",
+      "breve": "Ci sono localizzatori GPS su mezzi o telefoni"
     },
     {
       "id": "sede",
       "tipo": "sino",
       "testo": "Hai un locale dove lavori (laboratorio, negozio, ufficio, capannone)?",
       "aiuto": "Rispondi No se lavori solo presso i clienti o nei cantieri."
-    },
-    {
-      "id": "pubblico_50",
-      "tipo": "sino",
-      "testo": "Nel tuo locale possono esserci più di 50 persone insieme, contando clienti e lavoratori?",
-      "aiuto": "Per esempio un ristorante, una sala o un negozio molto frequentato.",
-      "mostraSe": {
-        "q": "sede",
-        "eq": true
-      }
     },
     {
       "id": "rischio_incendio",
@@ -216,6 +246,18 @@
       ]
     },
     {
+      "id": "pubblico_50",
+      "tipo": "sino",
+      "testo": "Nel tuo locale possono esserci più di 50 persone insieme, contando clienti e lavoratori?",
+      "aiuto": "Per esempio un ristorante, una sala o un negozio molto frequentato.",
+      "mostraSe": {
+        "q": "sede",
+        "eq": true
+      },
+      "gruppo": "locale",
+      "breve": "Possono esserci più di 50 persone insieme"
+    },
+    {
       "id": "emissioni",
       "tipo": "sino",
       "testo": "Dal tuo locale escono all'esterno fumi, vapori o polveri (camini, aspiratori, cabine di verniciatura, forni)?",
@@ -223,7 +265,21 @@
       "mostraSe": {
         "q": "sede",
         "eq": true
-      }
+      },
+      "gruppo": "locale",
+      "breve": "Escono fumi, vapori o polveri all'esterno"
+    },
+    {
+      "id": "scarichi",
+      "tipo": "sino",
+      "testo": "Scarichi in fogna o nell'ambiente acque usate per lavorare (lavaggi di mezzi o pezzi, laboratori, tintorie, autolavaggi)?",
+      "aiuto": "Non contano i normali bagni e lavandini.",
+      "mostraSe": {
+        "q": "sede",
+        "eq": true
+      },
+      "gruppo": "locale",
+      "breve": "Scarico in fogna acque usate per lavorare"
     },
     {
       "id": "videosorveglianza",
@@ -233,91 +289,121 @@
       "mostraSe": {
         "q": "sede",
         "eq": true
-      }
-    },
-    {
-      "id": "gps",
-      "tipo": "sino",
-      "testo": "Hai localizzatori GPS su furgoni, auto o telefoni dati ai lavoratori?",
-      "aiuto": "Anche quelli installati dall'assicurazione o dal noleggio.",
-      "mostraSe": {
-        "q": "composizione",
-        "eq": "dipendenti"
-      }
+      },
+      "gruppo": "locale",
+      "breve": "Ci sono telecamere"
     },
     {
       "id": "cantiere",
       "tipo": "sino",
       "testo": "Lavori nei cantieri, anche solo come installatore o impiantista?",
-      "aiuto": "Vale per qualsiasi cantiere edile o di ingegneria civile, anche piccolo."
+      "aiuto": "Vale per qualsiasi cantiere edile o di ingegneria civile, anche piccolo.",
+      "gruppo": "lavorazioni",
+      "breve": "Lavoro nei cantieri"
     },
     {
       "id": "quota",
       "tipo": "sino",
       "testo": "Lavori sopra i 2 metri di altezza (scale, ponteggi, tetti, piattaforme)?",
-      "aiuto": "Anche se succede solo ogni tanto."
+      "aiuto": "Anche se succede solo ogni tanto.",
+      "gruppo": "lavorazioni",
+      "breve": "Lavoro sopra i 2 metri (scale, ponteggi, tetti)"
     },
     {
       "id": "attrezzature_abilitazione",
       "tipo": "sino",
       "testo": "Usi piattaforme aeree, gru, carrelli elevatori (muletti), escavatori o trattori?",
-      "aiuto": "Per guidarli serve un patentino specifico."
+      "aiuto": "Per guidarli serve un patentino specifico.",
+      "gruppo": "lavorazioni",
+      "breve": "Uso piattaforme, gru, muletti, escavatori o trattori"
     },
     {
       "id": "elettrico",
       "tipo": "sino",
       "testo": "Lavori su impianti o quadri elettrici?",
-      "aiuto": "Anche solo per manutenzione o collegamenti."
+      "aiuto": "Anche solo per manutenzione o collegamenti.",
+      "gruppo": "lavorazioni",
+      "breve": "Lavoro su impianti o quadri elettrici"
     },
     {
       "id": "confinati",
       "tipo": "sino",
       "testo": "Entri in cisterne, pozzi, fognature, silos, vasche o cunicoli?",
-      "aiuto": "Sono luoghi chiusi dove l'aria può diventare pericolosa."
+      "aiuto": "Sono luoghi chiusi dove l'aria può diventare pericolosa.",
+      "gruppo": "lavorazioni",
+      "breve": "Entro in cisterne, pozzi, fognature, silos"
+    },
+    {
+      "id": "amianto",
+      "tipo": "sino",
+      "testo": "Lavori su tetti, tubazioni, canne fumarie o pavimenti vecchi che potrebbero contenere amianto (eternit)?",
+      "aiuto": "Gli edifici costruiti prima del 1992 possono contenere amianto, anche se non si vede.",
+      "gruppo": "lavorazioni",
+      "breve": "Lavoro su edifici vecchi che possono avere amianto"
+    },
+    {
+      "id": "polveri_cancerogene",
+      "tipo": "sino",
+      "testo": "Tagli, levighi o fori legno duro (rovere, faggio, noce), pietra, cemento, mattoni o quarzo?",
+      "aiuto": "Queste lavorazioni producono polveri che possono causare tumori.",
+      "gruppo": "lavorazioni",
+      "breve": "Taglio o levigo legno duro, pietra, cemento o mattoni"
+    },
+    {
+      "id": "atex",
+      "tipo": "sino",
+      "testo": "Nel tuo lavoro ci sono polveri fini che possono bruciare (legno, farina, zucchero), vernici a spruzzo, solventi o bombole di gas?",
+      "aiuto": "In certe condizioni possono formare un'atmosfera che esplode.",
+      "gruppo": "lavorazioni",
+      "breve": "Ci sono polveri fini, vernici a spruzzo, solventi o bombole di gas"
+    },
+    {
+      "id": "biologici",
+      "tipo": "sino",
+      "testo": "Il tuo lavoro mette a contatto con sangue, pelle, animali, rifiuti, fogne o acque sporche?",
+      "aiuto": "Per esempio acconciatori, estetisti, tatuatori, pulizie, spurgo, giardinaggio, assistenza alle persone.",
+      "gruppo": "lavorazioni",
+      "breve": "Contatto con sangue, pelle, animali, rifiuti o fogne"
+    },
+    {
+      "id": "strada",
+      "tipo": "sino",
+      "testo": "Lavori su strade aperte al traffico (cantieri stradali, scavi, potature, manutenzione reti)?",
+      "aiuto": "Anche interventi brevi con il furgone fermo in carreggiata.",
+      "gruppo": "lavorazioni",
+      "breve": "Lavoro su strade aperte al traffico"
     },
     {
       "id": "chimici",
       "tipo": "sino",
       "testo": "Usi vernici, solventi, colle, detergenti professionali o altri prodotti chimici? Produci polveri o fumi?",
-      "aiuto": "Guarda le etichette: se c'è un simbolo di pericolo (rombo rosso), rispondi Sì."
+      "aiuto": "Guarda le etichette: se c'è un simbolo di pericolo (rombo rosso), rispondi Sì.",
+      "gruppo": "lavorazioni",
+      "breve": "Uso vernici, solventi, colle o prodotti chimici"
     },
     {
       "id": "rumore_vibrazioni",
       "tipo": "sino",
       "testo": "Usi macchine rumorose o utensili che vibrano (flessibili, martelli, seghe)?",
-      "aiuto": "Se per parlare con un collega a un metro devi alzare la voce, rispondi Sì."
+      "aiuto": "Se per parlare con un collega a un metro devi alzare la voce, rispondi Sì.",
+      "gruppo": "lavorazioni",
+      "breve": "Uso macchine rumorose o utensili che vibrano"
     },
     {
       "id": "carichi",
       "tipo": "sino",
       "testo": "Sollevi o sposti pesi a mano, o fai sempre gli stessi movimenti?",
-      "aiuto": "Per esempio sacchi, cassette, materiali, pazienti o clienti."
-    },
-    {
-      "id": "videoterminali",
-      "tipo": "sino",
-      "testo": "Qualcuno lavora al computer per 20 ore a settimana o più?",
-      "aiuto": "Conta il tempo davanti allo schermo, pause escluse.",
-      "mostraSe": {
-        "q": "composizione",
-        "eq": "dipendenti"
-      }
-    },
-    {
-      "id": "notte_guida",
-      "tipo": "sino",
-      "testo": "Qualcuno lavora di notte o guida mezzi per lavoro?",
-      "aiuto": "Vale anche per furgoni e mezzi da cantiere.",
-      "mostraSe": {
-        "q": "composizione",
-        "eq": "dipendenti"
-      }
+      "aiuto": "Per esempio sacchi, cassette, materiali, pazienti o clienti.",
+      "gruppo": "lavorazioni",
+      "breve": "Sollevo pesi o faccio movimenti ripetitivi"
     },
     {
       "id": "fgas",
       "tipo": "sino",
       "testo": "Installi o ripari impianti di climatizzazione o refrigerazione?",
-      "aiuto": "Condizionatori, celle frigorifere, pompe di calore."
+      "aiuto": "Condizionatori, celle frigorifere, pompe di calore.",
+      "gruppo": "lavorazioni",
+      "breve": "Lavoro su condizionatori, celle frigo o pompe di calore"
     },
     {
       "id": "rifiuti_pericolosi",
@@ -339,5 +425,19 @@
         }
       ]
     }
-  ]
+  ],
+  "gruppi": {
+    "locale": {
+      "titolo": "Nel tuo locale…",
+      "aiuto": "Tocca tutto quello che vale per te. Se nessuna va bene, premi Avanti."
+    },
+    "personale": {
+      "titolo": "Sui tuoi lavoratori…",
+      "aiuto": "Tocca tutto quello che vale per te. Se nessuna va bene, premi Avanti."
+    },
+    "lavorazioni": {
+      "titolo": "Che lavori fai, anche solo ogni tanto?",
+      "aiuto": "Tocca tutto quello che fai. Più sei preciso, più il piano sarà giusto per te."
+    }
+  }
 }

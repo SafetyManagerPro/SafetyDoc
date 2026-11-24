@@ -3,8 +3,8 @@
 // da sostituire per passare a Supabase: il resto dell'app usa solo queste funzioni.
 
 const DB_NOME = 'safetydoc';
-const DB_VERSIONE = 1;
-const STORES = ['profilo', 'adempimenti', 'meta'];
+const DB_VERSIONE = 2;
+const STORES = ['profilo', 'adempimenti', 'lavoratori', 'registri', 'meta'];
 export const ID_PROFILO = 'profilo-impresa';
 
 let dbPromise;
@@ -92,6 +92,23 @@ export async function salvaAdempimento(record) {
 /** Le cancellazioni non cancellano: il record resta, segnato come eliminato. */
 export async function eliminaAdempimento(record) {
   await scrivi('adempimenti', await timbra({ ...record, deleted: true }));
+}
+
+/** Salva un record di una collezione qualsiasi (lavoratori, registri), con id, data e postazione. */
+export async function salva(store, record) {
+  const base = record.id ? record : { ...record, id: nuovoId(), deleted: false };
+  const timbrato = await timbra(base);
+  await scrivi(store, timbrato);
+  return timbrato;
+}
+
+export async function elimina(store, record) {
+  await scrivi(store, await timbra({ ...record, deleted: true }));
+}
+
+export async function salvaAnagrafica(anagrafica) {
+  const profilo = await leggiProfilo();
+  await scrivi('profilo', await timbra({ ...profilo, anagrafica, deleted: false }));
 }
 
 export async function leggiMeta(chiave) {

@@ -41,19 +41,26 @@ Tutti i record hanno questi campi, che rendono possibile l'unione tra postazioni
 Collezioni:
 
 - `profilo`: un solo record con id fisso `profilo-impresa` e le `risposte` al questionario.
+- `profilo`: contiene anche `anagrafica` (ragione sociale, titolare, sede, comune, P.IVA, contatto, RSPP, medico, RLS)
+  usata per compilare i documenti.
 - `adempimenti`: `schedaId`, `fatto`, `dataFatto`, `scadenzaManuale`, `note`. Se più postazioni creano un record per
   la stessa scheda, vale il più recente non cancellato.
+- `lavoratori`: `nome`, `cognome`, `mansione`, `dataAssunzione`, `dataCessazione`, `ruoli` (id definiti in
+  `data/lavoratori.json`). I cessati restano salvati ma non sono mostrati.
+- `registri`: una registrazione per corso, visita o consegna: `lavoratoreId`, `requisitoId`, `data`, `scadenzaManuale`,
+  `esito` (solo per la visita: `idoneo`, `idoneo_prescrizioni`, `non_idoneo_temporaneo`, `non_idoneo`), `dettagli`,
+  `note`. Per ogni lavoratore e requisito vale la registrazione con la data più recente. Nessun dato clinico.
 
 ## File di backup
 
 ```json
 {
   "formato": "safetydoc-export",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "versioneApp": "0.1.0",
   "esportatoIl": "2026-11-23T18:00:00.000Z",
   "deviceId": "…",
-  "collezioni": { "profilo": [], "adempimenti": [] }
+  "collezioni": { "profilo": [], "adempimenti": [], "lavoratori": [], "registri": [] }
 }
 ```
 
@@ -63,7 +70,8 @@ con AES-GCM a 256 bit e chiave derivata con PBKDF2-SHA256 (310.000 iterazioni).
 **Unione all'import:** per ogni `id` vince il record con `updatedAt` più recente; a parità vince il `deviceId`
 maggiore, così due postazioni arrivano allo stesso risultato. Le cancellazioni sono record anch'esse, quindi un
 file vecchio non fa riapparire dati eliminati. Se `schemaVersion` è più alta di quella supportata, l'import viene
-rifiutato; i file più vecchi passano da `migra()` in `js/merge.js`.
+rifiutato; i file più vecchi passano da `migra()` in `js/merge.js` (la versione 1 riceve le collezioni
+`lavoratori` e `registri` vuote).
 
 ## Passaggio a un database
 

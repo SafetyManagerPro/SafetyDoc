@@ -1,0 +1,189 @@
+{
+  "versione": "0.4.0",
+  "aggiornato": "2026-11-24",
+  "ruoli": [
+    {
+      "id": "preposto",
+      "etichetta": "Preposto (controlla il lavoro degli altri)",
+      "modello": "nomina-preposto"
+    },
+    {
+      "id": "primo_soccorso",
+      "etichetta": "Addetto al primo soccorso",
+      "modello": "designazione-addetti"
+    },
+    {
+      "id": "antincendio",
+      "etichetta": "Addetto antincendio ed emergenze",
+      "modello": "designazione-addetti"
+    },
+    {
+      "id": "rls",
+      "etichetta": "Rappresentante dei lavoratori per la sicurezza (RLS)"
+    },
+    {
+      "id": "tratta_dati",
+      "etichetta": "Usa i dati di colleghi o clienti (paghe, presenze, clienti)",
+      "modello": "autorizzazione-trattamento"
+    },
+    {
+      "id": "macchine",
+      "etichetta": "Usa piattaforme, gru, muletti, escavatori o trattori",
+      "attivaSe": { "q": "attrezzature_abilitazione", "eq": true }
+    },
+    {
+      "id": "quota",
+      "etichetta": "Lavora in quota",
+      "attivaSe": { "q": "quota", "eq": true }
+    },
+    {
+      "id": "elettrico",
+      "etichetta": "Lavora su impianti elettrici",
+      "attivaSe": { "q": "elettrico", "eq": true }
+    },
+    {
+      "id": "confinati",
+      "etichetta": "Entra in ambienti confinati",
+      "attivaSe": { "q": "confinati", "eq": true }
+    },
+    {
+      "id": "strada",
+      "etichetta": "Lavora su strada aperta al traffico",
+      "attivaSe": { "q": "strada", "eq": true }
+    }
+  ],
+  "requisiti": [
+    {
+      "id": "formazione-generale",
+      "titolo": "Formazione generale (4 ore)",
+      "aiuto": "Uguale per tutti i lavoratori. Si fa una volta sola e vale anche se cambia datore di lavoro.",
+      "tipoScadenza": "una_tantum",
+      "schedaId": "formazione-lavoratori",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "formazione-specifica",
+      "titolo": "Formazione specifica sui rischi",
+      "aiuto": "4, 8 o 12 ore secondo il rischio della tua attività. Aggiornamento di almeno 6 ore ogni 5 anni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "schedaId": "formazione-lavoratori",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "visita-medica",
+      "titolo": "Visita medica",
+      "aiuto": "Scrivi la data della visita e la prossima scadenza indicata dal medico. Non scrivere mai diagnosi o malattie.",
+      "tipoScadenza": "manuale",
+      "conEsito": true,
+      "schedaId": "medico-competente",
+      "attivaSe": { "fatto": "rischiConSorveglianza" }
+    },
+    {
+      "id": "consegna-dpi",
+      "titolo": "Consegna dei DPI",
+      "aiuto": "Scrivi quali dispositivi hai consegnato. Puoi stampare il verbale da far firmare.",
+      "tipoScadenza": "una_tantum",
+      "conDettagli": "Quali DPI hai consegnato? (es. scarpe S3, guanti, occhiali)",
+      "schedaId": "dpi",
+      "modello": "consegna-dpi",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "informativa-privacy",
+      "titolo": "Informativa privacy consegnata",
+      "tipoScadenza": "una_tantum",
+      "schedaId": "privacy-lavoratori",
+      "modello": "informativa-lavoratori",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "corso-preposto",
+      "titolo": "Corso preposto (12 ore)",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 24,
+      "ruolo": "preposto",
+      "schedaId": "preposto",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "corso-primo-soccorso",
+      "titolo": "Corso addetto primo soccorso",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 36,
+      "ruolo": "primo_soccorso",
+      "schedaId": "primo-soccorso",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "corso-antincendio",
+      "titolo": "Corso addetto antincendio",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "ruolo": "antincendio",
+      "schedaId": "antincendio",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "corso-rls",
+      "titolo": "Corso RLS (32 ore) e aggiornamento annuale",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "ruolo": "rls",
+      "schedaId": "rls",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "autorizzazione-trattamento",
+      "titolo": "Autorizzazione al trattamento dei dati firmata",
+      "tipoScadenza": "una_tantum",
+      "ruolo": "tratta_dati",
+      "schedaId": "privacy-lavoratori",
+      "modello": "autorizzazione-trattamento",
+      "attivaSe": { "sempre": true }
+    },
+    {
+      "id": "patentino-macchine",
+      "titolo": "Patentino per le macchine",
+      "aiuto": "Un corso per ogni tipo di macchina. Aggiornamento ogni 5 anni.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 60,
+      "ruolo": "macchine",
+      "schedaId": "attrezzature-abilitazione",
+      "attivaSe": { "q": "attrezzature_abilitazione", "eq": true }
+    },
+    {
+      "id": "addestramento-quota",
+      "titolo": "Addestramento ai dispositivi anticaduta",
+      "tipoScadenza": "manuale",
+      "ruolo": "quota",
+      "schedaId": "lavori-quota",
+      "attivaSe": { "q": "quota", "eq": true }
+    },
+    {
+      "id": "qualifica-elettrica",
+      "titolo": "Formazione CEI 11-27 e qualifica PES/PAV",
+      "tipoScadenza": "manuale",
+      "ruolo": "elettrico",
+      "schedaId": "lavori-elettrici",
+      "attivaSe": { "q": "elettrico", "eq": true }
+    },
+    {
+      "id": "corso-confinati",
+      "titolo": "Corso ambienti confinati (12 ore in presenza)",
+      "tipoScadenza": "manuale",
+      "ruolo": "confinati",
+      "schedaId": "ambienti-confinati",
+      "attivaSe": { "q": "confinati", "eq": true }
+    },
+    {
+      "id": "corso-strada",
+      "titolo": "Corso segnaletica per lavori stradali",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 48,
+      "ruolo": "strada",
+      "schedaId": "lavori-stradali",
+      "attivaSe": { "q": "strada", "eq": true }
+    }
+  ]
+}
