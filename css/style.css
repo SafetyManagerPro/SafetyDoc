@@ -252,3 +252,20 @@ select.campo { appearance: auto; }
   .doc { box-shadow: none; padding: 0; margin: 0; font-size: 11pt; }
   .doc__tabella tr { page-break-inside: avoid; }
 }
+
+/* Codice ATECO */
+.campo--grande { font-size: 1.3rem; letter-spacing: .04em; }
+.esito-ateco { margin-top: 12px; }
+.ateco { background: var(--superficie); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 12px 14px; }
+.ateco p { margin: 0 0 4px; }
+.ateco__codice { font-weight: 700; }
+.ateco__sezione { font-size: .9rem; color: var(--testo-2); }
+.ateco__rischio { margin-top: 8px !important; padding: 6px 10px; border-radius: 8px; display: inline-block; }
+.ateco__rischio--basso { background: var(--verde-sfondo); color: var(--verde); }
+.ateco__rischio--medio { background: var(--giallo-sfondo); color: var(--giallo); }
+.ateco__rischio--alto { background: var(--rosso-sfondo); color: var(--rosso); }
+.scelta small { display: block; font-size: .85rem; color: var(--primario); font-weight: 600; margin-top: 2px; }
+.scelta--suggerita { border-color: var(--primario); border-style: dashed; }
+.riquadro { background: var(--info-sfondo); border-radius: var(--raggio); padding: 12px 14px; margin: 16px 0; }
+.riquadro p { margin: 0 0 6px; }
+.riquadro p:last-child { margin-bottom: 0; }

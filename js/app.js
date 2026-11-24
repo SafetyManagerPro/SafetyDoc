@@ -1,5 +1,6 @@
 import {
   schermate,
+  cercaAteco,
   generaPiano,
   cosaFareAdesso,
   conteggi,
@@ -19,7 +20,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.5.0';
+export const VERSIONE_APP = '0.6.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -56,7 +57,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [] };
+const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, profilo: null, adempimenti: [], lavoratori: [], registri: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -96,7 +97,7 @@ async function ricarica() {
 
 const risposte = () => stato.profilo?.risposte || {};
 const questionarioCompletato = () => Boolean(risposte().__completato);
-const ctx = () => creaContesto(risposte(), stato.questionario);
+const ctx = () => creaContesto(risposte(), stato.questionario, stato.ateco);
 const haDipendenti = () => ctx().fatti.haDipendenti;
 
 function anagrafica() {
@@ -117,7 +118,8 @@ function piano() {
     questionario: stato.questionario,
     risposte: risposte(),
     adempimenti: stato.adempimenti,
-    oggi: oggiIso()
+    oggi: oggiIso(),
+    ateco: stato.ateco
   });
 }
 
@@ -282,6 +284,25 @@ async function esportaCalendario() {
   avviso(`${eventi.length} ${eventi.length === 1 ? 'scadenza pronta' : 'scadenze pronte'} per il calendario.`);
 }
 
+const NOMI_CLASSE = { basso: 'basso', medio: 'medio', alto: 'alto' };
+
+function descriviAteco(info, testo) {
+  const cifre = String(testo || '').replace(/[^0-9]/g, '');
+  if (!cifre) return '';
+  if (!info) return '<p class="nota">Continua a scrivere il codice…</p>';
+  if (!info.valido) {
+    if (cifre.startsWith('45')) {
+      return `<p class="esito esito--errore">Il codice ${esc(testo)} è della vecchia classificazione ATECO 2007. Dal 2025 vale ATECO 2025: controlla la visura aggiornata (per i meccanici di solito inizia con 95.3).</p>`;
+    }
+    return '<p class="esito esito--errore">Questo codice non esiste nella classificazione ATECO 2025. Controlla la visura.</p>';
+  }
+  return `<div class="ateco">
+      <p class="ateco__codice">${esc(info.codice)} · ${esc(info.descrizione)}</p>
+      <p class="ateco__sezione">Sezione ${esc(info.sezione)} – ${esc(info.descrizioneSezione)}</p>
+      <p class="ateco__rischio ateco__rischio--${esc(info.classe)}">Rischio <strong>${esc(NOMI_CLASSE[info.classe])}</strong> · formazione specifica dei lavoratori: <strong>${esc(String(info.ore))} ore</strong></p>
+    </div>`;
+}
+
 async function schermataDomanda(indice) {
   const elenco = schermate(stato.questionario, risposte());
   const i = Math.max(0, Math.min(Number(indice) || 0, elenco.length - 1));
@@ -311,6 +332,11 @@ async function schermataDomanda(indice) {
         )
         .join('')}
     </div>`;
+  } else if (d.tipo === 'ateco') {
+    conAvanti = true;
+    campo = `<input class="campo campo--grande" id="campo" type="text" inputmode="decimal" autocomplete="off" placeholder="es. 43.21.01" value="${esc(valore ?? '')}" aria-label="${esc(d.testo)}" aria-describedby="esito-ateco">
+      <div id="esito-ateco" class="esito-ateco" aria-live="polite"></div>
+      <button type="button" class="btn btn--testo" id="non-so">Non lo so, lo aggiungo dopo</button>`;
   } else if (d.tipo === 'sino') {
     campo = `<div class="scelte scelte--due">
       ${[
@@ -324,11 +350,14 @@ async function schermataDomanda(indice) {
         .join('')}
     </div>`;
   } else if (d.tipo === 'scelta') {
+    const suggerito = d.id === 'attivita' ? cercaAteco(r.ateco, stato.ateco)?.settore : null;
     campo = `<div class="scelte">
       ${d.opzioni
         .map(
           (o) =>
-            `<button type="button" class="scelta ${valore === o.valore ? 'scelta--attiva' : ''}" data-valore='${esc(JSON.stringify(o.valore))}' aria-pressed="${valore === o.valore}">${esc(o.etichetta)}</button>`
+            `<button type="button" class="scelta ${valore === o.valore ? 'scelta--attiva' : ''} ${suggerito === o.valore && valore !== o.valore ? 'scelta--suggerita' : ''}" data-valore='${esc(JSON.stringify(o.valore))}' aria-pressed="${valore === o.valore}">${esc(o.etichetta)}${
+              suggerito === o.valore ? '<small>Suggerito dal tuo codice ATECO</small>' : ''
+            }</button>`
         )
         .join('')}
     </div>`;
@@ -386,6 +415,28 @@ async function schermataDomanda(indice) {
     b.addEventListener('click', () => vai({ [d.id]: JSON.parse(b.dataset.valore) }));
   }
   const input = app.querySelector('#campo');
+  if (input && d.tipo === 'ateco') {
+    const esito = app.querySelector('#esito-ateco');
+    const mostra = () => {
+      const info = cercaAteco(input.value, stato.ateco);
+      esito.innerHTML = descriviAteco(info, input.value);
+      return info;
+    };
+    mostra();
+    input.addEventListener('input', mostra);
+    input.focus();
+    const conferma = () => {
+      const testo = input.value.trim();
+      if (!testo) return vai({ ateco: null });
+      const info = mostra();
+      if (!info?.valido) return avviso('Controlla il codice ATECO, oppure premi «Non lo so».');
+      vai({ ateco: info.codice });
+    };
+    app.querySelector('#avanti').addEventListener('click', conferma);
+    input.addEventListener('keydown', (e) => e.key === 'Enter' && conferma());
+    app.querySelector('#non-so').addEventListener('click', () => vai({ ateco: null }));
+    return;
+  }
   if (input) {
     input.focus();
     const conferma = () => {
@@ -406,7 +457,7 @@ async function schermataScheda(id) {
   if (!scheda) return (location.hash = '#/piano');
   const voce = piano().find((v) => v.scheda.id === id);
   const st = voce?.stato;
-  const ctx = creaContesto(risposte(), stato.questionario);
+  const ctx = creaContesto(risposte(), stato.questionario, stato.ateco);
   const mesi = periodicitaPer(scheda, ctx);
   const chiedeScadenza = scheda.tipoScadenza === 'manuale' || scheda.tipoScadenza === 'periodica';
   const e = voce ? ETICHETTE[voce.colore] : null;
@@ -431,6 +482,7 @@ async function schermataScheda(id) {
       </dl>
       <p class="riferimento">Riferimento: ${esc(scheda.riferimento)}</p>
       ${scheda.daVerificare?.length ? `<p class="verifica">In verifica: ${esc(scheda.daVerificare.join(' '))}</p>` : ''}
+      ${id === 'formazione-lavoratori' || id === 'formazione-datore' ? notaClasseRischio() : ''}
       ${collegamentiScheda(id)}
 
       ${
@@ -481,6 +533,22 @@ async function schermataScheda(id) {
     avviso('Segnato come da fare.');
     schermataScheda(id);
   });
+}
+
+// ---------- classe di rischio ----------
+
+function notaClasseRischio() {
+  const f = ctx().fatti;
+  if (f.ateco) {
+    return `<div class="riquadro"><p><strong>La tua attività:</strong> ATECO ${esc(f.ateco.codice)} – ${esc(f.ateco.descrizione)}.</p>
+      <p>Rischio <strong>${esc(f.classeRischio)}</strong>: la formazione specifica dei lavoratori è di <strong>${esc(String(f.oreFormazioneSpecifica))} ore</strong>, oltre alle 4 ore di formazione generale.</p>
+      <p class="nota">${esc(stato.ateco.avvertenza)}</p></div>`;
+  }
+  if (f.fonteClasse === 'attivita' && f.oreFormazioneSpecifica) {
+    return `<div class="riquadro"><p>Per il settore che hai scelto il rischio è di solito <strong>${esc(f.classeRischio)}</strong> (formazione specifica di ${esc(String(f.oreFormazioneSpecifica))} ore).</p>
+      <p><a href="#/domanda/1">Inserisci il codice ATECO</a> per avere l'indicazione esatta.</p></div>`;
+  }
+  return `<div class="riquadro"><p>Le ore di formazione specifica dipendono dal codice ATECO. <a href="#/domanda/1">Inseriscilo qui</a>.</p></div>`;
 }
 
 // ---------- collegamenti dalle schede ----------
@@ -660,6 +728,7 @@ async function schermataRegistro(lavId, reqId) {
       ${voce ? `<p class="pill pill--${voce.colore}"><span aria-hidden="true">${e.icona}</span> ${esc(voce.motivo)}${voce.prossimaScadenza ? ` · ${dataLeggibile(voce.prossimaScadenza)}` : ''}</p>` : ''}
       <h1>${esc(req.titolo)}</h1>
       ${req.aiuto ? `<p class="lead">${esc(req.aiuto)}</p>` : ''}
+      ${req.id === 'formazione-specifica' ? notaClasseRischio() : ''}
       ${scheda ? `<p><a href="#/scheda/${esc(scheda.id)}">Come si fa: ${esc(scheda.titolo)} ›</a></p>` : ''}
       <form class="registra" id="registra">
         <h2>Registra</h2>
@@ -817,6 +886,12 @@ async function schermataDati() {
 
       <h2>Dati dell'impresa</h2>
       <p>Servono per compilare i documenti. Puoi lasciare vuoto quello che non sai.</p>
+      ${(() => {
+        const f = ctx().fatti;
+        return f.ateco
+          ? `<p class="riquadro">Codice ATECO <strong>${esc(f.ateco.codice)}</strong> – ${esc(f.ateco.descrizione)} · rischio ${esc(f.classeRischio)}. <a href="#/domanda/1">Cambia</a></p>`
+          : `<p class="riquadro">Codice ATECO non inserito. <a href="#/domanda/1">Aggiungilo</a></p>`;
+      })()}
       <form id="anagrafica">
         ${CAMPI_ANAGRAFICA.map(
           ([k, et, ac]) => `<label>${esc(et)}<input class="campo" name="${k}" autocomplete="${ac}" value="${esc(anagrafica()[k] || '')}"></label>`
@@ -936,10 +1011,11 @@ async function instrada() {
 
 async function avvia() {
   try {
-    const [q, c, l, d] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json'].map((u) => fetch(u).then((r) => r.json()))
+    const [q, c, l, d, a] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json'].map((u) => fetch(u).then((r) => r.json()))
     );
     stato.dvr = d;
+    stato.ateco = a;
     stato.questionario = q;
     stato.catalogo = c;
     stato.defLav = l;

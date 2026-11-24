@@ -59,6 +59,8 @@ export const MODELLI = [
         <table class="doc__tabella doc__tabella--campi"><tbody>
           <tr><th>Ragione sociale</th><td>${esc(a.ragioneSociale || '')}</td></tr>
           <tr><th>Attività</th><td>${esc(attivita || '')}</td></tr>
+          <tr><th>Codice ATECO</th><td>${esc(ctx?.fatti?.ateco ? `${ctx.fatti.ateco.codice} – ${ctx.fatti.ateco.descrizione}` : '')}</td></tr>
+          <tr><th>Classe di rischio (formazione)</th><td>${esc(ctx?.fatti?.classeRischio && ctx.fatti.classeRischio !== 'da_verificare' ? ctx.fatti.classeRischio : '')}</td></tr>
           <tr><th>Sede</th><td>${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>
           <tr><th>Datore di lavoro</th><td>${esc(a.titolare || '')}</td></tr>
           <tr><th>RSPP</th><td>${esc(ctx?.risposte?.dl_rspp ? `${a.titolare || ''} (datore di lavoro)` : a.rspp || '')}</td></tr>

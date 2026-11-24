@@ -1,0 +1,523 @@
+{
+  "versione": "0.6.0",
+  "aggiornato": "2026-11-24",
+  "fonte": "Classi di rischio dell'Allegato II dell'Accordo Stato-Regioni del 21 dicembre 2011 (ripreso dall'Accordo n. 59/2025), applicate alle divisioni della classificazione ATECO 2025.",
+  "avvertenza": "Classe indicativa per divisione ATECO: verificare con l'ente formatore. Se nel lavoro ci sono rischi specifici più alti, la formazione va adeguata al rischio reale.",
+  "oreFormazioneSpecifica": {
+    "basso": 4,
+    "medio": 8,
+    "alto": 12
+  },
+  "sezioni": {
+    "A": "Agricoltura, silvicoltura e pesca",
+    "B": "Estrazione di minerali",
+    "C": "Attività manifatturiere",
+    "D": "Energia elettrica, gas, vapore",
+    "E": "Acqua, reti fognarie, rifiuti",
+    "F": "Costruzioni",
+    "G": "Commercio all'ingrosso e al dettaglio",
+    "H": "Trasporto e magazzinaggio",
+    "I": "Alloggio e ristorazione",
+    "J": "Editoria, audiovisivi e contenuti",
+    "K": "Telecomunicazioni e informatica",
+    "L": "Attività finanziarie e assicurative",
+    "M": "Attività immobiliari",
+    "N": "Attività professionali, scientifiche e tecniche",
+    "O": "Noleggio, agenzie e servizi di supporto alle imprese",
+    "P": "Amministrazione pubblica",
+    "Q": "Istruzione",
+    "R": "Sanità e assistenza sociale",
+    "S": "Attività artistiche, sportive e di intrattenimento",
+    "T": "Altre attività di servizi",
+    "U": "Famiglie come datori di lavoro",
+    "V": "Organizzazioni extraterritoriali"
+  },
+  "divisioni": {
+    "01": {
+      "sezione": "A",
+      "descrizione": "Coltivazioni agricole e allevamento",
+      "classe": "medio"
+    },
+    "02": {
+      "sezione": "A",
+      "descrizione": "Silvicoltura e utilizzo di aree forestali",
+      "classe": "medio"
+    },
+    "03": {
+      "sezione": "A",
+      "descrizione": "Pesca e acquacoltura",
+      "classe": "medio"
+    },
+    "05": {
+      "sezione": "B",
+      "descrizione": "Estrazione di carbone e lignite",
+      "classe": "alto"
+    },
+    "06": {
+      "sezione": "B",
+      "descrizione": "Estrazione di petrolio greggio e gas naturale",
+      "classe": "alto"
+    },
+    "07": {
+      "sezione": "B",
+      "descrizione": "Estrazione di minerali metalliferi",
+      "classe": "alto"
+    },
+    "08": {
+      "sezione": "B",
+      "descrizione": "Altre attività di estrazione di minerali (cave)",
+      "classe": "alto"
+    },
+    "09": {
+      "sezione": "B",
+      "descrizione": "Servizi di supporto all'estrazione",
+      "classe": "alto"
+    },
+    "10": {
+      "sezione": "C",
+      "descrizione": "Industrie alimentari",
+      "classe": "alto"
+    },
+    "11": {
+      "sezione": "C",
+      "descrizione": "Industria delle bevande",
+      "classe": "alto"
+    },
+    "12": {
+      "sezione": "C",
+      "descrizione": "Industria del tabacco",
+      "classe": "alto"
+    },
+    "13": {
+      "sezione": "C",
+      "descrizione": "Industrie tessili",
+      "classe": "alto"
+    },
+    "14": {
+      "sezione": "C",
+      "descrizione": "Confezione di articoli di abbigliamento",
+      "classe": "alto"
+    },
+    "15": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di articoli in pelle",
+      "classe": "alto"
+    },
+    "16": {
+      "sezione": "C",
+      "descrizione": "Industria del legno e dei prodotti in legno (esclusi i mobili)",
+      "classe": "alto"
+    },
+    "17": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di carta e prodotti di carta",
+      "classe": "alto"
+    },
+    "18": {
+      "sezione": "C",
+      "descrizione": "Stampa e riproduzione di supporti registrati",
+      "classe": "alto"
+    },
+    "19": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di coke e prodotti petroliferi raffinati",
+      "classe": "alto"
+    },
+    "20": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di prodotti chimici",
+      "classe": "alto"
+    },
+    "21": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di prodotti farmaceutici",
+      "classe": "alto"
+    },
+    "22": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di articoli in gomma e plastica",
+      "classe": "alto"
+    },
+    "23": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di prodotti della lavorazione di minerali non metalliferi (vetro, ceramica, cemento, pietra)",
+      "classe": "alto"
+    },
+    "24": {
+      "sezione": "C",
+      "descrizione": "Metallurgia",
+      "classe": "alto"
+    },
+    "25": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di prodotti in metallo (esclusi macchinari)",
+      "classe": "alto"
+    },
+    "26": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di computer e prodotti elettronici e ottici",
+      "classe": "alto"
+    },
+    "27": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di apparecchiature elettriche",
+      "classe": "alto"
+    },
+    "28": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di macchinari e apparecchiature",
+      "classe": "alto"
+    },
+    "29": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di autoveicoli e rimorchi",
+      "classe": "alto"
+    },
+    "30": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di altri mezzi di trasporto",
+      "classe": "alto"
+    },
+    "31": {
+      "sezione": "C",
+      "descrizione": "Fabbricazione di mobili",
+      "classe": "alto"
+    },
+    "32": {
+      "sezione": "C",
+      "descrizione": "Altre industrie manifatturiere (gioielleria, strumenti musicali, articoli sportivi, ecc.)",
+      "classe": "alto"
+    },
+    "33": {
+      "sezione": "C",
+      "descrizione": "Riparazione, manutenzione e installazione di macchine e apparecchiature",
+      "classe": "alto"
+    },
+    "35": {
+      "sezione": "D",
+      "descrizione": "Fornitura di energia elettrica, gas, vapore e aria condizionata",
+      "classe": "alto"
+    },
+    "36": {
+      "sezione": "E",
+      "descrizione": "Raccolta, trattamento e fornitura di acqua",
+      "classe": "alto"
+    },
+    "37": {
+      "sezione": "E",
+      "descrizione": "Gestione delle reti fognarie",
+      "classe": "alto"
+    },
+    "38": {
+      "sezione": "E",
+      "descrizione": "Raccolta, trattamento e smaltimento dei rifiuti; recupero dei materiali",
+      "classe": "alto"
+    },
+    "39": {
+      "sezione": "E",
+      "descrizione": "Attività di risanamento e altri servizi di gestione dei rifiuti",
+      "classe": "alto"
+    },
+    "41": {
+      "sezione": "F",
+      "descrizione": "Costruzione di edifici",
+      "classe": "alto"
+    },
+    "42": {
+      "sezione": "F",
+      "descrizione": "Ingegneria civile (strade, reti, opere pubbliche)",
+      "classe": "alto"
+    },
+    "43": {
+      "sezione": "F",
+      "descrizione": "Lavori di costruzione specializzati (demolizioni, impianti, finiture)",
+      "classe": "alto"
+    },
+    "46": {
+      "sezione": "G",
+      "descrizione": "Commercio all'ingrosso",
+      "classe": "basso"
+    },
+    "47": {
+      "sezione": "G",
+      "descrizione": "Commercio al dettaglio",
+      "classe": "basso"
+    },
+    "49": {
+      "sezione": "H",
+      "descrizione": "Trasporto terrestre e mediante condotte",
+      "classe": "medio"
+    },
+    "50": {
+      "sezione": "H",
+      "descrizione": "Trasporto marittimo e per vie d'acqua",
+      "classe": "medio"
+    },
+    "51": {
+      "sezione": "H",
+      "descrizione": "Trasporto aereo",
+      "classe": "medio"
+    },
+    "52": {
+      "sezione": "H",
+      "descrizione": "Magazzinaggio e attività di supporto ai trasporti",
+      "classe": "medio"
+    },
+    "53": {
+      "sezione": "H",
+      "descrizione": "Servizi postali e attività di corriere",
+      "classe": "medio"
+    },
+    "55": {
+      "sezione": "I",
+      "descrizione": "Alloggio",
+      "classe": "basso"
+    },
+    "56": {
+      "sezione": "I",
+      "descrizione": "Attività dei servizi di ristorazione",
+      "classe": "basso"
+    },
+    "58": {
+      "sezione": "J",
+      "descrizione": "Attività editoriali",
+      "classe": "basso"
+    },
+    "59": {
+      "sezione": "J",
+      "descrizione": "Produzione cinematografica, video, programmi televisivi, registrazioni musicali",
+      "classe": "basso"
+    },
+    "60": {
+      "sezione": "J",
+      "descrizione": "Attività di programmazione, trasmissione e distribuzione di contenuti",
+      "classe": "basso"
+    },
+    "61": {
+      "sezione": "K",
+      "descrizione": "Telecomunicazioni",
+      "classe": "basso"
+    },
+    "62": {
+      "sezione": "K",
+      "descrizione": "Programmazione, consulenza informatica e attività connesse",
+      "classe": "basso"
+    },
+    "63": {
+      "sezione": "K",
+      "descrizione": "Infrastrutture informatiche, elaborazione dati, hosting e altri servizi d'informazione",
+      "classe": "basso"
+    },
+    "64": {
+      "sezione": "L",
+      "descrizione": "Servizi finanziari",
+      "classe": "basso"
+    },
+    "65": {
+      "sezione": "L",
+      "descrizione": "Assicurazioni e fondi pensione",
+      "classe": "basso"
+    },
+    "66": {
+      "sezione": "L",
+      "descrizione": "Attività ausiliarie dei servizi finanziari e assicurativi",
+      "classe": "basso"
+    },
+    "68": {
+      "sezione": "M",
+      "descrizione": "Attività immobiliari",
+      "classe": "basso"
+    },
+    "69": {
+      "sezione": "N",
+      "descrizione": "Attività legali e contabilità",
+      "classe": "basso"
+    },
+    "70": {
+      "sezione": "N",
+      "descrizione": "Attività di direzione aziendale e di consulenza gestionale",
+      "classe": "basso"
+    },
+    "71": {
+      "sezione": "N",
+      "descrizione": "Studi di architettura e d'ingegneria; collaudi e analisi tecniche",
+      "classe": "basso"
+    },
+    "72": {
+      "sezione": "N",
+      "descrizione": "Ricerca scientifica e sviluppo",
+      "classe": "basso"
+    },
+    "73": {
+      "sezione": "N",
+      "descrizione": "Pubblicità, ricerche di mercato e pubbliche relazioni",
+      "classe": "basso"
+    },
+    "74": {
+      "sezione": "N",
+      "descrizione": "Altre attività professionali, scientifiche e tecniche",
+      "classe": "basso"
+    },
+    "75": {
+      "sezione": "N",
+      "descrizione": "Servizi veterinari",
+      "classe": "basso"
+    },
+    "77": {
+      "sezione": "O",
+      "descrizione": "Attività di noleggio e leasing",
+      "classe": "basso"
+    },
+    "78": {
+      "sezione": "O",
+      "descrizione": "Attività di ricerca, selezione e fornitura di personale",
+      "classe": "basso"
+    },
+    "79": {
+      "sezione": "O",
+      "descrizione": "Agenzie di viaggio e tour operator",
+      "classe": "basso"
+    },
+    "80": {
+      "sezione": "O",
+      "descrizione": "Servizi di investigazione e vigilanza",
+      "classe": "basso"
+    },
+    "81": {
+      "sezione": "O",
+      "descrizione": "Servizi per edifici e paesaggio (pulizia, disinfestazione, cura del verde)",
+      "classe": "basso"
+    },
+    "82": {
+      "sezione": "O",
+      "descrizione": "Attività di supporto per le funzioni d'ufficio e altri servizi alle imprese",
+      "classe": "basso"
+    },
+    "84": {
+      "sezione": "P",
+      "descrizione": "Amministrazione pubblica e difesa; assicurazione sociale obbligatoria",
+      "classe": "medio"
+    },
+    "85": {
+      "sezione": "Q",
+      "descrizione": "Istruzione",
+      "classe": "medio"
+    },
+    "86": {
+      "sezione": "R",
+      "descrizione": "Assistenza sanitaria",
+      "classe": "alto"
+    },
+    "87": {
+      "sezione": "R",
+      "descrizione": "Servizi di assistenza sociale residenziale",
+      "classe": "alto"
+    },
+    "88": {
+      "sezione": "R",
+      "descrizione": "Assistenza sociale non residenziale",
+      "classe": "medio"
+    },
+    "90": {
+      "sezione": "S",
+      "descrizione": "Attività creative, artistiche e di intrattenimento",
+      "classe": "basso"
+    },
+    "91": {
+      "sezione": "S",
+      "descrizione": "Biblioteche, archivi, musei e altre attività culturali",
+      "classe": "basso"
+    },
+    "92": {
+      "sezione": "S",
+      "descrizione": "Attività riguardanti le lotterie, le scommesse, le case da gioco",
+      "classe": "basso"
+    },
+    "93": {
+      "sezione": "S",
+      "descrizione": "Attività sportive, di intrattenimento e di divertimento",
+      "classe": "basso"
+    },
+    "94": {
+      "sezione": "T",
+      "descrizione": "Attività di organizzazioni associative",
+      "classe": "basso"
+    },
+    "95": {
+      "sezione": "T",
+      "descrizione": "Riparazione e manutenzione di computer, beni per uso personale e per la casa, autoveicoli e motocicli",
+      "classe": "basso"
+    },
+    "96": {
+      "sezione": "T",
+      "descrizione": "Servizi per la persona (lavanderie, parrucchieri, estetisti, ecc.)",
+      "classe": "basso"
+    },
+    "97": {
+      "sezione": "U",
+      "descrizione": "Attività di famiglie e convivenze come datori di lavoro per personale domestico",
+      "classe": "basso"
+    },
+    "98": {
+      "sezione": "U",
+      "descrizione": "Produzione di beni e servizi indifferenziati per uso proprio da parte di famiglie",
+      "classe": "basso"
+    },
+    "99": {
+      "sezione": "V",
+      "descrizione": "Organizzazioni ed organismi extraterritoriali",
+      "classe": "basso"
+    }
+  },
+  "settori": {
+    "01": "agricoltura",
+    "02": "agricoltura",
+    "03": "agricoltura",
+    "81.3": "agricoltura",
+    "10": "alimentare_produzione",
+    "11": "alimentare_produzione",
+    "56": "ristorazione",
+    "16": "legno",
+    "31": "legno",
+    "24": "metalmeccanica",
+    "25": "metalmeccanica",
+    "28": "metalmeccanica",
+    "33": "metalmeccanica",
+    "41": "edilizia",
+    "42": "edilizia",
+    "43": "edilizia",
+    "43.2": "impianti",
+    "46": "commercio_ufficio",
+    "47": "commercio_ufficio",
+    "49": "trasporto",
+    "52": "trasporto",
+    "53": "trasporto",
+    "95.3": "autoriparazione",
+    "96.2": "acconciatura_estetica",
+    "81.2": "pulizie",
+    "58": "commercio_ufficio",
+    "59": "commercio_ufficio",
+    "60": "commercio_ufficio",
+    "61": "commercio_ufficio",
+    "62": "commercio_ufficio",
+    "63": "commercio_ufficio",
+    "64": "commercio_ufficio",
+    "65": "commercio_ufficio",
+    "66": "commercio_ufficio",
+    "68": "commercio_ufficio",
+    "69": "commercio_ufficio",
+    "70": "commercio_ufficio",
+    "71": "commercio_ufficio",
+    "72": "commercio_ufficio",
+    "73": "commercio_ufficio",
+    "74": "commercio_ufficio",
+    "75": "commercio_ufficio",
+    "77": "commercio_ufficio",
+    "78": "commercio_ufficio",
+    "79": "commercio_ufficio",
+    "80": "commercio_ufficio",
+    "82": "commercio_ufficio",
+    "84": "commercio_ufficio",
+    "85": "commercio_ufficio"
+  }
+}
