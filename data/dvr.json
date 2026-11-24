@@ -344,17 +344,16 @@
     {
       "id": "tutele",
       "famiglia": "Gruppi di lavoratori",
-      "pericolo": "Lavoratrici in gravidanza o allattamento, minori",
+      "pericolo": "Lavoratrici in gravidanza o allattamento, minori, lavoratori con limitazioni",
       "presenteSe": {
-        "q": "tutele_particolari",
-        "eq": true
+        "fatto": "haDipendenti"
       },
       "misure": [
         "Valutazione specifica e lavori vietati",
         "Spostamento a mansioni compatibili",
         "Visita medica per i minori"
       ],
-      "schedaId": "tutele-particolari"
+      "schedaId": "lavoratrici-madri"
     },
     {
       "id": "differenze",

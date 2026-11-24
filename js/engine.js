@@ -387,3 +387,96 @@ export function dataDaMese(valore) {
   if (/^\d{4}-\d{2}$/.test(v)) return `${v}-01`;
   return null;
 }
+
+// ---------- prodotti chimici ----------
+
+/** Pittogrammi di pericolo del regolamento CLP. */
+export const PITTOGRAMMI = [
+  { id: 'GHS01', etichetta: 'Esplosivo' },
+  { id: 'GHS02', etichetta: 'Infiammabile' },
+  { id: 'GHS03', etichetta: 'Comburente' },
+  { id: 'GHS04', etichetta: 'Gas sotto pressione' },
+  { id: 'GHS05', etichetta: 'Corrosivo' },
+  { id: 'GHS06', etichetta: 'Tossicità acuta (teschio)' },
+  { id: 'GHS07', etichetta: 'Irritante o nocivo (punto esclamativo)' },
+  { id: 'GHS08', etichetta: 'Grave pericolo per la salute (sagoma umana)' },
+  { id: 'GHS09', etichetta: "Pericoloso per l'ambiente" }
+];
+
+/** Frasi H che indicano cancerogeni, mutageni o tossici per la riproduzione (categorie 1A e 1B). */
+export function frasiCmr(frasiH) {
+  return [...new Set((String(frasiH || '').toUpperCase().match(/H3[456]0[A-Z]{0,2}/g) || []))];
+}
+
+export const prodottiAttivi = (prodotti) => (prodotti || []).filter((p) => !p.deleted && !p.dismesso);
+
+/** Semaforo di un prodotto: scheda di sicurezza presente? sostanze molto pericolose? */
+export function situazioneProdotto(prodotto, numeroAllegati = 0) {
+  const cmr = frasiCmr(prodotto.frasiH);
+  if (!prodotto.dataSds && !numeroAllegati) return { prodotto, colore: 'rosso', motivo: 'Manca la scheda di sicurezza', cmr };
+  if (cmr.length) return { prodotto, colore: 'giallo', motivo: `Contiene ${cmr.join(', ')}: valuta la sostituzione con l'RSPP`, cmr };
+  return { prodotto, colore: 'verde', motivo: 'Scheda di sicurezza presente', cmr };
+}
+
+// ---------- infortuni e quasi incidenti ----------
+
+export const TIPI_EVENTO = {
+  infortunio: 'Infortunio',
+  medicazione: 'Piccola medicazione (nessun giorno di assenza)',
+  quasi_incidente: 'Quasi incidente (nessuno si è fatto male)'
+};
+
+const piuGiorni = (iso, giorni) => {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + giorni);
+  return d.toISOString().slice(0, 10);
+};
+
+/**
+ * Cosa resta da fare per un evento. Denuncia INAIL per prognosi oltre 3 giorni, comunicazione statistica per
+ * almeno 1 giorno, in entrambi i casi entro 2 giorni dal certificato; poi una misura per evitare che si ripeta.
+ */
+export function situazioneEvento(evento, oggi) {
+  const azioni = [];
+  if (evento.tipo === 'infortunio') {
+    const g = evento.giorniPrognosi;
+    const base = evento.dataCertificato || evento.data;
+    if (g === null || g === undefined || g === '') {
+      azioni.push({ colore: 'giallo', motivo: 'Scrivi i giorni di prognosi del certificato medico' });
+    } else if (!evento.dataDenuncia && Number(g) >= 1) {
+      const entro = piuGiorni(base, 2);
+      azioni.push({
+        colore: Number(g) > 3 || entro < oggi ? 'rosso' : 'giallo',
+        motivo: Number(g) > 3 ? 'Denuncia di infortunio all’INAIL da fare' : 'Comunicazione all’INAIL a fini statistici da fare',
+        scadenza: entro
+      });
+    }
+  }
+  if (!evento.misureFatte) {
+    azioni.push({ colore: 'giallo', motivo: evento.misure ? 'Misura decisa, da completare' : 'Decidi una misura per evitare che si ripeta' });
+  }
+  const colore = azioni.some((a) => a.colore === 'rosso') ? 'rosso' : azioni.length ? 'giallo' : 'verde';
+  const principale = azioni.find((a) => a.colore === colore) || null;
+  return { evento, colore, azioni, motivo: principale?.motivo || 'Chiuso', scadenza: principale?.scadenza || null };
+}
+
+export const eventiAttivi = (eventi) => (eventi || []).filter((e) => !e.deleted).sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+export function urgenzeEventi(eventi, oggi) {
+  const ordine = { rosso: 0, giallo: 1 };
+  return eventiAttivi(eventi)
+    .map((e) => situazioneEvento(e, oggi))
+    .filter((s) => s.colore !== 'verde')
+    .sort((a, b) => ordine[a.colore] - ordine[b.colore]);
+}
+
+/** Conteggio degli eventi per anno, utile per la valutazione dello stress (eventi sentinella). */
+export function eventiPerAnno(eventi, anni) {
+  const r = {};
+  for (const a of anni) r[a] = { infortunio: 0, medicazione: 0, quasi_incidente: 0 };
+  for (const e of eventiAttivi(eventi)) {
+    const a = Number((e.data || '').slice(0, 4));
+    if (r[a] && r[a][e.tipo] !== undefined) r[a][e.tipo]++;
+  }
+  return r;
+}

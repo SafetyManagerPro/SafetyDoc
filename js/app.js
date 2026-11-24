@@ -18,6 +18,14 @@ import {
   urgenzeAttrezzature,
   tipoAttrezzatura,
   storicoControlli,
+  PITTOGRAMMI,
+  prodottiAttivi,
+  situazioneProdotto,
+  TIPI_EVENTO,
+  eventiAttivi,
+  situazioneEvento,
+  urgenzeEventi,
+  eventiPerAnno,
   vociControlloIniziale,
   dataDaMese
 } from './engine.js';
@@ -29,7 +37,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.8.0';
+export const VERSIONE_APP = '0.9.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -43,12 +51,23 @@ const SCHEDA_MODELLI = {
   dpi: ['consegna-dpi'],
   'formazione-lavoratori': ['registro-formazione'],
   dvr: ['dvr-bozza'],
-  'stress-lavoro-correlato': ['dvr-bozza'],
+  'stress-lavoro-correlato': ['stress-preliminare', 'dvr-bozza'],
   'privacy-lavoratori': ['informativa-lavoratori', 'autorizzazione-trattamento'],
   privacy: ['informativa-clienti', 'nomina-responsabile-esterno'],
   'piano-emergenza': ['verbale-evacuazione'],
   'presidi-antincendio': ['registro-antincendio'],
-  'riunione-periodica': ['verbale-riunione']
+  'riunione-periodica': ['verbale-riunione'],
+  duvri: ['info-rischi-ditte', 'duvri-bozza'],
+  'appalti-presso-clienti': ['autocertificazione-idoneita'],
+  pos: ['pos-bozza', 'autocertificazione-idoneita'],
+  'lavoratrici-madri': ['informativa-lavoratrici-madri'],
+  'lavoratori-minori': ['informativa-minori'],
+  'schede-sicurezza': ['elenco-prodotti-chimici'],
+  'rischio-chimico': ['elenco-prodotti-chimici'],
+  'registro-eventi': ['registro-eventi'],
+  infortuni: ['registro-eventi'],
+  'haccp-autocontrollo': ['registro-temperature'],
+  allergeni: ['cartello-allergeni']
 };
 
 // Schede che si gestiscono lavoratore per lavoratore.
@@ -66,7 +85,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], allegati: [] };
+const stato = { questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -104,6 +123,8 @@ async function ricarica() {
   stato.registri = await store.tutti('registri');
   stato.attrezzature = await store.tutti('attrezzature');
   stato.controlli = await store.tutti('controlli');
+  stato.prodotti = await store.tutti('prodotti');
+  stato.eventi = await store.tutti('eventi');
   stato.allegati = await store.tutti('allegati');
 }
 
@@ -262,7 +283,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { scheda: 'piano', 'controllo-iniziale': 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
+const SEZIONE = { scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -346,6 +367,8 @@ async function schermataOggi() {
       }
       <a class="btn btn--secondario" href="#/piano">Vedi il piano completo</a>
       ${haDipendenti() ? bloccoLavoratoriOggi() : ''}
+      ${bloccoEventiOggi()}
+      ${bloccoProdottiOggi()}
       ${bloccoMacchineOggi()}
       ${bloccoAiuto('la sicurezza della mia impresa')}
       ${richiestaInstallazione && !installata() ? `<p class="nota"><a href="#/dati/installa">Installa safetyDoc sul telefono</a> per aprirlo con un tocco.</p>` : ''}
@@ -686,6 +709,215 @@ async function schermataScheda(id) {
   });
 }
 
+// ---------- prodotti chimici ----------
+
+const numeroAllegati = (tipo, id) => stato.allegati.filter((a) => !a.deleted && a.collegatoTipo === tipo && a.collegatoId === id).length;
+const situazioniProdotti = () => prodottiAttivi(stato.prodotti).map((p) => situazioneProdotto(p, numeroAllegati('prodotto', p.id)));
+
+function bloccoProdottiOggi() {
+  if (!risposte().chimici) return '';
+  const sit = situazioniProdotti();
+  const daFare = sit.filter((x) => x.colore !== 'verde');
+  if (sit.length && !daFare.length) return '';
+  return `<h2>Prodotti chimici</h2>
+    <p>${sit.length ? `${daFare.length} ${daFare.length === 1 ? 'prodotto richiede' : 'prodotti richiedono'} attenzione.` : 'Fai l\'elenco dei prodotti che usi e allega le schede di sicurezza.'}</p>
+    <a class="btn btn--secondario" href="#/prodotti">${sit.length ? 'Vedi i prodotti' : 'Inizia l\'elenco dei prodotti'}</a>`;
+}
+
+function cardProdotto(x) {
+  const e = ETICHETTE[x.colore];
+  return `<a class="voce voce--${x.colore}" href="#/prodotto/${esc(x.prodotto.id)}">
+    <span class="voce__segno" aria-hidden="true">${e.icona}</span>
+    <span class="voce__testo"><span class="voce__titolo">${esc(x.prodotto.nome)}</span>
+    <span class="voce__stato">${esc(x.motivo)}${x.prodotto.uso ? ` · ${esc(x.prodotto.uso)}` : ''}</span></span>
+    <span class="voce__freccia" aria-hidden="true">›</span></a>`;
+}
+
+async function schermataProdotti() {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const ordine = { rosso: 0, giallo: 1, verde: 2 };
+  const sit = situazioniProdotti().sort((a, b) => ordine[a.colore] - ordine[b.colore] || a.prodotto.nome.localeCompare(b.prodotto.nome, 'it'));
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/scheda/schede-sicurezza">‹ Cosa devi fare</a>
+      <h1>Prodotti chimici</h1>
+      <p class="lead">Vernici, solventi, colle, detergenti, oli, gas, prodotti per capelli o per la pulizia: per ognuno serve la scheda di sicurezza del fornitore.</p>
+      ${sit.length ? `<div class="lista">${sit.map(cardProdotto).join('')}</div>` : '<p>Non hai ancora inserito nessun prodotto.</p>'}
+      <a class="btn btn--primario btn--grande" href="#/prodotto/nuovo">Aggiungi un prodotto</a>
+      ${sit.length ? `<a class="btn btn--secondario" href="#/documento/elenco-prodotti-chimici">Stampa l'elenco</a>` : ''}
+    </section>`;
+}
+
+async function schermataProdotto(id) {
+  const nuovo = id === 'nuovo';
+  const p = nuovo ? { pittogrammi: [] } : stato.prodotti.find((x) => x.id === id && !x.deleted);
+  if (!p) return (location.hash = '#/prodotti');
+  const sit = nuovo ? null : situazioneProdotto(p, numeroAllegati('prodotto', p.id));
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/prodotti">‹ Prodotti chimici</a>
+      ${sit ? `<p class="pill pill--${sit.colore}"><span aria-hidden="true">${ETICHETTE[sit.colore].icona}</span> ${esc(sit.motivo)}</p>` : ''}
+      <h1>${nuovo ? 'Nuovo prodotto' : esc(p.nome)}</h1>
+      ${sit?.cmr.length ? `<p class="esito esito--errore">Questo prodotto può causare tumori, danni genetici o alla fertilità (${esc(sit.cmr.join(', '))}). Chiedi al tuo RSPP se puoi sostituirlo; se no, servono misure specifiche e il registro degli esposti. <a href="#/scheda/cancerogeni">Scopri di più</a></p>` : ''}
+      <form id="prodotto">
+        <label>Nome commerciale<input class="campo" name="nome" required value="${esc(p.nome || '')}"></label>
+        <label>Fornitore<input class="campo" name="fornitore" value="${esc(p.fornitore || '')}"></label>
+        <label>A cosa serve <small>(es. «sgrassatore per officina», «tinta per capelli»)</small><input class="campo" name="uso" value="${esc(p.uso || '')}"></label>
+        <fieldset class="spunte"><legend>Pittogrammi sull'etichetta <small>(i rombi rossi)</small></legend>
+          ${PITTOGRAMMI.map((g) => `<label class="spunta"><input type="checkbox" name="pittogrammi" value="${g.id}" ${(p.pittogrammi || []).includes(g.id) ? 'checked' : ''}><span>${esc(g.etichetta)}</span></label>`).join('')}
+        </fieldset>
+        <label>Frasi H <small>(sezione 2 della scheda, es. «H225 H319 H350»)</small><input class="campo" name="frasiH" value="${esc(p.frasiH || '')}"></label>
+        <label>DPI indicati <small>(sezione 8: guanti, maschera, occhiali)</small><input class="campo" name="dpi" value="${esc(p.dpi || '')}"></label>
+        <label>Data della scheda di sicurezza <small>(in alto o in fondo alla scheda)</small><input class="campo" type="date" name="dataSds" max="${oggiIso()}" value="${esc(p.dataSds || '')}"></label>
+        ${campoAllegato()}
+        ${nuovo ? '' : `<label class="spunta-semplice"><input type="checkbox" name="dismesso" ${p.dismesso ? 'checked' : ''}> Non lo uso più</label>`}
+        <button class="btn btn--primario btn--grande" type="submit">Salva</button>
+        ${nuovo ? '' : '<button class="btn btn--testo" type="button" id="elimina">Elimina</button>'}
+      </form>
+      ${nuovo ? '' : `<h2>Scheda di sicurezza e foto</h2>${elencoAllegati('prodotto', p.id) || '<p>Nessun documento allegato: fotografa la scheda o allega il PDF.</p>'}`}
+    </section>`;
+  if (!nuovo) attivaAllegati(() => schermataProdotto(id));
+  app.querySelector('#prodotto').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const salvato = await store.salva('prodotti', {
+      ...p,
+      nome: String(f.get('nome') || '').trim(),
+      fornitore: String(f.get('fornitore') || '').trim(),
+      uso: String(f.get('uso') || '').trim(),
+      pittogrammi: f.getAll('pittogrammi'),
+      frasiH: String(f.get('frasiH') || '').trim().toUpperCase(),
+      dpi: String(f.get('dpi') || '').trim(),
+      dataSds: f.get('dataSds') || null,
+      dismesso: f.get('dismesso') === 'on'
+    });
+    await salvaAllegatiDa(ev.target, 'prodotto', salvato.id);
+    await ricarica();
+    avviso('Prodotto salvato.');
+    if (nuovo || salvato.dismesso) location.hash = '#/prodotti';
+    else schermataProdotto(salvato.id);
+  });
+  app.querySelector('#elimina')?.addEventListener('click', async () => {
+    if (!confirm(`Eliminare ${p.nome}? Se non lo usi più, è meglio segnarlo come non più usato.`)) return;
+    await store.elimina('prodotti', p);
+    await ricarica();
+    location.hash = '#/prodotti';
+  });
+}
+
+// ---------- infortuni e quasi incidenti ----------
+
+function bloccoEventiOggi() {
+  if (!haDipendenti()) return '';
+  const urg = urgenzeEventi(stato.eventi, oggiIso());
+  if (!urg.length) return '';
+  return `<h2>Infortuni e quasi incidenti</h2><div class="lista">${urg.slice(0, 3).map(cardEvento).join('')}</div>`;
+}
+
+function cardEvento(x) {
+  const e = ETICHETTE[x.colore];
+  const ev = x.evento;
+  const tipo = { infortunio: 'Infortunio', medicazione: 'Medicazione', quasi_incidente: 'Quasi incidente' }[ev.tipo];
+  return `<a class="voce voce--${x.colore}" href="#/evento/${esc(ev.id)}">
+    <span class="voce__segno" aria-hidden="true">${e.icona}</span>
+    <span class="voce__testo"><span class="voce__titolo">${esc(tipo)} del ${esc(dataLeggibile(ev.data))}${ev.luogo ? ` · ${esc(ev.luogo)}` : ''}</span>
+    <span class="voce__stato">${esc(x.motivo)}${x.scadenza ? ` · entro il ${esc(dataLeggibile(x.scadenza))}` : ''}</span></span>
+    <span class="voce__freccia" aria-hidden="true">›</span></a>`;
+}
+
+async function schermataEventi() {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const sit = eventiAttivi(stato.eventi).map((e) => situazioneEvento(e, oggiIso()));
+  const conta = (t) => sit.filter((x) => x.evento.tipo === t).length;
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/scheda/registro-eventi">‹ Cosa devi fare</a>
+      <h1>Infortuni e quasi incidenti</h1>
+      <p class="lead">Annota anche le volte in cui «poteva andare male»: sono gli avvertimenti che evitano l'infortunio vero.</p>
+      ${sit.length ? `<p>${conta('infortunio')} infortuni · ${conta('medicazione')} medicazioni · ${conta('quasi_incidente')} quasi incidenti</p><div class="lista">${sit.map(cardEvento).join('')}</div>` : '<p>Nessun evento registrato.</p>'}
+      <a class="btn btn--primario btn--grande" href="#/evento/nuovo">Registra un evento</a>
+      ${sit.length ? `<a class="btn btn--secondario" href="#/documento/registro-eventi">Stampa il registro</a>` : ''}
+    </section>`;
+}
+
+async function schermataEvento(id) {
+  const nuovo = id === 'nuovo';
+  const ev = nuovo ? { tipo: 'quasi_incidente', data: oggiIso() } : stato.eventi.find((x) => x.id === id && !x.deleted);
+  if (!ev) return (location.hash = '#/eventi');
+  const sit = nuovo ? null : situazioneEvento(ev, oggiIso());
+  const lav = attivi();
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/eventi">‹ Registro</a>
+      ${sit ? `<p class="pill pill--${sit.colore}"><span aria-hidden="true">${ETICHETTE[sit.colore].icona}</span> ${esc(sit.motivo)}${sit.scadenza ? ` · entro il ${esc(dataLeggibile(sit.scadenza))}` : ''}</p>` : ''}
+      <h1>${nuovo ? 'Registra un evento' : 'Evento del ' + esc(dataLeggibile(ev.data))}</h1>
+      <form id="evento">
+        <fieldset class="scelte-radio"><legend>Che cosa è successo?</legend>
+          ${Object.entries(TIPI_EVENTO).map(([k, et]) => `<label class="spunta"><input type="radio" name="tipo" value="${k}" ${ev.tipo === k ? 'checked' : ''}><span>${esc(et)}</span></label>`).join('')}
+        </fieldset>
+        <label>Data<input class="campo" type="date" name="data" required max="${oggiIso()}" value="${esc(ev.data || '')}"></label>
+        <label>Dove <small>(reparto, cantiere, mezzo)</small><input class="campo" name="luogo" value="${esc(ev.luogo || '')}"></label>
+        ${
+          lav.length
+            ? `<label>Lavoratore coinvolto <small>(facoltativo)</small><select class="campo" name="lavoratoreId"><option value="">Nessuno o non indicato</option>${lav
+                .map((l) => `<option value="${esc(l.id)}" ${ev.lavoratoreId === l.id ? 'selected' : ''}>${esc(nomeCompleto(l))}</option>`)
+                .join('')}</select></label>`
+            : ''
+        }
+        <label>Cosa è successo <small>(la dinamica, non la lesione)</small><textarea class="campo" name="descrizione" rows="3">${esc(ev.descrizione || '')}</textarea></label>
+        <label>Perché è successo <small>(attrezzatura, procedura, fretta, formazione, ordine)</small><textarea class="campo" name="causa" rows="2">${esc(ev.causa || '')}</textarea></label>
+        <div id="campi-infortunio">
+          <label>Giorni di prognosi sul certificato medico <small>(escluso il giorno dell'infortunio)</small><input class="campo" type="number" inputmode="numeric" min="0" max="999" name="giorniPrognosi" value="${esc(ev.giorniPrognosi ?? '')}"></label>
+          <label>Data in cui hai ricevuto il certificato<input class="campo" type="date" name="dataCertificato" max="${oggiIso()}" value="${esc(ev.dataCertificato || '')}"></label>
+          <label>Data della denuncia o comunicazione all'INAIL<input class="campo" type="date" name="dataDenuncia" max="${oggiIso()}" value="${esc(ev.dataDenuncia || '')}"></label>
+          <p class="riquadro">Prognosi oltre 3 giorni: denuncia telematica all'INAIL entro 2 giorni dal certificato. Da 1 a 3 giorni: comunicazione a fini statistici. Morte o pericolo di morte: entro 24 ore. Non scrivere qui diagnosi o lesioni.</p>
+        </div>
+        <label>Cosa fai perché non si ripeta<textarea class="campo" name="misure" rows="2">${esc(ev.misure || '')}</textarea></label>
+        <label class="spunta-semplice"><input type="checkbox" name="misureFatte" ${ev.misureFatte ? 'checked' : ''}> La misura è stata fatta</label>
+        ${campoAllegato()}
+        <button class="btn btn--primario btn--grande" type="submit">Salva</button>
+        ${nuovo ? '' : '<button class="btn btn--testo" type="button" id="elimina">Elimina</button>'}
+      </form>
+      ${nuovo ? '' : `<h2>Documenti e foto</h2>${elencoAllegati('evento', ev.id) || '<p>Nessun documento allegato.</p>'}`}
+      ${nuovo ? '' : '<p class="nota">Dopo un infortunio significativo il DVR va rivisto: <a href="#/scheda/dvr">apri la voce DVR</a>.</p>'}
+    </section>`;
+  if (!nuovo) attivaAllegati(() => schermataEvento(id));
+  const form = app.querySelector('#evento');
+  const aggiorna = () => (app.querySelector('#campi-infortunio').hidden = form.querySelector('input[name="tipo"]:checked')?.value !== 'infortunio');
+  form.querySelectorAll('input[name="tipo"]').forEach((r) => r.addEventListener('change', aggiorna));
+  aggiorna();
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const tipo = f.get('tipo');
+    const infortunio = tipo === 'infortunio';
+    const salvato = await store.salva('eventi', {
+      ...ev,
+      tipo,
+      data: f.get('data'),
+      luogo: String(f.get('luogo') || '').trim(),
+      lavoratoreId: f.get('lavoratoreId') || null,
+      descrizione: String(f.get('descrizione') || '').trim(),
+      causa: String(f.get('causa') || '').trim(),
+      giorniPrognosi: infortunio && f.get('giorniPrognosi') !== '' ? Number(f.get('giorniPrognosi')) : null,
+      dataCertificato: infortunio ? f.get('dataCertificato') || null : null,
+      dataDenuncia: infortunio ? f.get('dataDenuncia') || null : null,
+      misure: String(f.get('misure') || '').trim(),
+      misureFatte: f.get('misureFatte') === 'on'
+    });
+    await salvaAllegatiDa(form, 'evento', salvato.id);
+    await ricarica();
+    avviso('Evento salvato.');
+    location.hash = '#/eventi';
+  });
+  app.querySelector('#elimina')?.addEventListener('click', async () => {
+    if (!confirm('Eliminare questo evento dal registro?')) return;
+    await store.elimina('eventi', ev);
+    await ricarica();
+    location.hash = '#/eventi';
+  });
+}
+
 // ---------- controllo iniziale ----------
 
 // Il giro tiene fermo l'elenco delle voci mentre l'utente risponde (le voci segnate escono dal piano).
@@ -816,8 +1048,17 @@ function notaClasseRischio() {
 
 // ---------- collegamenti dalle schede ----------
 
+const STRUMENTI_SCHEDA = {
+  'schede-sicurezza': ['#/prodotti', 'Apri l\'elenco dei prodotti chimici'],
+  'rischio-chimico': ['#/prodotti', 'Apri l\'elenco dei prodotti chimici'],
+  cancerogeni: ['#/prodotti', 'Apri l\'elenco dei prodotti chimici'],
+  'registro-eventi': ['#/eventi', 'Apri il registro di infortuni e quasi incidenti'],
+  infortuni: ['#/evento/nuovo', 'Registra un infortunio o un quasi incidente']
+};
+
 function collegamentiScheda(id) {
   const parti = [];
+  if (STRUMENTI_SCHEDA[id]) parti.push(`<a class="btn btn--primario" href="${STRUMENTI_SCHEDA[id][0]}">${STRUMENTI_SCHEDA[id][1]}</a>`);
   if (SCHEDE_PER_LAVORATORE.has(id) && haDipendenti()) {
     parti.push(`<a class="btn btn--secondario" href="#/lavoratori">Segui questa voce per ogni lavoratore</a>`);
   }
@@ -1344,6 +1585,13 @@ async function schermataDocumento(id, lavId) {
     lavoratori: attivi(),
     attrezzature: macchine().map((a) => ({ nome: a.nome, tipo: tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta })),
     attivita: opzioneAttivita?.etichetta || '',
+    prodotti: prodottiAttivi(stato.prodotti),
+    eventi: eventiAttivi(stato.eventi),
+    ruoli: Object.fromEntries(stato.defLav.ruoli.map((r) => [r.id, r.etichetta])),
+    perAnno: (() => {
+      const y = Number(oggiIso().slice(0, 4));
+      return eventiPerAnno(stato.eventi, [y - 2, y - 1, y]);
+    })(),
     ...(id === 'stato-sicurezza'
       ? {
           piano: piano(),
@@ -1553,6 +1801,10 @@ async function instrada() {
   if (rotta === 'attrezzatura') return schermataAttrezzatura(param);
   if (rotta === 'attrezzatura-modifica') return schermataModificaAttrezzatura(param);
   if (rotta === 'controllo') return schermataControllo(param, extra);
+  if (rotta === 'prodotti') return schermataProdotti();
+  if (rotta === 'prodotto') return schermataProdotto(param);
+  if (rotta === 'eventi') return schermataEventi();
+  if (rotta === 'evento') return schermataEvento(param);
   if (rotta === 'documenti') return schermataDocumenti();
   if (rotta === 'documento') return schermataDocumento(param, extra);
   return schermataOggi();

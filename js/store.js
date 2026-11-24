@@ -3,8 +3,8 @@
 // da sostituire per passare a Supabase: il resto dell'app usa solo queste funzioni.
 
 const DB_NOME = 'safetydoc';
-const DB_VERSIONE = 3;
-const STORES = ['profilo', 'adempimenti', 'lavoratori', 'registri', 'attrezzature', 'controlli', 'allegati', 'meta'];
+const DB_VERSIONE = 4;
+const STORES = ['profilo', 'adempimenti', 'lavoratori', 'registri', 'attrezzature', 'controlli', 'prodotti', 'eventi', 'allegati', 'meta'];
 export const ID_PROFILO = 'profilo-impresa';
 
 let dbPromise;

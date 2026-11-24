@@ -1,5 +1,5 @@
 {
-  "versione": "0.5.0",
+  "versione": "0.6.0",
   "aggiornato": "2026-11-24",
   "avvertenza": "Bozza da validare da un esperto prima dell'uso reale. Le voci con 'daVerificare' richiedono un controllo sulla norma vigente.",
   "categorie": {
@@ -7,7 +7,8 @@
     "sicurezza": "Sicurezza di base",
     "lavorazioni": "Le tue lavorazioni",
     "ambiente": "Rifiuti e ambiente",
-    "privacy": "Privacy e dati"
+    "privacy": "Privacy e dati",
+    "alimenti": "Alimenti e HACCP"
   },
   "schede": [
     {
@@ -695,19 +696,44 @@
       "priorita": 2
     },
     {
+      "id": "registro-eventi",
+      "categoria": "sicurezza",
+      "titolo": "Registro di infortuni e quasi incidenti",
+      "priorita": 2,
+      "cosaE": "Un elenco di tutto quello che è successo: infortuni, piccole medicazioni e «quasi incidenti», cioè le volte in cui poteva succedere qualcosa ma è andata bene.",
+      "perche": "Ogni quasi incidente è un avvertimento gratuito: annotarlo e capirne la causa evita l'infortunio vero. Dopo un infortunio importante il DVR va rivisto.",
+      "riferimento": "D.Lgs. 81/2008 artt. 18 c. 1 lett. r e 29 c. 3; DPR 1124/1965 art. 53",
+      "come": [
+        "Annota ogni evento in «Infortuni e quasi incidenti»: cosa è successo, dove, perché.",
+        "Per gli infortuni con assenza di oltre 3 giorni fai la denuncia all'INAIL entro 2 giorni dal certificato medico; per morte o pericolo di morte entro 24 ore.",
+        "Per le assenze di almeno un giorno è obbligatoria la comunicazione a fini statistici all'INAIL.",
+        "Per ogni evento decidi una misura (riparare, formare, cambiare procedura) e segnala quando è fatta.",
+        "Dopo un infortunio significativo rivedi il DVR."
+      ],
+      "notaScadenza": "Il vecchio registro infortuni cartaceo non è più obbligatorio dal 2015, ma tenere traccia degli eventi resta il modo migliore per prevenirli.",
+      "chi": "Tu, con il preposto e l'RSPP.",
+      "quando": "Ogni volta che succede qualcosa.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      }
+    },
+    {
       "id": "duvri",
       "categoria": "sicurezza",
-      "titolo": "Ditte esterne nella tua sede (DUVRI)",
-      "cosaE": "Quando fai lavorare un'altra ditta nella tua sede, dovete coordinarvi sui rischi.",
-      "perche": "Il committente deve verificare la ditta e valutare i rischi delle interferenze.",
-      "riferimento": "D.Lgs. 81/2008 art. 26",
+      "titolo": "Ditte esterne nella tua sede (appalti e DUVRI)",
+      "cosaE": "Quando fai lavorare un'altra ditta o un lavoratore autonomo nella tua sede (manutenzioni, pulizie, impianti, lavori edili), sei il committente: devi controllare chi entra e coordinarti con lui sui rischi.",
+      "perche": "Se la ditta non è idonea o non è informata sui rischi del tuo locale, in caso di infortunio rispondi anche tu.",
+      "riferimento": "D.Lgs. 81/2008 art. 26 e Allegato XVII",
       "come": [
-        "Chiedi alla ditta la visura e l'autocertificazione dei requisiti.",
-        "Informala sui rischi della tua sede.",
-        "Prepara il DUVRI con i costi della sicurezza, quando richiesto."
+        "Prima di affidare il lavoro controlla che la ditta sia idonea: visura camerale, autocertificazione dei requisiti e DURC. Per i lavori edili servono i documenti dell'Allegato XVII.",
+        "Dai alla ditta le informazioni sui rischi della tua sede e sulle regole di emergenza (modello «Informazioni sui rischi per le ditte esterne»).",
+        "Prima dell'inizio fate un incontro di coordinamento e scrivete un breve verbale.",
+        "Prepara il DUVRI e indica nel contratto i costi della sicurezza. Non serve per servizi intellettuali, sole forniture di materiali o attrezzature e lavori che durano non più di 5 uomini-giorno, se non ci sono rischi particolari (incendio elevato, ambienti confinati, amianto, cancerogeni, esplosione).",
+        "Controlla che il personale della ditta abbia la tessera di riconoscimento con foto."
       ],
-      "chi": "Tu.",
-      "quando": "A ogni nuovo appalto.",
+      "chi": "Tu, con il tuo RSPP.",
+      "quando": "A ogni nuovo lavoro affidato a ditte esterne o autonomi.",
       "tipoScadenza": "evento",
       "attivaSe": {
         "all": [
@@ -723,25 +749,76 @@
       "priorita": 2
     },
     {
-      "id": "tutele-particolari",
+      "id": "appalti-presso-clienti",
       "categoria": "sicurezza",
-      "titolo": "Minori, gravidanza e allattamento",
-      "cosaE": "Per minorenni e lavoratrici in gravidanza o allattamento ci sono lavori vietati e tutele aggiuntive.",
-      "perche": "Lo prevedono norme specifiche a loro tutela.",
-      "riferimento": "D.Lgs. 151/2001; L. 977/1967",
+      "titolo": "Lavori nella sede dei clienti (sei tu la ditta esterna)",
+      "priorita": 2,
+      "cosaE": "Quando lavori dentro l'azienda, il negozio o l'ufficio di un cliente, sei tu la ditta esterna: il cliente ti chiederà documenti e dovrete coordinarvi sui rischi.",
+      "perche": "Senza documenti in ordine il cliente non può farti lavorare, e i rischi delle interferenze vanno gestiti insieme.",
+      "riferimento": "D.Lgs. 81/2008 artt. 21 e 26",
       "come": [
-        "Aggiorna il DVR con la valutazione specifica.",
-        "Sposta la lavoratrice a mansioni compatibili quando serve.",
-        "Per i minori verifica i lavori vietati e la visita medica."
+        "Tieni pronti visura camerale, DURC e l'autocertificazione dei requisiti (modello «Autocertificazione di idoneità tecnico-professionale»).",
+        "Chiedi al cliente le informazioni sui rischi del suo locale e sulle regole di emergenza, e dagli quelle sui rischi che porti tu (macchine, prodotti, rumore, polveri).",
+        "Partecipa all'incontro di coordinamento e firma il DUVRI quando c'è.",
+        "Dai ai lavoratori la tessera di riconoscimento con foto, nome e datore di lavoro. Anche i lavoratori autonomi devono averla.",
+        "Se il lavoro è in un cantiere edile serve anche il POS."
       ],
-      "chi": "Tu, con RSPP e medico competente.",
-      "quando": "A ogni comunicazione di gravidanza o assunzione di un minore.",
+      "chi": "Tu.",
+      "quando": "A ogni lavoro presso un cliente.",
       "tipoScadenza": "evento",
       "attivaSe": {
-        "q": "tutele_particolari",
+        "q": "lavori_presso_clienti",
+        "eq": true
+      }
+    },
+    {
+      "id": "lavoratrici-madri",
+      "categoria": "sicurezza",
+      "titolo": "Gravidanza e allattamento: valutazione dei rischi",
+      "priorita": 2,
+      "cosaE": "Devi sapere in anticipo quali lavori della tua impresa sono vietati o rischiosi per una lavoratrice in gravidanza o che allatta, e cosa farai quando te lo comunica.",
+      "perche": "La legge chiede di valutare questi rischi nel DVR e di informare tutte le lavoratrici, prima che ci sia una gravidanza.",
+      "riferimento": "D.Lgs. 151/2001 artt. 7, 11, 12, 17, 53 e Allegati A, B e C; D.Lgs. 81/2008 art. 28",
+      "come": [
+        "Valuta con RSPP e medico competente quali mansioni espongono a rischi per gravidanza e allattamento (pesi, prodotti chimici, agenti biologici, rumore, vibrazioni, scale, lavoro in piedi, notte, guida).",
+        "Scrivi nel DVR la valutazione e le mansioni alternative possibili.",
+        "Informa tutte le lavoratrici e l'RLS sui risultati (modello «Informativa per le lavoratrici»).",
+        "Quando una lavoratrice ti comunica la gravidanza, spostala subito a un lavoro compatibile, senza ridurle lo stipendio.",
+        "Se non c'è un lavoro compatibile, comunicalo all'Ispettorato territoriale del lavoro per l'astensione anticipata.",
+        "Il lavoro notturno (dalle 24 alle 6) è vietato dall'inizio della gravidanza fino a un anno di età del bambino."
+      ],
+      "chi": "Tu, con RSPP e medico competente.",
+      "quando": "Con il DVR, e subito a ogni comunicazione di gravidanza.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "fatto": "haDipendenti"
+      },
+      "daVerificare": "Elenco dei lavori vietati e periodi di applicazione (gravidanza, fino a 7 mesi dopo il parto) da confermare con il medico competente per le singole mansioni."
+    },
+    {
+      "id": "lavoratori-minori",
+      "categoria": "sicurezza",
+      "titolo": "Lavoratori minorenni",
+      "priorita": 1,
+      "cosaE": "Per chi ha meno di 18 anni, anche apprendista o tirocinante, ci sono lavori vietati, orari ridotti e controlli medici.",
+      "perche": "Gli adolescenti sono più esposti agli infortuni: la legge vieta alcune lavorazioni e chiede una valutazione dei rischi prima di farli lavorare.",
+      "riferimento": "L. 977/1967 come modificata dal D.Lgs. 345/1999 e dal D.Lgs. 262/2000 (Allegato I); D.Lgs. 81/2008 art. 28",
+      "come": [
+        "Prima di farlo lavorare, valuta i rischi della sua mansione tenendo conto dell'età e dell'esperienza.",
+        "Controlla che non svolga lavori vietati (Allegato I): tra questi agenti chimici e cancerogeni pericolosi, rumore elevato, molte macchine pericolose, lavori in quota e in ambienti confinati, salvo le eccezioni per la formazione.",
+        "Informa i genitori o chi ne ha la responsabilità sui rischi e sulle misure (modello «Informativa per il lavoratore minorenne e la famiglia»).",
+        "Fai fare la visita medica prima dell'inizio e poi con la periodicità indicata dal medico.",
+        "Rispetta gli orari: al massimo 8 ore al giorno e 40 a settimana, pausa di almeno un'ora dopo 4 ore e mezza, niente lavoro notturno.",
+        "Formazione e addestramento devono essere più accurati, con un preposto che lo segue."
+      ],
+      "chi": "Tu, con RSPP e medico competente.",
+      "quando": "Prima dell'assunzione di ogni minorenne.",
+      "tipoScadenza": "evento",
+      "attivaSe": {
+        "q": "minori",
         "eq": true
       },
-      "priorita": 2
+      "daVerificare": "Durata minima della pausa e regime delle visite mediche per i minori da confermare sulla norma vigente."
     },
     {
       "id": "patente-crediti",
@@ -774,9 +851,11 @@
       "perche": "Va consegnato prima di iniziare i lavori in cantiere.",
       "riferimento": "D.Lgs. 81/2008 artt. 89, 96 e Allegato XV",
       "come": [
-        "Prepara un POS per ogni cantiere, con lavorazioni, attrezzature e lavoratori.",
-        "Consegnalo all'impresa affidataria o al coordinatore prima di iniziare.",
-        "Porta con te in cantiere tessere di riconoscimento e attestati."
+        "Prepara un POS per ogni cantiere: dati dell'impresa e del cantiere, lavorazioni, lavoratori e incarichi, attrezzature e opere provvisionali, prodotti pericolosi con le schede di sicurezza, rumore, misure e DPI, formazione (Allegato XV, punto 3.2.1).",
+        "Se c'è un coordinatore per la sicurezza, leggi il suo piano (PSC) e indica nel POS le misure in più che applichi.",
+        "Consegna il POS all'impresa affidataria o al coordinatore prima di iniziare: i lavori non possono partire senza.",
+        "Porta in cantiere tessere di riconoscimento, attestati e libretti delle attrezzature.",
+        "Aggiorna il POS se cambiano lavorazioni, attrezzature o squadra."
       ],
       "chi": "Tu, con il tuo RSPP.",
       "quando": "A ogni nuovo cantiere.",
@@ -994,6 +1073,30 @@
         "eq": true
       },
       "priorita": 2
+    },
+    {
+      "id": "schede-sicurezza",
+      "categoria": "lavorazioni",
+      "titolo": "Elenco dei prodotti chimici e schede di sicurezza",
+      "priorita": 2,
+      "cosaE": "La scheda di sicurezza (SDS) è il documento in 16 sezioni che il fornitore deve darti per ogni prodotto pericoloso: dice quali pericoli ha, come usarlo, come conservarlo e quali protezioni servono.",
+      "perche": "Senza le schede non puoi valutare il rischio chimico né scegliere guanti e maschere giusti. I lavoratori devono poterle consultare.",
+      "riferimento": "Reg. CE 1907/2006 (REACH) art. 31; Reg. CE 1272/2008 (CLP); D.Lgs. 81/2008 artt. 223 e 227",
+      "come": [
+        "Fai l'elenco di tutti i prodotti che usi: vernici, solventi, colle, detergenti, oli, gas, prodotti per capelli, disinfettanti. Puoi farlo in safetyDoc in «Prodotti chimici».",
+        "Per ognuno chiedi al fornitore la scheda di sicurezza in italiano e aggiornata; fotografala o allega il PDF.",
+        "Guarda i pittogrammi dell'etichetta e la sezione 2 (frasi H): segnala quelli più pericolosi.",
+        "Leggi la sezione 8: lì trovi i DPI da usare (guanti, maschera, occhiali).",
+        "Conserva i prodotti come dice la sezione 7 e tieni le schede dove i lavoratori possono leggerle.",
+        "Se un prodotto ha frasi H340, H350 o H360 (può causare tumori, danni genetici o alla fertilità), parlane subito con il tuo RSPP: valuta se sostituirlo."
+      ],
+      "chi": "Tu, con il tuo RSPP.",
+      "quando": "Subito, e a ogni nuovo prodotto o nuova versione della scheda.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "chimici",
+        "eq": true
+      }
     },
     {
       "id": "amianto",
@@ -1450,6 +1553,117 @@
       "attivaSe": {
         "q": "numero_lavoratori",
         "gte": 50
+      }
+    },
+    {
+      "id": "registrazione-alimentare",
+      "categoria": "alimenti",
+      "titolo": "Registrazione sanitaria dell'attività alimentare",
+      "priorita": 1,
+      "cosaE": "Chi produce, prepara, conserva, trasporta, vende o somministra alimenti deve essere registrato presso l'ASL.",
+      "perche": "Senza registrazione l'attività alimentare non può essere svolta.",
+      "riferimento": "Reg. CE 852/2004 art. 6; Reg. CE 853/2004 (riconoscimento per alcuni prodotti di origine animale)",
+      "come": [
+        "Presenta la notifica sanitaria (SCIA) al SUAP del Comune, che la trasmette all'ASL.",
+        "Se cambi attività, locali o titolare, presenta l'aggiornamento.",
+        "Alcune attività all'ingrosso di carne, pesce, latte o uova hanno bisogno del riconoscimento: chiedi all'ASL se è il tuo caso.",
+        "Conserva la ricevuta e allegala qui."
+      ],
+      "chi": "Tu, di solito con il consulente o l'associazione.",
+      "quando": "Prima di iniziare, e a ogni modifica.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "alimenti",
+        "eq": true
+      }
+    },
+    {
+      "id": "haccp-autocontrollo",
+      "categoria": "alimenti",
+      "titolo": "Piano di autocontrollo HACCP",
+      "priorita": 1,
+      "cosaE": "Il manuale che descrive come tieni sotto controllo l'igiene: pulizie, temperature, fornitori, infestanti, acqua, conservazione e gestione dei prodotti non conformi.",
+      "perche": "È obbligatorio per tutte le imprese alimentari, anche piccole (con procedure semplificate).",
+      "riferimento": "Reg. CE 852/2004 art. 5 e Allegato II; Reg. CE 1935/2004 (materiali a contatto con alimenti)",
+      "come": [
+        "Fai preparare o aggiorna il manuale adatto alla tua attività.",
+        "Tieni le registrazioni previste: temperature di frigoriferi e congelatori, pulizie, controllo merci in arrivo (modello «Registro delle temperature»).",
+        "Affida il controllo di topi e insetti a una ditta o fallo come previsto dal manuale.",
+        "Usa solo contenitori, pellicole e attrezzi adatti al contatto con alimenti.",
+        "Rivedi il manuale quando cambiano prodotti, locali o attrezzature."
+      ],
+      "notaScadenza": "La revisione annuale è buona prassi: la legge chiede di aggiornare il piano quando cambia qualcosa.",
+      "chi": "Tu, con il consulente HACCP.",
+      "quando": "Prima di iniziare; revisione consigliata ogni anno.",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 12,
+      "attivaSe": {
+        "q": "alimenti",
+        "eq": true
+      }
+    },
+    {
+      "id": "formazione-alimentaristi",
+      "categoria": "alimenti",
+      "titolo": "Formazione degli addetti agli alimenti",
+      "priorita": 2,
+      "cosaE": "Chi manipola alimenti, compreso il titolare, deve essere formato sull'igiene alimentare (il vecchio «libretto sanitario» non esiste più).",
+      "perche": "Lo chiede il regolamento europeo; durata e rinnovo li stabilisce ogni Regione.",
+      "riferimento": "Reg. CE 852/2004 Allegato II cap. XII; normativa della Regione",
+      "come": [
+        "Fai fare il corso a te e a chi tocca gli alimenti prima di iniziare.",
+        "Segna in safetyDoc il ruolo «Lavora con gli alimenti» per i lavoratori interessati: ti ricorderemo il rinnovo.",
+        "Conserva gli attestati e allegali."
+      ],
+      "chi": "Ente formativo riconosciuto dalla Regione.",
+      "quando": "Prima di iniziare e alla scadenza fissata dalla Regione.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "alimenti",
+        "eq": true
+      },
+      "daVerificare": "Durata del corso e periodicità del rinnovo secondo la delibera vigente della Regione Campania."
+    },
+    {
+      "id": "allergeni",
+      "categoria": "alimenti",
+      "titolo": "Informazioni sugli allergeni per i clienti",
+      "priorita": 2,
+      "cosaE": "Devi poter dire al cliente quali dei 14 allergeni principali sono presenti in ogni alimento che vendi o servi, anche sfuso o preparato al momento.",
+      "perche": "Per una persona allergica un errore può essere molto grave; la mancata informazione è sanzionata.",
+      "riferimento": "Reg. UE 1169/2011 artt. 9 e 44 e Allegato II; D.Lgs. 231/2017",
+      "come": [
+        "Per ogni piatto o prodotto annota quali allergeni contiene (ricette, etichette dei fornitori).",
+        "Esponi un cartello o tieni un registro consultabile e forma il personale a rispondere (modello «Cartello degli allergeni»).",
+        "Evita le contaminazioni: utensili e superfici separati quando prepari piatti senza un allergene."
+      ],
+      "chi": "Tu e il personale.",
+      "quando": "Subito, e a ogni cambio di menù o fornitore.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "alimenti",
+        "eq": true
+      }
+    },
+    {
+      "id": "rintracciabilita",
+      "categoria": "alimenti",
+      "titolo": "Rintracciabilità e ritiro dei prodotti",
+      "priorita": 3,
+      "cosaE": "Devi sapere da chi hai comprato ogni prodotto (e a chi lo hai venduto, se vendi ad altre imprese), per poterlo ritirare se è pericoloso.",
+      "perche": "In caso di allerta alimentare devi ritirare subito i prodotti e avvisare l'ASL.",
+      "riferimento": "Reg. CE 178/2002 artt. 18 e 19",
+      "come": [
+        "Conserva fatture e documenti di trasporto dei fornitori.",
+        "Scrivi nel manuale HACCP la procedura di ritiro e richiamo.",
+        "Se scopri un prodotto non sicuro, toglilo dalla vendita e avvisa l'ASL."
+      ],
+      "chi": "Tu.",
+      "quando": "Sempre.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "alimenti",
+        "eq": true
       }
     }
   ]
