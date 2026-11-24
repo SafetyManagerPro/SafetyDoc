@@ -33,6 +33,7 @@ import {
   dataDaMese
 } from './engine.js';
 import { linkAiuto } from './aiuto.js';
+import { immaginiPerStampa } from './allegati.js';
 import { LINGUE } from './lingue.js';
 import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport } from './allegati.js';
 import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
@@ -41,7 +42,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.13.0';
+export const VERSIONE_APP = '0.14.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -161,9 +162,16 @@ function situazioneMacchina(a) {
 
 const allegatiDi = (tipo, id) => (id ? stato.allegati.filter((a) => !a.deleted && a.collegatoTipo === tipo && a.collegatoId === id) : []);
 
-function campoAllegato() {
-  return `<label>Allega foto o PDF <small>(attestato, verbale, documento firmato: puoi anche scattare una foto)</small>
-    <input class="campo" type="file" name="allegato" accept="image/*,application/pdf" multiple></label>`;
+function campoAllegato(tipo) {
+  const categorie = stato.defAttr?.categorieAllegati?.[tipo];
+  return `<label>Allega foto o PDF <small>(attestato, verbale, libretto, documento firmato: puoi anche scattare una foto)</small>
+    <input class="campo" type="file" name="allegato" accept="image/*,application/pdf" multiple></label>
+    ${
+      categorie
+        ? `<div class="allegato-dati"><label>Che documento è?<select class="campo" name="categoria">${categorie.map((c) => `<option value="${esc(c.id)}">${esc(c.etichetta)}</option>`).join('')}</select></label>
+        <label>Pagine da stampare nei documenti <small>(solo PDF, es. «1-4, 12»; vuoto = tutte fino a 30)</small><input class="campo" name="pagine" inputmode="numeric" placeholder="tutte"></label></div>`
+        : ''
+    }`;
 }
 
 async function salvaAllegatiDa(form, tipo, id) {
@@ -172,7 +180,9 @@ async function salvaAllegatiDa(form, tipo, id) {
   for (const f of files) {
     try {
       const p = await preparaFile(f);
-      await store.salva('allegati', { collegatoTipo: tipo, collegatoId: id, nome: p.nome, tipo: p.tipo, dimensione: p.dimensione, file: p.file });
+      const categoria = form.querySelector('[name="categoria"]')?.value || null;
+      const pagine = form.querySelector('[name="pagine"]')?.value.trim() || '';
+      await store.salva('allegati', { collegatoTipo: tipo, collegatoId: id, nome: p.nome, tipo: p.tipo, dimensione: p.dimensione, file: p.file, categoria, pagine, inStampa: true });
       n++;
     } catch (e) {
       avviso(e.message);
@@ -192,7 +202,43 @@ function elencoAllegati(tipo, id) {
     .join('')}</ul>`;
 }
 
+const etichettaCategoria = (tipo, id) => stato.defAttr?.categorieAllegati?.[tipo]?.find((c) => c.id === id)?.etichetta || '';
+
+/** Elenco degli allegati con categoria, pagine da stampare e inclusione nei documenti, modificabili. */
+function elencoAllegatiDettaglio(tipo, id) {
+  const lista = allegatiDi(tipo, id);
+  const categorie = stato.defAttr?.categorieAllegati?.[tipo] || [];
+  if (!lista.length) return '';
+  return `<ul class="allegati allegati--dettaglio">${lista
+    .map(
+      (a) => `<li data-allegato-id="${esc(a.id)}">
+        <button type="button" class="allegato" data-apri="${esc(a.id)}"><span class="allegato__tipo">${a.tipo?.startsWith('image/') ? 'Foto' : 'PDF'}</span> ${esc(a.nome)} <small>${esc(dimensioneLeggibile(a.dimensione))}</small></button>
+        <div class="allegato-dati">
+          <select class="campo" data-modifica="categoria" aria-label="Che documento è">${categorie.map((c) => `<option value="${esc(c.id)}" ${a.categoria === c.id ? 'selected' : ''}>${esc(c.etichetta)}</option>`).join('')}</select>
+          ${a.tipo === 'application/pdf' ? `<input class="campo" data-modifica="pagine" value="${esc(a.pagine || '')}" placeholder="pagine: tutte" aria-label="Pagine da stampare">` : ''}
+          <label class="spunta-semplice"><input type="checkbox" data-modifica="inStampa" ${a.inStampa !== false ? 'checked' : ''}> Stampa nei documenti</label>
+        </div>
+        <button type="button" class="btn btn--testo btn--piccolo" data-togli="${esc(a.id)}">Elimina</button></li>`
+    )
+    .join('')}</ul>`;
+}
+
+function attivaModificheAllegati() {
+  for (const el of app.querySelectorAll('[data-modifica]')) {
+    el.addEventListener('change', async () => {
+      const id = el.closest('[data-allegato-id]').dataset.allegatoId;
+      const a = stato.allegati.find((x) => x.id === id);
+      if (!a) return;
+      const campo = el.dataset.modifica;
+      await store.salva('allegati', { ...a, [campo]: el.type === 'checkbox' ? el.checked : el.value.trim() });
+      await ricarica();
+      avviso('Allegato aggiornato.');
+    });
+  }
+}
+
 function attivaAllegati(ridisegna) {
+  attivaModificheAllegati();
   for (const b of app.querySelectorAll('[data-apri]')) {
     b.addEventListener('click', () => {
       const a = stato.allegati.find((x) => x.id === b.dataset.apri);
@@ -900,6 +946,7 @@ function attivaFirme({ modello, lavoratore, requisito, registro }) {
   };
   collega();
   barra.querySelector('button').addEventListener('click', async () => {
+    await stato.attesaAllegati;
     const copia = app.querySelector('.doc').cloneNode(true);
     copia.querySelectorAll('.solo-schermo').forEach((x) => x.remove());
     const css = await fetch('css/style.css').then((r) => r.text()).catch(() => '');
@@ -986,12 +1033,12 @@ async function schermataProdotto(id) {
         <label>Frasi H <small>(sezione 2 della scheda, es. «H225 H319 H350»)</small><input class="campo" name="frasiH" value="${esc(p.frasiH || '')}"></label>
         <label>DPI indicati <small>(sezione 8: guanti, maschera, occhiali)</small><input class="campo" name="dpi" value="${esc(p.dpi || '')}"></label>
         <label>Data della scheda di sicurezza <small>(in alto o in fondo alla scheda)</small><input class="campo" type="date" name="dataSds" max="${oggiIso()}" value="${esc(p.dataSds || '')}"></label>
-        ${campoAllegato()}
+        ${campoAllegato('prodotto')}
         ${nuovo ? '' : `<label class="spunta-semplice"><input type="checkbox" name="dismesso" ${p.dismesso ? 'checked' : ''}> Non lo uso più</label>`}
         <button class="btn btn--primario btn--grande" type="submit">Salva</button>
         ${nuovo ? '' : '<button class="btn btn--testo" type="button" id="elimina">Elimina</button>'}
       </form>
-      ${nuovo ? '' : `<h2>Scheda di sicurezza e foto</h2>${elencoAllegati('prodotto', p.id) || '<p>Nessun documento allegato: fotografa la scheda o allega il PDF.</p>'}`}
+      ${nuovo ? '' : `<h2>Scheda di sicurezza e foto</h2>${elencoAllegatiDettaglio('prodotto', p.id) || '<p>Nessun documento allegato: fotografa la scheda o allega il PDF.</p>'}`}
     </section>`;
   if (!nuovo) attivaAllegati(() => schermataProdotto(id));
   app.querySelector('#prodotto').addEventListener('submit', async (ev) => {
@@ -1604,12 +1651,32 @@ async function schermataAttrezzatura(id) {
             <span class="voce__freccia" aria-hidden="true">›</span></a>`;
         })
         .join('')}</div>
+      <h2>Pericoli e protezioni</h2>
+      <form id="pericoli-macchina">
+        <p class="nota">Li trovi nel libretto d'uso e manutenzione, nel capitolo sulla sicurezza. Finiscono nel DVR, nel POS e nei verbali di addestramento.${!a.pericoli ? ' Abbiamo spuntato quelli tipici di questo tipo di attrezzatura: correggili.' : ''}</p>
+        <fieldset class="spunte spunte--compatte"><legend>Pericoli</legend>
+          ${stato.defAttr.pericoli.map((x) => `<label class="spunta"><input type="checkbox" name="pericoli" value="${esc(x.id)}" ${(a.pericoli || s.tipo?.pericoli || []).includes(x.id) ? 'checked' : ''}><span>${esc(x.etichetta)}</span></label>`).join('')}
+        </fieldset>
+        <fieldset class="spunte spunte--compatte"><legend>DPI da usare</legend>
+          ${stato.defAttr.dpi.map((x) => `<label class="spunta"><input type="checkbox" name="dpi" value="${esc(x)}" ${(a.dpi || s.tipo?.dpi || []).includes(x) ? 'checked' : ''}><span>${esc(x)}</span></label>`).join('')}
+        </fieldset>
+        <label>Istruzioni di sicurezza principali <small>(dal libretto: controlli prima dell'uso, divieti, cosa fare in caso di guasto)</small>
+          <textarea class="campo" name="istruzioni" rows="3">${esc(a.istruzioni || '')}</textarea></label>
+        <button class="btn btn--secondario" type="submit">Salva pericoli e protezioni</button>
+      </form>
       <h2>Libretto e documenti</h2>
-      ${elencoAllegati('attrezzatura', a.id) || '<p>Nessun documento allegato.</p>'}
-      <form id="documenti-macchina">${campoAllegato()}<button class="btn btn--secondario" type="submit">Allega</button></form>
+      ${elencoAllegatiDettaglio('attrezzatura', a.id) || '<p>Nessun documento allegato. Carica il libretto d\'uso e manutenzione (PDF o foto delle pagine) e la dichiarazione CE.</p>'}
+      <form id="documenti-macchina">${campoAllegato('attrezzatura')}<button class="btn btn--secondario" type="submit">Allega</button></form>
       <a class="btn btn--secondario" href="#/attrezzatura-modifica/${esc(a.id)}">Modifica i dati</a>
     </section>`;
   attivaAllegati(() => schermataAttrezzatura(id));
+  app.querySelector('#pericoli-macchina').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    await store.salva('attrezzature', { ...a, pericoli: f.getAll('pericoli'), dpi: f.getAll('dpi'), istruzioni: String(f.get('istruzioni') || '').trim() });
+    await ricarica();
+    avviso('Pericoli e protezioni salvati.');
+  });
   app.querySelector('#documenti-macchina').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const n = await salvaAllegatiDa(ev.target, 'attrezzatura', a.id);
@@ -1802,7 +1869,8 @@ function datiDocumento(l, registro, opzioni) {
     dvr: stato.dvr,
     ctx: ctx(),
     lavoratori: attivi(),
-    attrezzature: macchine().map((a) => ({ nome: a.nome, tipo: tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta })),
+    attrezzature: macchine().map((a) => ({ id: a.id, nome: a.nome, tipo: tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta, pericoli: a.pericoli || tipoAttrezzatura(stato.defAttr, a.tipo)?.pericoli || [], dpi: a.dpi || tipoAttrezzatura(stato.defAttr, a.tipo)?.dpi || [], istruzioni: a.istruzioni || '' })),
+    etichettePericoli: Object.fromEntries((stato.defAttr.pericoli || []).map((x) => [x.id, x.etichetta])),
     attivita: opzioneAttivita?.etichetta || '',
     prodotti: prodottiAttivi(stato.prodotti),
     eventi: eventiAttivi(stato.eventi),
@@ -1810,11 +1878,67 @@ function datiDocumento(l, registro, opzioni) {
     perAnno: eventiPerAnno(stato.eventi, [y - 2, y - 1, y]),
     piano: piano(),
     situazioni: haDipendenti() ? attivi().map(situazione) : [],
-    macchine: macchine().map(situazioneMacchina),
+    macchine: macchine().map((a) => {
+      const sm = situazioneMacchina(a);
+      const t = tipoAttrezzatura(stato.defAttr, a.tipo);
+      return { ...sm, attrezzatura: { ...a, pericoli: a.pericoli || t?.pericoli || [], dpi: a.dpi || t?.dpi || [] } };
+    }),
     allegati: contaAllegati(),
     lavorazioni: stato.lavorazioni,
     opzioni
   };
+}
+
+/** Allegati da stampare in fondo al documento, numerati A1, A2… */
+function allegatiDelDocumento(m, chiaveDoc, opzioni) {
+  const spec = m.allegati || {};
+  const categorie = spec.categorie || null;
+  const stampabili = (a) => !a.deleted && a.inStampa !== false && a.file !== null && (a.tipo?.startsWith('image/') || a.tipo === 'application/pdf');
+  const scelta = (fn) => (fn ? fn(opzioni || {}) : null);
+  const out = [];
+  const aggiungi = (a, origine, titolo) => out.push({ id: a.id, origine, collegatoId: a.collegatoId, titolo, categoria: etichettaCategoria(a.collegatoTipo, a.categoria) || 'Documento', nome: a.nome });
+  const filtroA = scelta(spec.attrezzature);
+  const nomiA = spec.attrezzatureNomi ? new Set(spec.attrezzatureNomi(opzioni || {})) : null;
+  if (filtroA || nomiA) {
+    for (const mac of macchine()) {
+      const ok = nomiA ? (nomiA.size ? nomiA.has(mac.nome) : true) : filtroA === true || (typeof filtroA === 'function' && filtroA(mac.id));
+      if (!ok) continue;
+      for (const a of stato.allegati.filter((x) => x.collegatoTipo === 'attrezzatura' && x.collegatoId === mac.id && stampabili(x) && (!categorie || categorie.includes(x.categoria || 'altro'))))
+        aggiungi(a, 'attrezzatura', mac.nome);
+    }
+  }
+  const filtroP = scelta(spec.prodotti);
+  if (filtroP) {
+    for (const pr of prodottiAttivi(stato.prodotti)) {
+      if (!(filtroP === true || (typeof filtroP === 'function' && filtroP(pr.id)))) continue;
+      for (const a of stato.allegati.filter((x) => x.collegatoTipo === 'prodotto' && x.collegatoId === pr.id && stampabili(x) && (x.categoria || 'sds') === 'sds')) aggiungi(a, 'prodotto', pr.nome);
+    }
+  }
+  for (const a of stato.allegati.filter((x) => x.collegatoTipo === 'documento' && x.collegatoId === chiaveDoc && stampabili(x))) aggiungi(a, 'documento', 'Questo documento');
+  return out.map((x, i) => ({ ...x, n: `A${i + 1}` }));
+}
+
+const cacheStampa = new Map();
+
+/** Inserisce nelle sezioni «Allegato» le immagini e le pagine dei PDF. */
+function riempiAllegati() {
+  const lavori = [...app.querySelectorAll('.doc [data-allegato]')].map(async (fig) => {
+    const a = stato.allegati.find((x) => x.id === fig.dataset.allegato);
+    const box = fig.querySelector('.doc__allegato-pagine');
+    const chiave = `${a?.id}:${a?.updatedAt}:${a?.pagine || ''}`;
+    try {
+      if (!cacheStampa.has(chiave)) cacheStampa.set(chiave, immaginiPerStampa(a));
+      const r = await cacheStampa.get(chiave);
+      if (!fig.isConnected) return;
+      box.innerHTML =
+        r.immagini.map((src, i) => `<img class="doc__pagina" src="${src}" alt="${esc(a.nome)} pagina ${r.scelte[i]}">`).join('') +
+        (r.totale > r.scelte.length ? `<p class="doc__nota">Stampate le pagine ${r.scelte.join(', ')} di ${r.totale}. Per scegliere altre pagine modifica l'allegato nella sua scheda.</p>` : '');
+    } catch (e) {
+      cacheStampa.delete(chiave);
+      box.innerHTML = `<p class="doc__nota">Non è stato possibile preparare questo file per la stampa: aprilo e stampalo a parte.</p>`;
+    }
+  });
+  return Promise.all(lavori);
 }
 
 /** Campi compilabili di un documento (cantiere, ditta, lavorazioni…). */
@@ -1889,7 +2013,12 @@ async function schermataDocumento(id, lavId) {
     if (c.tipo === 'tabella' && c.iniziali?.length) opzioni[c.id] = c.iniziali;
     else if (c.valore !== undefined && c.valore !== '') opzioni[c.id] = c.valore;
   }
-  const genera = () => generaDocumento(id, datiDocumento(l, registro, opzioni)).html;
+  const genera = () => generaDocumento(id, { ...datiDocumento(l, registro, opzioni), allegatiDoc: allegatiDelDocumento(m, chiaveDoc, opzioni) }).html;
+  let pronti = Promise.resolve();
+  const ridisegna = () => {
+    app.querySelector('.doc').innerHTML = genera();
+    pronti = stato.attesaAllegati = riempiAllegati();
+  };
 
   const firmatiReg = req && l ? storicoRegistri(l.id, req.id, stato.registri).map((r) => elencoAllegati('registro', r.id)).join('') : '';
   const firmati = elencoAllegati('documento', chiaveDoc) + firmatiReg;
@@ -1908,20 +2037,40 @@ async function schermataDocumento(id, lavId) {
         <button class="btn btn--primario btn--grande" id="stampa">Stampa o salva in PDF</button>
         <p class="nota">Puoi anche far firmare qui sul telefono o sul tablet: tocca «Firma qui» sotto ogni firma. Compila prima i dati del documento.</p>
         ${firmati ? `<h2>Copie già firmate</h2>${firmati}` : ''}
+        <details class="opzioni-doc"><summary>Allegati di questo documento</summary>
+          <p class="nota">Planimetrie, libretti di attrezzature delle ditte esterne, misure, documenti della ditta: finiscono in fondo al documento. I libretti delle tue macchine e le schede di sicurezza si caricano nelle loro schede e vengono inseriti da soli.</p>
+          ${elencoAllegatiDettaglio('documento', chiaveDoc)}
+          <form id="allegati-doc">${campoAllegato('documento')}<button class="btn btn--secondario" type="submit">Allega al documento</button></form>
+        </details>
       </div>
       <div class="barra-firma solo-schermo" id="barra-firma" hidden><span></span><button class="btn btn--primario" type="button">Salva il documento firmato</button></div>
       <article class="doc">${genera()}</article>
       <p class="nota solo-schermo">Modello da verificare e adattare con il tuo consulente prima dell'uso.</p>
     </section>`;
-  app.querySelector('#stampa').addEventListener('click', () => window.print());
+  pronti = stato.attesaAllegati = riempiAllegati();
+  app.querySelector('#stampa').addEventListener('click', async (ev) => {
+    ev.target.disabled = true;
+    ev.target.textContent = 'Preparo gli allegati…';
+    await pronti;
+    ev.target.disabled = false;
+    ev.target.textContent = 'Stampa o salva in PDF';
+    window.print();
+  });
   attivaAllegati(() => schermataDocumento(id, lavId));
+  app.querySelector('#allegati-doc').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const n = await salvaAllegatiDa(ev.target, 'documento', chiaveDoc);
+    await ricarica();
+    if (n) avviso('Allegato aggiunto al documento.');
+    schermataDocumento(id, lavId);
+  });
   const firme = attivaFirme({ modello: m, lavoratore: l, requisito: req && l ? req : null, registro });
   const form = app.querySelector('#opzioni-doc');
   if (form) {
     let attesa;
     const aggiorna = () => {
       opzioni = leggiOpzioni(form, defs);
-      app.querySelector('.doc').innerHTML = genera();
+      ridisegna();
       firme.ricollega();
       clearTimeout(attesa);
       attesa = setTimeout(() => store.scriviMeta(chiaveOpzioni, opzioni), 400);

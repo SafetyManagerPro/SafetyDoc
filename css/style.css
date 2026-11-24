@@ -266,6 +266,15 @@ select.campo { appearance: auto; }
 .doc__liv--medio-alto { background: #fbd9b0; }
 .doc__liv--alto { background: #f6c1bd; }
 .doc__spunte { list-style: none; padding-left: 0; }
+.doc__allegati { break-before: page; }
+.doc__allegato { margin: 16px 0; }
+.doc__allegato figcaption { font-size: 0.9rem; margin-bottom: 6px; }
+.doc__pagina { display: block; width: 100%; height: auto; border: 1px solid #ccc; margin: 0 0 10px; }
+.doc__rif-all { white-space: nowrap; font-weight: 700; }
+.allegato-dati { display: grid; gap: 6px; margin: 6px 0; }
+.allegati--dettaglio li { flex-wrap: wrap; }
+.allegati--dettaglio .allegato-dati { flex-basis: 100%; }
+.spunte--compatte label.spunta { min-height: 40px; padding: 8px 10px; }
 .doc__esito { padding: 8px 10px; border-radius: 4px; }
 .doc__esito--verde { background: #d9f0dd; }
 .doc__esito--giallo { background: #fbf3c4; }
@@ -294,6 +303,8 @@ dialog.firma h2 { margin-top: 0; }
   .pagina { max-width: none; padding: 0; }
   .doc { box-shadow: none; padding: 0; margin: 0; font-size: 11pt; }
   .doc__tabella tr { page-break-inside: avoid; }
+  .doc__allegato { break-before: page; margin: 0; }
+  .doc__pagina { max-height: 24cm; width: auto; max-width: 100%; margin: 0 auto 6px; border: 0; break-inside: avoid; }
 }
 
 /* Codice ATECO */

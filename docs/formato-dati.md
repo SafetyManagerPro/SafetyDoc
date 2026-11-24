@@ -50,7 +50,8 @@ Collezioni:
   `esito` (solo per la visita: `idoneo`, `idoneo_prescrizioni`, `non_idoneo_temporaneo`, `non_idoneo`), `dettagli`,
   `note`. Per ogni lavoratore e requisito vale la registrazione con la data più recente. Nessun dato clinico.
 - `attrezzature`: `tipo` (id definiti in `data/attrezzature.json`), `nome`, `marcaModello`, `matricola`,
-  `annoFabbricazione`, `marcaturaCE`, `dismessa`.
+  `annoFabbricazione`, `marcaturaCE`, `dismessa`, `pericoli` (id definiti in `data/attrezzature.json`), `dpi`,
+  `istruzioni` (istruzioni di sicurezza dal libretto). Se mancano si usano quelli tipici del tipo.
 - `controlli`: una registrazione per manutenzione, controllo o verifica: `attrezzaturaId`, `controlloId`, `data`,
   `scadenzaManuale`, `esito` (`positivo`, `con_interventi`, `negativo`), `note`. La periodicità delle verifiche
   dipende da tipo, settore (edilizia, estrazione, siderurgia, porti) ed età della macchina (oltre 10 anni).
@@ -62,7 +63,9 @@ Collezioni:
   `misureFatte`. Nessuna diagnosi: solo i giorni di prognosi che servono per le scadenze INAIL (oltre 3 giorni
   denuncia, da 1 a 3 comunicazione statistica, entro 2 giorni dal certificato).
 - `allegati`: foto e PDF collegati a un'altra voce: `collegatoTipo` (`adempimento`, `registro`, `controllo`,
-  `attrezzatura`, `prodotto`, `evento`, `documento`). I documenti firmati sul telefono sono salvati come HTML (`text/html`) con le firme incluse e collegati alla registrazione del lavoratore o al documento, `collegatoId`, `nome`, `tipo` (MIME), `dimensione`, `file` (Blob). Nel file di backup il
+  `attrezzatura`, `prodotto`, `evento`, `documento`), `categoria` (per le attrezzature `libretto`, `ce`, `pericoli`,
+  `verifica`, `foto`, `altro`; per i prodotti `sds`, `etichetta`; per i documenti `planimetria`, `verbale`…),
+  `pagine` (pagine del PDF da stampare, es. «1-4, 12») e `inStampa` (se finisce negli allegati dei documenti). I documenti firmati sul telefono sono salvati come HTML (`text/html`) con le firme incluse e collegati alla registrazione del lavoratore o al documento, `collegatoId`, `nome`, `tipo` (MIME), `dimensione`, `file` (Blob). Nel file di backup il
   contenuto diventa `datiBase64`; si può scegliere di non includerlo.
 
 ## File di backup

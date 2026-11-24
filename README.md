@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.13.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.14.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -20,7 +20,10 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
    settore ed età (`data/attrezzature.json`).
 7. **Prodotti chimici e registro eventi** – elenco dei prodotti con schede di sicurezza e frasi H; registro di
    infortuni e quasi incidenti con le scadenze INAIL.
-8. **Allegati** – foto e PDF di attestati, verbali e libretti, collegati a ogni voce; le foto vengono rimpicciolite
+8. **Allegati** – foto e PDF di attestati, verbali e libretti, collegati a ogni voce; le foto vengono rimpicciolite.
+   Libretti d'uso e manutenzione, dichiarazioni CE e schede di sicurezza, con le pagine scelte, vengono stampati in
+   fondo a DVR, POS e altri documenti con il rimando «All. A1»; le pagine dei PDF sono preparate con pdf.js
+   (`js/vendor/pdfjs`, licenza Apache 2.0)
    (`js/allegati.js`).
 9. **Documenti** – DVR, POS e DUVRI completi con campi da compilare nell'app (`data/lavorazioni.json`: fasi di cantiere e tipi di appalto), piano di emergenza, valutazione incendio (DM 3/9/2021), valutazioni di rumore, vibrazioni, movimentazione carichi (NIOSH) e rischio chimico con calcolo automatico (`js/calcoli.js`), incarico RSPP, richiesta visite al medico, permesso di lavoro a caldo, informazione art. 36, addestramento, elezione RLS, nomine, designazioni, informative (privacy, gravidanza, minori), stress, allergeni, verbali e registri compilati con i dati e stampabili in PDF (`js/modelli.js`).
 10. **Aiuto a fare** – firma sul telefono o sul tablet dei documenti (la copia firmata resta allegata e registra la

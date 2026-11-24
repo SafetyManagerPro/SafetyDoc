@@ -27,6 +27,18 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "caduta_alto",
+        "ribaltamento",
+        "schiacciamento",
+        "urti",
+        "elettrocuzione"
+      ],
+      "dpi": [
+        "Imbracatura anticaduta",
+        "Casco",
+        "Scarpe antinfortunistiche"
       ]
     },
     {
@@ -53,6 +65,19 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "ribaltamento",
+        "investimento",
+        "urti",
+        "schiacciamento",
+        "rumore",
+        "vibrazioni"
+      ],
+      "dpi": [
+        "Casco",
+        "Scarpe antinfortunistiche",
+        "Indumenti ad alta visibilità"
       ]
     },
     {
@@ -93,6 +118,19 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "ribaltamento",
+        "urti",
+        "schiacciamento",
+        "elettrocuzione",
+        "investimento"
+      ],
+      "dpi": [
+        "Casco",
+        "Scarpe antinfortunistiche",
+        "Indumenti ad alta visibilità",
+        "Guanti contro i rischi meccanici"
       ]
     },
     {
@@ -145,6 +183,16 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "urti",
+        "schiacciamento",
+        "caduta_alto"
+      ],
+      "dpi": [
+        "Casco",
+        "Scarpe antinfortunistiche",
+        "Guanti contro i rischi meccanici"
       ]
     },
     {
@@ -170,6 +218,15 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "urti",
+        "schiacciamento",
+        "caduta_alto"
+      ],
+      "dpi": [
+        "Casco",
+        "Scarpe antinfortunistiche"
       ]
     },
     {
@@ -195,6 +252,16 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "caduta_alto",
+        "urti",
+        "ribaltamento"
+      ],
+      "dpi": [
+        "Imbracatura anticaduta",
+        "Casco",
+        "Scarpe antinfortunistiche"
       ]
     },
     {
@@ -215,6 +282,16 @@
           "tipoScadenza": "periodica",
           "periodicitaMesi": 12
         }
+      ],
+      "pericoli": [
+        "ribaltamento",
+        "investimento",
+        "urti",
+        "schiacciamento"
+      ],
+      "dpi": [
+        "Scarpe antinfortunistiche",
+        "Indumenti ad alta visibilità"
       ]
     },
     {
@@ -234,7 +311,16 @@
           "tipoScadenza": "manuale"
         }
       ],
-      "daVerificare": true
+      "daVerificare": true,
+      "pericoli": [
+        "pressione",
+        "rumore",
+        "ustioni"
+      ],
+      "dpi": [
+        "Otoprotettori",
+        "Occhiali o visiera"
+      ]
     },
     {
       "id": "caldaia",
@@ -259,6 +345,14 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "ustioni",
+        "pressione",
+        "incendio"
+      ],
+      "dpi": [
+        "Guanti e grembiule termici"
       ]
     },
     {
@@ -271,6 +365,17 @@
           "aiuto": "Usa solo ponteggi con autorizzazione ministeriale e libretto. Prima di ogni montaggio controlla gli elementi e prepara il PiMUS; dopo forti venti o lunghe interruzioni ricontrolla.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "caduta_alto",
+        "urti",
+        "ribaltamento"
+      ],
+      "dpi": [
+        "Casco",
+        "Imbracatura anticaduta",
+        "Scarpe antinfortunistiche",
+        "Guanti contro i rischi meccanici"
       ]
     },
     {
@@ -284,6 +389,15 @@
           "tipoScadenza": "periodica",
           "periodicitaMesi": 12
         }
+      ],
+      "pericoli": [
+        "caduta_alto",
+        "ribaltamento",
+        "urti"
+      ],
+      "dpi": [
+        "Casco",
+        "Scarpe antinfortunistiche"
       ]
     },
     {
@@ -297,6 +411,13 @@
           "tipoScadenza": "periodica",
           "periodicitaMesi": 12
         }
+      ],
+      "pericoli": [
+        "caduta_alto",
+        "postura"
+      ],
+      "dpi": [
+        "Scarpe antinfortunistiche"
       ]
     },
     {
@@ -316,6 +437,20 @@
           "tipoScadenza": "periodica",
           "periodicitaMesi": 12
         }
+      ],
+      "pericoli": [
+        "taglio",
+        "schiacciamento",
+        "trascinamento",
+        "proiezione",
+        "elettrocuzione",
+        "rumore"
+      ],
+      "dpi": [
+        "Scarpe antinfortunistiche",
+        "Guanti contro i rischi meccanici",
+        "Occhiali o visiera",
+        "Otoprotettori"
       ]
     },
     {
@@ -329,6 +464,20 @@
           "tipoScadenza": "periodica",
           "periodicitaMesi": 12
         }
+      ],
+      "pericoli": [
+        "taglio",
+        "proiezione",
+        "elettrocuzione",
+        "rumore",
+        "vibrazioni",
+        "polveri"
+      ],
+      "dpi": [
+        "Guanti contro i rischi meccanici",
+        "Occhiali o visiera",
+        "Otoprotettori",
+        "Maschera FFP2/FFP3"
       ]
     },
     {
@@ -347,6 +496,15 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
+      ],
+      "pericoli": [
+        "investimento",
+        "ribaltamento",
+        "vibrazioni",
+        "polveri"
+      ],
+      "dpi": [
+        "Indumenti ad alta visibilità"
       ]
     },
     {
@@ -359,7 +517,160 @@
           "aiuto": "Segui il libretto d'uso e manutenzione del costruttore. Scrivi la data e la prossima manutenzione prevista.",
           "tipoScadenza": "manuale"
         }
-      ]
+      ],
+      "pericoli": [],
+      "dpi": []
     }
-  ]
+  ],
+  "pericoli": [
+    {
+      "id": "taglio",
+      "etichetta": "Tagli e abrasioni"
+    },
+    {
+      "id": "schiacciamento",
+      "etichetta": "Schiacciamento e cesoiamento"
+    },
+    {
+      "id": "trascinamento",
+      "etichetta": "Trascinamento e impigliamento in organi in movimento"
+    },
+    {
+      "id": "proiezione",
+      "etichetta": "Proiezione di schegge, trucioli o materiali"
+    },
+    {
+      "id": "urti",
+      "etichetta": "Urti, colpi e caduta di oggetti"
+    },
+    {
+      "id": "caduta_alto",
+      "etichetta": "Caduta dall'alto"
+    },
+    {
+      "id": "ribaltamento",
+      "etichetta": "Ribaltamento della macchina"
+    },
+    {
+      "id": "investimento",
+      "etichetta": "Investimento"
+    },
+    {
+      "id": "elettrocuzione",
+      "etichetta": "Elettrocuzione"
+    },
+    {
+      "id": "ustioni",
+      "etichetta": "Ustioni e superfici calde"
+    },
+    {
+      "id": "incendio",
+      "etichetta": "Incendio o esplosione"
+    },
+    {
+      "id": "pressione",
+      "etichetta": "Scoppio o rilascio di fluidi in pressione"
+    },
+    {
+      "id": "rumore",
+      "etichetta": "Rumore"
+    },
+    {
+      "id": "vibrazioni",
+      "etichetta": "Vibrazioni"
+    },
+    {
+      "id": "polveri",
+      "etichetta": "Polveri, fumi o gas di scarico"
+    },
+    {
+      "id": "postura",
+      "etichetta": "Posture scorrette e sforzi"
+    }
+  ],
+  "dpi": [
+    "Scarpe antinfortunistiche",
+    "Guanti contro i rischi meccanici",
+    "Occhiali o visiera",
+    "Otoprotettori",
+    "Maschera FFP2/FFP3",
+    "Casco",
+    "Imbracatura anticaduta",
+    "Indumenti ad alta visibilità",
+    "Guanti antivibrazione",
+    "Guanti e grembiule termici",
+    "Guanti isolanti"
+  ],
+  "categorieAllegati": {
+    "attrezzatura": [
+      {
+        "id": "libretto",
+        "etichetta": "Libretto d'uso e manutenzione"
+      },
+      {
+        "id": "ce",
+        "etichetta": "Dichiarazione CE di conformità"
+      },
+      {
+        "id": "pericoli",
+        "etichetta": "Pagine sui pericoli e sulle istruzioni di sicurezza"
+      },
+      {
+        "id": "verifica",
+        "etichetta": "Verbale di verifica o manutenzione"
+      },
+      {
+        "id": "foto",
+        "etichetta": "Foto della macchina o della targhetta"
+      },
+      {
+        "id": "altro",
+        "etichetta": "Altro"
+      }
+    ],
+    "prodotto": [
+      {
+        "id": "sds",
+        "etichetta": "Scheda di sicurezza"
+      },
+      {
+        "id": "etichetta",
+        "etichetta": "Foto dell'etichetta"
+      },
+      {
+        "id": "altro",
+        "etichetta": "Altro"
+      }
+    ],
+    "documento": [
+      {
+        "id": "planimetria",
+        "etichetta": "Planimetria"
+      },
+      {
+        "id": "libretto",
+        "etichetta": "Libretto di attrezzatura (anche di ditte esterne)"
+      },
+      {
+        "id": "sds",
+        "etichetta": "Scheda di sicurezza"
+      },
+      {
+        "id": "verbale",
+        "etichetta": "Verbale, misura o relazione tecnica"
+      },
+      {
+        "id": "documento",
+        "etichetta": "Documento della ditta (visura, DURC, attestati)"
+      },
+      {
+        "id": "foto",
+        "etichetta": "Foto"
+      },
+      {
+        "id": "altro",
+        "etichetta": "Altro"
+      }
+    ]
+  }
 }

@@ -97,6 +97,37 @@ function tabellaCriteri(c) {
       .join('')}</tbody></table>`;
 }
 
+/** Pericoli e DPI di un'attrezzatura in testo. */
+function pericoliMacchina(a, etichette) {
+  const p = (a.pericoli || []).map((id) => (etichette && etichette[id]) || id);
+  return { pericoli: p.join(', '), dpi: (a.dpi || []).join(', '), istruzioni: a.istruzioni || '' };
+}
+
+/** Riferimenti agli allegati di una voce: "All. A1, A3". */
+export function rifAllegati(allegatiDoc, origine, id) {
+  const lista = (allegatiDoc || []).filter((x) => x.origine === origine && x.collegatoId === id);
+  return lista.length ? lista.map((x) => `<span class="doc__rif-all">All. ${esc(x.n)}</span>`).join(', ') : '';
+}
+
+/** Elenco e spazio per le pagine degli allegati, riempito dall'app con le immagini. */
+export function appendiceAllegati(allegatiDoc) {
+  if (!(allegatiDoc || []).length) return '';
+  return `<section class="doc__allegati">
+    <h2>Allegati</h2>
+    <table class="doc__tabella"><thead><tr><th>N.</th><th>Riferito a</th><th>Documento</th><th>File</th></tr></thead><tbody>
+      ${allegatiDoc.map((x) => `<tr><td>${esc(x.n)}</td><td>${esc(x.titolo)}</td><td>${esc(x.categoria)}</td><td><small>${esc(x.nome)}</small></td></tr>`).join('')}
+    </tbody></table>
+    ${allegatiDoc
+      .map(
+        (x) => `<figure class="doc__allegato" data-allegato="${esc(x.id)}">
+        <figcaption><strong>Allegato ${esc(x.n)}</strong> · ${esc(x.titolo)} · ${esc(x.categoria)}</figcaption>
+        <div class="doc__allegato-pagine"><p class="doc__nota solo-schermo">Preparazione delle pagine…</p></div>
+      </figure>`
+      )
+      .join('')}
+  </section>`;
+}
+
 /** I 14 allergeni dell'Allegato II del Reg. UE 1169/2011. */
 export const ALLERGENI = [
   'Cereali contenenti glutine (grano, segale, orzo, avena, farro, kamut)',
@@ -192,6 +223,7 @@ export const MODELLI = [
     id: 'dvr-bozza',
     titolo: 'Documento di valutazione dei rischi (DVR) completo',
     descrizione: 'DVR dettagliato secondo le procedure standardizzate: organigramma, mansioni, criteri, valutazione di ogni rischio con probabilità e danno, attrezzature, prodotti, DPI, formazione, sorveglianza sanitaria, emergenze e programma di miglioramento. Da completare e firmare con RSPP e medico competente.',
+    allegati: { attrezzature: () => true, prodotti: () => true, categorie: ['libretto', 'ce', 'pericoli', 'sds'] },
     ambito: 'impresa',
     attivaSe: { fatto: 'haDipendenti' },
     opzioni: () => [
@@ -306,12 +338,19 @@ export const MODELLI = [
         <h2>7 · Attrezzature di lavoro</h2>
         ${
           (d.macchine || []).length
-            ? `<table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Tipo</th><th>Matricola</th><th>CE</th><th>Controlli</th></tr></thead><tbody>
+            ? `<table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Pericoli e DPI</th><th>Controlli</th><th>Libretto e documenti</th></tr></thead><tbody>
           ${d.macchine
-            .map((s) => `<tr><td>${esc(s.attrezzatura.nome)}</td><td>${esc(s.tipo?.etichetta || '')}</td><td>${esc(s.attrezzatura.matricola || '')}</td><td>${s.attrezzatura.marcaturaCE === false ? 'NO' : 'Sì'}</td><td>${s.voci
-              .map((x) => `${esc(x.controllo.titolo)}: ${x.registro ? `fatto il ${esc(data(x.registro.data))}` : 'da fare'}${x.prossimaScadenza ? `, scade il ${esc(data(x.prossimaScadenza))}` : ''}`)
-              .join('<br>')}</td></tr>`)
-            .join('')}</tbody></table>`
+            .map((s) => {
+              const pm = pericoliMacchina(s.attrezzatura, d.etichettePericoli);
+              return `<tr><td><strong>${esc(s.attrezzatura.nome)}</strong><br><small>${esc([s.tipo?.etichetta, s.attrezzatura.marcaModello, s.attrezzatura.matricola ? `matr. ${s.attrezzatura.matricola}` : '', s.attrezzatura.marcaturaCE === false ? 'SENZA CE' : 'CE'].filter(Boolean).join(' · '))}</small></td>
+              <td>${esc(pm.pericoli) || '<em>da indicare</em>'}${pm.dpi ? `<br><small>DPI: ${esc(pm.dpi)}</small>` : ''}${pm.istruzioni ? `<br><small>${esc(pm.istruzioni)}</small>` : ''}</td>
+              <td><small>${s.voci
+                .map((x) => `${esc(x.controllo.titolo)}: ${x.registro ? `fatto il ${esc(data(x.registro.data))}` : 'da fare'}${x.prossimaScadenza ? `, scade il ${esc(data(x.prossimaScadenza))}` : ''}`)
+                .join('<br>')}</small></td>
+              <td>${rifAllegati(d.allegatiDoc, 'attrezzatura', s.attrezzatura.id) || '<em>libretto da allegare</em>'}</td></tr>`;
+            })
+            .join('')}</tbody></table>
+            <p class="doc__nota">I libretti d'uso e manutenzione e le dichiarazioni CE sono riportati negli allegati in fondo al documento.</p>`
             : '<p>Nessuna attrezzatura registrata in safetyDoc.</p>'
         }
 
@@ -319,7 +358,7 @@ export const MODELLI = [
         ${
           (d.prodotti || []).length
             ? `<table class="doc__tabella"><thead><tr><th>Prodotto</th><th>Uso</th><th>Pericoli</th><th>Scheda di sicurezza</th><th>DPI</th></tr></thead><tbody>${d.prodotti
-                .map((p) => `<tr><td>${esc(p.nome)}</td><td>${esc(p.uso || '')}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${p.dataSds ? esc(data(p.dataSds)) : 'da acquisire'}</td><td>${esc(p.dpi || '')}</td></tr>`)
+                .map((p) => `<tr><td>${esc(p.nome)}</td><td>${esc(p.uso || '')}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${p.dataSds ? esc(data(p.dataSds)) : 'da acquisire'} ${rifAllegati(d.allegatiDoc, 'prodotto', p.id)}</td><td>${esc(p.dpi || '')}</td></tr>`)
                 .join('')}</tbody></table>`
             : '<p>Nessun prodotto registrato.</p>'
         }
@@ -816,8 +855,9 @@ export const MODELLI = [
     descrizione: 'Informazione scritta sui rischi della mansione, le misure, i DPI, le emergenze e le figure della sicurezza, con firma del lavoratore.',
     ambito: 'lavoratore',
     attivaSe: { fatto: 'haDipendenti' },
-    genera: ({ anagrafica: a, oggi, lavoratore: l, lavoratori, dvr, ctx, prodotti }) => {
+    genera: ({ anagrafica: a, oggi, lavoratore: l, lavoratori, dvr, ctx, prodotti, attrezzature, etichettePericoli }) => {
       const presenti = pericoliPresenti(dvr, ctx).filter((x) => !['interferenze', 'differenze', 'tutele'].includes(x.id));
+      const conPericoli = (attrezzature || []).filter((x) => (x.pericoli || []).length || x.istruzioni);
       return `${intestazione(a)}
         <h1>Informazione sui rischi per la salute e la sicurezza</h1>
         <p class="doc__rif">D.Lgs. 81/2008 art. 36</p>
@@ -836,6 +876,12 @@ export const MODELLI = [
         <table class="doc__tabella"><thead><tr><th>Rischio</th><th>Cosa può succedere</th><th>Misure e comportamenti</th><th>DPI</th></tr></thead><tbody>
           ${presenti.map((x) => `<tr><td>${esc(x.pericolo)}</td><td>${esc(x.danno || '')}</td><td>${esc(x.misure.join('; '))}</td><td>${esc((x.dpi || []).join(', '))}</td></tr>`).join('')}
         </tbody></table>
+        ${conPericoli.length ? `<h2>Attrezzature: pericoli e protezioni</h2><table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Pericoli</th><th>DPI e istruzioni</th></tr></thead><tbody>${conPericoli
+          .map((x) => {
+            const pm = pericoliMacchina(x, etichettePericoli);
+            return `<tr><td>${esc(x.nome)}</td><td>${esc(pm.pericoli)}</td><td>${esc([pm.dpi, pm.istruzioni].filter(Boolean).join(' · '))}</td></tr>`;
+          })
+          .join('')}</tbody></table>` : ''}
         ${(prodotti || []).length ? `<h2>Prodotti chimici che usi</h2><p>${(prodotti || []).map((p) => esc(p.nome)).join(', ')}. Le schede di sicurezza sono a tua disposizione: leggi i pittogrammi dell'etichetta e usa i DPI indicati.</p>` : ''}
         <h2>Emergenze</h2>
         <p>In caso di emergenza chiama il <strong>112</strong>, avvisa gli addetti, segui le vie di esodo e raggiungi il punto di raccolta. Le procedure sono nel piano di emergenza esposto.</p>
@@ -849,6 +895,7 @@ export const MODELLI = [
     id: 'verbale-addestramento',
     titolo: 'Verbale di addestramento all\'uso delle attrezzature',
     descrizione: 'Registra l\'addestramento pratico del lavoratore sulle attrezzature che usa (artt. 37 e 73), con chi lo ha svolto e la firma.',
+    allegati: { attrezzatureNomi: (o) => o.attrezzature || [], categorie: ['libretto', 'pericoli'] },
     ambito: 'lavoratore',
     attivaSe: { fatto: 'haDipendenti' },
     opzioni: (d) => [
@@ -856,14 +903,20 @@ export const MODELLI = [
       { id: 'addestratore', etichetta: 'Chi ha svolto l\'addestramento', tipo: 'testo' },
       { id: 'ore', etichetta: 'Durata (ore)', tipo: 'numero' }
     ],
-    genera: ({ anagrafica: a, oggi, lavoratore: l, attrezzature, opzioni: o = {} }) => {
+    genera: ({ anagrafica: a, oggi, lavoratore: l, attrezzature, opzioni: o = {}, etichettePericoli, allegatiDoc }) => {
       const elenco = (o.attrezzature || []).length ? o.attrezzature : (attrezzature || []).map((x) => x.nome);
+      const dettagli = (nome) => {
+        const x = (attrezzature || []).find((y) => y.nome === nome);
+        if (!x) return '';
+        const pm = pericoliMacchina(x, etichettePericoli);
+        return [pm.pericoli && `Pericoli: ${esc(pm.pericoli)}`, pm.dpi && `DPI: ${esc(pm.dpi)}`, pm.istruzioni && esc(pm.istruzioni), rifAllegati(allegatiDoc, 'attrezzatura', x.id) && `Libretto: ${rifAllegati(allegatiDoc, 'attrezzatura', x.id)}`].filter(Boolean).join('<br>');
+      };
       return `${intestazione(a)}
         <h1>Verbale di addestramento</h1>
         <p class="doc__rif">D.Lgs. 81/2008 artt. 37 c. 5, 71 c. 7 e 73</p>
         <p>Il lavoratore ${v(l ? nomeCompleto(l) : '', 24)}, mansione ${v(l?.mansione, 18)}, ha ricevuto in data ${v(data(oggi), 10)} l'addestramento pratico, della durata di ${v(o.ore ? `${o.ore} ore` : '', 8)}, svolto da ${v(o.addestratore, 22)}, persona esperta, sul luogo di lavoro.</p>
         <table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Contenuti</th><th>Esito</th></tr></thead><tbody>
-          ${(elenco.length ? elenco : ['']).map((n) => `<tr><td>${esc(n)}</td><td><small>Uso corretto secondo il manuale, dispositivi di sicurezza, controlli prima dell'uso, DPI, cosa fare in caso di guasto</small></td><td>☐ idoneo ☐ da ripetere</td></tr>`).join('')}
+          ${(elenco.length ? elenco : ['']).map((n) => `<tr><td>${esc(n)}</td><td><small>Uso corretto secondo il libretto, dispositivi di sicurezza, controlli prima dell'uso, DPI, cosa fare in caso di guasto${dettagli(n) ? `<br>${dettagli(n)}` : ''}</small></td><td>☐ idoneo ☐ da ripetere</td></tr>`).join('')}
         </tbody></table>
         <p>Il lavoratore dichiara di aver compreso le istruzioni e di essere in grado di usare le attrezzature in sicurezza.</p>
         ${luogoData(a, oggi)}
@@ -1161,6 +1214,7 @@ export const MODELLI = [
     id: 'valutazione-chimico',
     titolo: 'Valutazione del rischio chimico (stima semplificata)',
     descrizione: 'Per ogni prodotto: pericolosità dalle frasi H e stima dell\'esposizione (quantità, frequenza, modalità d\'uso, ventilazione), con esito irrilevante o da approfondire.',
+    allegati: { prodotti: () => true, categorie: ['sds'] },
     ambito: 'impresa',
     attivaSe: { q: 'chimici', eq: true },
     opzioni: (d) => [
@@ -1494,6 +1548,7 @@ export const MODELLI = [
     id: 'pos-bozza',
     titolo: 'Piano operativo di sicurezza (POS) completo',
     descrizione: 'POS dettagliato con tutti i contenuti dell\'Allegato XV: dati del cantiere e dell\'impresa, lavoratori e incarichi, organizzazione, attrezzature, prodotti, analisi di ogni fase di lavoro con rischi, misure e DPI, emergenze e documenti da tenere in cantiere.',
+    allegati: { attrezzature: (o) => (id) => !(o.attrezzatureCantiere || []).length || o.attrezzatureCantiere.includes(id), prodotti: (o) => (id) => !(o.prodottiCantiere || []).length || o.prodottiCantiere.includes(id), categorie: ['libretto', 'ce', 'pericoli', 'verifica', 'sds'] },
     ambito: 'impresa',
     attivaSe: { all: [{ q: 'cantiere', eq: true }, { fatto: 'haDipendenti' }] },
     opzioni: (d) => [
@@ -1510,6 +1565,8 @@ export const MODELLI = [
       { id: 'capocantiere', etichetta: 'Capocantiere o preposto', tipo: 'scelta', valori: (d.lavoratori || []).map((l) => ({ valore: l.id, etichetta: nomeCompleto(l) })) },
       { id: 'lavoratori', etichetta: 'Lavoratori presenti in cantiere', tipo: 'spunte', valori: (d.lavoratori || []).map((l) => ({ valore: l.id, etichetta: `${nomeCompleto(l)}${l.mansione ? ` · ${l.mansione}` : ''}` })) },
       { id: 'fasi', etichetta: 'Lavorazioni che farai in questo cantiere', tipo: 'spunte', valori: (d.lavorazioni?.fasiCantiere || []).map((f) => ({ valore: f.id, etichetta: f.titolo })) },
+      { id: 'attrezzatureCantiere', etichetta: 'Attrezzature portate in cantiere (nessuna spunta = tutte)', tipo: 'spunte', valori: (d.macchine || []).map((s) => ({ valore: s.attrezzatura.id, etichetta: s.attrezzatura.nome })) },
+      { id: 'prodottiCantiere', etichetta: 'Prodotti usati in cantiere (nessuna spunta = tutti)', tipo: 'spunte', valori: (d.prodotti || []).map((p) => ({ valore: p.id, etichetta: p.nome })) },
       { id: 'subappalti', etichetta: 'Lavorazioni affidate in subappalto o a lavoratori autonomi', tipo: 'area' }
     ],
     genera: (d) => {
@@ -1521,7 +1578,9 @@ export const MODELLI = [
       const etichetta = (r) => (ruoli && ruoli[r]) || r;
       const dpi = [...new Set(fasi.flatMap((f) => f.dpi))];
       const sitPer = (id) => (d.situazioni || []).find((s) => s.lavoratore.id === id);
-      const ponteggio = fasi.some((f) => f.id === 'ponteggi') || (d.macchine || []).some((s) => s.attrezzatura.tipo === 'ponteggio');
+      const macchine = (o.attrezzatureCantiere || []).length ? (d.macchine || []).filter((s) => o.attrezzatureCantiere.includes(s.attrezzatura.id)) : d.macchine || [];
+      const prodotti = (o.prodottiCantiere || []).length ? (d.prodotti || []).filter((p) => o.prodottiCantiere.includes(p.id)) : d.prodotti || [];
+      const ponteggio = fasi.some((f) => f.id === 'ponteggi') || macchine.some((s) => s.attrezzatura.tipo === 'ponteggio');
       const vuoto = (n = 2) => Array.from({ length: n }, () => '<tr><td style="height:2em"></td><td></td><td></td></tr>').join('');
       return `${intestazione(a)}
         <section class="doc__frontespizio">
@@ -1586,20 +1645,23 @@ export const MODELLI = [
         </tbody></table>
 
         <h2>4 · Opere provvisionali, macchine e impianti (lett. d)</h2>
-        <table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Matricola</th><th>Verifiche e controlli</th></tr></thead><tbody>
-          ${(d.macchine || [])
-            .map((s) => `<tr><td>${esc(s.attrezzatura.nome)}${s.tipo ? ` <small>(${esc(s.tipo.etichetta)})</small>` : ''}</td><td>${esc(s.attrezzatura.matricola || '')}</td><td>${s.colore === 'verde' ? 'In regola' : esc(s.voci.filter((x) => x.colore !== 'verde').map((x) => `${x.controllo.titolo}: ${x.motivo}`).join('; '))}</td></tr>`)
+        <table class="doc__tabella"><thead><tr><th>Attrezzatura</th><th>Pericoli e DPI</th><th>Verifiche e controlli</th><th>Libretto</th></tr></thead><tbody>
+          ${macchine
+            .map((s) => {
+              const pm = pericoliMacchina(s.attrezzatura, d.etichettePericoli);
+              return `<tr><td>${esc(s.attrezzatura.nome)}${s.tipo ? ` <small>(${esc(s.tipo.etichetta)})</small>` : ''}${s.attrezzatura.matricola ? `<br><small>matr. ${esc(s.attrezzatura.matricola)}</small>` : ''}</td><td><small>${esc(pm.pericoli)}${pm.dpi ? `<br>DPI: ${esc(pm.dpi)}` : ''}</small></td><td>${s.colore === 'verde' ? 'In regola' : esc(s.voci.filter((x) => x.colore !== 'verde').map((x) => `${x.controllo.titolo}: ${x.motivo}`).join('; '))}</td><td>${rifAllegati(d.allegatiDoc, 'attrezzatura', s.attrezzatura.id) || '<em>da allegare</em>'}</td></tr>`;
+            })
             .join('')}
           ${[...new Set(fasi.flatMap((f) => f.attrezzature))]
-            .filter((n) => !(d.macchine || []).some((s) => normalizza(s.attrezzatura.nome).includes(normalizza(n))))
-            .map((n) => `<tr><td>${esc(n)} <small>(prevista dalle lavorazioni)</small></td><td></td><td></td></tr>`)
+            .filter((n) => !macchine.some((s) => normalizza(s.attrezzatura.nome).includes(normalizza(n))))
+            .map((n) => `<tr><td>${esc(n)} <small>(prevista dalle lavorazioni)</small></td><td></td><td></td><td></td></tr>`)
             .join('')}
         </tbody></table>
         ${ponteggio ? '<p><strong>Ponteggio:</strong> allegare il PiMUS, il libretto di autorizzazione ministeriale e, se oltre 20 m o fuori schema, il progetto firmato.</p>' : ''}
 
         <h2>5 · Sostanze e miscele pericolose (lett. e)</h2>
         <table class="doc__tabella"><thead><tr><th>Prodotto</th><th>Pericoli</th><th>Scheda di sicurezza</th></tr></thead><tbody>
-          ${(d.prodotti || []).map((p) => `<tr><td>${esc(p.nome)}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${p.dataSds ? `del ${esc(data(p.dataSds))}, allegata` : 'da allegare'}</td></tr>`).join('') || vuoto(1)}
+          ${prodotti.map((p) => `<tr><td>${esc(p.nome)}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${p.dataSds ? `del ${esc(data(p.dataSds))}` : ''} ${rifAllegati(d.allegatiDoc, 'prodotto', p.id) || 'da allegare'}</td></tr>`).join('') || vuoto(1)}
         </tbody></table>
 
         <h2>6 · Rumore (lett. f)</h2>
@@ -1749,16 +1811,17 @@ export const MODELLI = [
     id: 'elenco-prodotti-chimici',
     titolo: 'Elenco dei prodotti chimici e delle schede di sicurezza',
     descrizione: 'Tutti i prodotti inseriti in safetyDoc con pericoli, data della scheda di sicurezza e DPI. Da allegare al DVR e tenere a disposizione dei lavoratori.',
+    allegati: { prodotti: () => true, categorie: ['sds'] },
     ambito: 'impresa',
     attivaSe: { q: 'chimici', eq: true },
-    genera: ({ anagrafica: a, oggi, prodotti }) => `${intestazione(a)}
+    genera: ({ anagrafica: a, oggi, prodotti, allegatiDoc }) => `${intestazione(a)}
         <h1>Elenco dei prodotti chimici e delle schede di sicurezza</h1>
         <p class="doc__rif">D.Lgs. 81/2008 artt. 223 e 227; Reg. CE 1907/2006 art. 31</p>
         <table class="doc__tabella"><thead><tr><th>Prodotto</th><th>Fornitore</th><th>Uso</th><th>Pericoli</th><th>Scheda del</th><th>DPI</th></tr></thead><tbody>
           ${
             (prodotti || [])
               .map(
-                (p) => `<tr><td>${esc(p.nome)}</td><td>${esc(p.fornitore || '')}</td><td>${esc(p.uso || '')}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${esc(data(p.dataSds))}</td><td>${esc(p.dpi || '')}</td></tr>`
+                (p) => `<tr><td>${esc(p.nome)}</td><td>${esc(p.fornitore || '')}</td><td>${esc(p.uso || '')}</td><td>${esc([(p.pittogrammi || []).join(', '), p.frasiH].filter(Boolean).join(' · '))}</td><td>${esc(data(p.dataSds))} ${rifAllegati(allegatiDoc, 'prodotto', p.id)}</td><td>${esc(p.dpi || '')}</td></tr>`
               )
               .join('') || '<tr><td colspan="6" style="height:2em"></td></tr>'
           }
@@ -1845,5 +1908,6 @@ export function modelloPerLavoratore(modello, lavoratore) {
 export function generaDocumento(id, dati) {
   const m = MODELLI.find((x) => x.id === id);
   if (!m) throw new Error(`Modello sconosciuto: ${id}`);
-  return { modello: m, html: m.genera({ anagrafica: {}, ...dati, anagrafica: dati.anagrafica || {} }) };
+  const d = { anagrafica: {}, ...dati, anagrafica: dati.anagrafica || {} };
+  return { modello: m, html: m.genera(d) + appendiceAllegati(dati.allegatiDoc) };
 }
