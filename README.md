@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.19.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.20.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -58,6 +58,10 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
    (codice casuale del dispositivo, versione, tipo di dispositivo, divisione ATECO, fascia di lavoratori, schermate e
    documenti usati) allo schema separato `safetydoc` del progetto Supabase SafetyManagerPro. Mai nomi o dati dell'impresa.
    Si può revocare e cancellare tutto da Dati. Dettagli, cruscotto e script in `docs/supabase.md` e `supabase/migrations/`.
+19. **Account delle imprese e sezione Amministratore** – registrazione obbligatoria con link di attivazione mandato
+   su WhatsApp, verifica dell'account a ogni apertura (24 ore di tolleranza senza rete), blocco di imprese o dispositivi
+   per uso non conforme, sezione #/admin per l'amministratore (imprese, dispositivi, accessi, utilizzo, CSV). Nessun IP
+   registrato. Dettagli in `docs/supabase.md`.
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta. Quando si aggiungono
 schede si alza `versione` e si aggiunge una voce in `novita`: l'impresa vede le schede nuove che la riguardano.
@@ -73,6 +77,8 @@ icons/, screenshots/  icone (anche per iPhone) e schermate mostrate al momento d
 css/style.css         grafica: telefono prima di tutto, testo grande, tema scuro
 js/app.js             schermate e navigazione
 js/engine.js          regole, piano, semaforo (modulo puro, testato)
+js/supabase.js        collegamento a Supabase (rpc, accesso amministratore)
+js/account.js         attivazione, verifica giornaliera, blocco, link e CSV (modulo puro, testato)
 js/utilizzo.js        dati di utilizzo anonimi con consenso (Supabase)
 js/scadenzario.js     scadenze calcolate, promemoria e notifiche (modulo puro, testato)
 js/conoscenza.js      indice, ricerca con sinonimi, collegamenti e controlli di coerenza (modulo puro, testato)

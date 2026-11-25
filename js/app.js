@@ -40,7 +40,9 @@ import {
   statoCorrente
 } from './engine.js';
 import { linkAiuto } from './aiuto.js';
-import { accoda, pacchetto, invia, cancellaDati } from './utilizzo.js';
+import { accoda, pacchetto, invia, cancellaDati, piattaforma } from './utilizzo.js';
+import { rpc, accedi, rinnova } from './supabase.js';
+import { GRAZIA_MS, RIVERIFICA_MS, ROTTE_LIBERE, decidiAccesso, daRiverificare, applicaVerifica, erroreAttivazione, datiAttivazione, erroriAttivazione, linkInvito, numeroWhatsApp, messaggioInvito, urlWhatsApp, csvImprese, sessioneValida } from './account.js';
 import { raccogliScadenze, raggruppaScadenze, conteggiScadenze, testoPromemoria, daNotificare, testoNotifica, perServiceWorker, revisioneDocumento, statoScadenza, chiaveDocumento, scadenzaArchivio, durataArchivio, giorniTra, AREE } from './scadenzario.js';
 import { costruisciIndice, cerca, raggruppa, collegati, voce, perDocumento, verifiche, normalizza as normalizzaTesto, TIPI_VOCE } from './conoscenza.js';
 import { oggiLocale, formattaData, interpretaData, mascheraData, erroreData, MESI } from './date.js';
@@ -53,7 +55,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, liv
 import { generaIcs } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.19.0';
+export const VERSIONE_APP = '0.20.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -107,7 +109,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { conoscenza: null, settori: null, lavorazioni: null, defArchivio: null, archivio: [], questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
+const stato = { legale: null, conoscenza: null, settori: null, lavorazioni: null, defArchivio: null, archivio: [], questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -2706,12 +2708,432 @@ async function importa(file) {
 
 // ---------- avvio ----------
 
+// ---------- account dell'impresa: attivazione, verifica giornaliera, blocco ----------
+
+let account = null; // { dispositivo, chiave, impresa, stato, motivo, verificatoIl, controllatoIl }
+let sessioneAdmin = null; // { accessToken, refreshToken, scade, email, verificatoIl }
+
+async function caricaAccount() {
+  account = (await store.leggiMeta('account')) || null;
+  sessioneAdmin = (await store.leggiMeta('admin:sessione')) || null;
+}
+
+async function salvaAccount(a) {
+  account = a;
+  await store.scriviMeta('account', a);
+}
+
+const datiDispositivo = () => ({
+  versione: VERSIONE_APP,
+  piattaforma: piattaforma(navigator.userAgent),
+  installata: matchMedia('(display-mode: standalone)').matches || navigator.standalone === true
+});
+
+/** Verifica l'account con il server (se c'è connessione) e restituisce la decisione di accesso. */
+async function controllaAccesso({ forza = false } = {}) {
+  const adminValido = Boolean(sessioneAdmin?.verificatoIl && Date.now() - sessioneAdmin.verificatoIl < GRAZIA_MS);
+  if (account?.chiave && navigator.onLine && (forza || daRiverificare(account))) {
+    let esito = null;
+    try {
+      esito = await rpc('safetydoc_verifica', { dispositivo: account.dispositivo, chiave: account.chiave, info: datiDispositivo() }, { timeoutMs: 6000 });
+    } catch {
+      esito = null; // server non raggiungibile: vale il periodo di 24 ore
+    }
+    const nuovo = applicaVerifica(account, esito);
+    if (nuovo) await salvaAccount(nuovo);
+    else {
+      account = null;
+      await store.scriviMeta('account', null);
+    }
+  }
+  if (sessioneAdmin?.refreshToken && navigator.onLine && (forza || !sessioneAdmin.verificatoIl || Date.now() - sessioneAdmin.verificatoIl > RIVERIFICA_MS)) await rinnovaAdmin().catch(() => {});
+  return decidiAccesso({ account, adminValido: Boolean(sessioneAdmin?.verificatoIl && Date.now() - sessioneAdmin.verificatoIl < GRAZIA_MS) || adminValido });
+}
+
+function schermataAccessoNegato(decisione) {
+  document.querySelector('.nav').hidden = true;
+  const testi = {
+    attivazione: `<h1>Attiva safetyDoc</h1>
+      <p class="lead">Per usare safetyDoc serve il <strong>link di attivazione</strong> che ti è stato mandato su WhatsApp.</p>
+      <p>Apri il link da questo telefono o computer: ti chiederà di confermare i dati dell'impresa. Se non l'hai ricevuto o l'hai perso, chiedine uno nuovo a chi ti ha proposto safetyDoc.</p>
+      <form id="incolla-link"><label>Hai il link? Incollalo qui<input class="campo" name="link" type="url" inputmode="url" placeholder="https://safetydoc.vercel.app/#/invito/…" required></label><button class="btn btn--primario" type="submit">Apri il link</button></form>`,
+    bloccato: `<h1>Accesso sospeso</h1>
+      <p class="lead">L'accesso a safetyDoc${account?.impresa?.ragione_sociale ? ` per <strong>${esc(account.impresa.ragione_sociale)}</strong>` : ''} è stato sospeso${account?.stato === 'bloccato' ? ' su questo dispositivo' : ''}.</p>
+      ${account?.motivo ? `<p><strong>Motivo:</strong> ${esc(account.motivo)}</p>` : ''}
+      <p>I dati inseriti restano su questo dispositivo. Per riattivare l'accesso contatta chi ti ha fornito safetyDoc.</p>
+      <button class="btn btn--secondario" type="button" id="riprova">Riprova</button>`,
+    'serve-rete': `<h1>Collegati a internet</h1>
+      <p class="lead">safetyDoc controlla una volta al giorno che l'account dell'impresa sia attivo. L'ultimo controllo è di più di 24 ore fa.</p>
+      <p>Collegati a internet (Wi-Fi o dati) e tocca <strong>Riprova</strong>. I tuoi dati sono al sicuro su questo dispositivo.</p>
+      <button class="btn btn--primario" type="button" id="riprova">Riprova</button>`
+  };
+  app.innerHTML = `<section class="pagina accesso">${testi[decisione]}<p class="nota"><a href="#/termini">Termini d'uso e informativa</a> · <a href="#/admin">Amministratore</a></p></section>`;
+  app.querySelector('#riprova')?.addEventListener('click', async () => {
+    const d = await controllaAccesso({ forza: true });
+    if (d === 'ok') instrada();
+    else {
+      avviso(d === 'serve-rete' ? 'Ancora nessuna connessione.' : 'L\'accesso è ancora sospeso.');
+      schermataAccessoNegato(d);
+    }
+  });
+  app.querySelector('#incolla-link')?.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const m = String(new FormData(ev.target).get('link')).match(/#\/invito\/([a-f0-9]{16,})/i);
+    if (m) location.hash = `#/invito/${m[1]}`;
+    else avviso('Il link non sembra un link di attivazione di safetyDoc.');
+  });
+}
+
+async function schermataInvito(token) {
+  document.querySelector('.nav').hidden = true;
+  app.innerHTML = '<section class="pagina"><h1>Attivazione</h1><p>Controllo il link…</p></section>';
+  let info = null;
+  try {
+    info = await rpc('safetydoc_invito_info', { token });
+  } catch {
+    app.innerHTML = '<section class="pagina"><h1>Attivazione</h1><p class="lead">Serve la connessione a internet per attivare safetyDoc.</p><button class="btn btn--primario" type="button" onclick="location.reload()">Riprova</button></section>';
+    return;
+  }
+  if (!info?.valido) {
+    app.innerHTML = `<section class="pagina"><h1>Link non valido</h1><p class="lead">Questo link di attivazione non funziona più${info ? ' perché ne è stato creato uno nuovo o l\'impresa è sospesa' : ''}.</p><p>Chiedi a chi ti ha proposto safetyDoc di mandarti un nuovo link.</p></section>`;
+    return;
+  }
+  const a = anagrafica();
+  const v = (k, alt = '') => esc(info[k] || alt || '');
+  const gia = account?.chiave && account?.impresa?.ragione_sociale;
+  app.innerHTML = `
+    <section class="pagina">
+      <h1>Attiva safetyDoc</h1>
+      <p class="lead">Attivazione per <strong>${v('ragione_sociale')}</strong>. Controlla e completa i dati dell'impresa.</p>
+      ${gia ? `<p class="riquadro">Questo dispositivo è già attivo per <strong>${esc(account.impresa.ragione_sociale)}</strong>: continuando lo colleghi all'impresa del link.</p>` : ''}
+      <form id="attivazione" novalidate>
+        <label>Ragione sociale<input class="campo" name="ragione_sociale" required value="${v('ragione_sociale', a.ragioneSociale)}" autocomplete="organization"></label>
+        <label>Partita IVA<input class="campo" name="partita_iva" inputmode="numeric" maxlength="11" value="${v('partita_iva', a.piva)}"></label>
+        <label>Codice fiscale <small>(se diverso dalla partita IVA)</small><input class="campo" name="codice_fiscale" maxlength="16" value="${v('codice_fiscale', a.codiceFiscale)}"></label>
+        <label>Codice ATECO<input class="campo" name="ateco" inputmode="decimal" placeholder="es. 43.21.01" value="${v('ateco', risposte().ateco)}"></label>
+        <label>Comune<input class="campo" name="comune" value="${v('comune', a.comune)}" autocomplete="address-level2"></label>
+        <label>Provincia <small>(2 lettere)</small><input class="campo" name="provincia" maxlength="2" placeholder="AV" value="${v('provincia')}"></label>
+        <label>Email<input class="campo" name="email" type="email" value="${v('email', a.email)}" autocomplete="email"></label>
+        <label>Cellulare<input class="campo" name="telefono" type="tel" value="${v('telefono')}" autocomplete="tel"></label>
+        <label>Nome del referente<input class="campo" name="referente" value="${v('referente', a.titolare)}" autocomplete="name"></label>
+        <label class="spunta-semplice"><input type="checkbox" name="termini" value="1"> Ho letto e accetto i <a href="#/termini" target="_blank" rel="noopener">termini d'uso e l'informativa sul trattamento dei dati</a></label>
+        <p class="esito esito--errore" id="errori-attivazione" hidden></p>
+        <button class="btn btn--primario" type="submit">Attiva questo dispositivo</button>
+      </form>
+    </section>`;
+  const form = app.querySelector('#attivazione');
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = Object.fromEntries(new FormData(form));
+    const d = datiAttivazione(f);
+    const errori = erroriAttivazione(d);
+    const box = app.querySelector('#errori-attivazione');
+    if (errori.length) {
+      box.hidden = false;
+      box.textContent = errori.join(' ');
+      return;
+    }
+    const bottone = form.querySelector('button[type=submit]');
+    bottone.disabled = true;
+    try {
+      const dispositivo = account?.dispositivo || (crypto.randomUUID ? crypto.randomUUID() : store.nuovoId());
+      const r = await rpc('safetydoc_attiva', { token, dispositivo, dati: { ...d, ...datiDispositivo() } });
+      await salvaAccount({ dispositivo, chiave: r.chiave, impresa: r.impresa, stato: 'attivo', motivo: '', verificatoIl: Date.now(), controllatoIl: Date.now() });
+      // i dati di utilizzo (se acconsentiti) vengono collegati a questo dispositivo
+      await store.scriviMeta('uso:id', dispositivo);
+      avviso('safetyDoc è attivo su questo dispositivo.');
+      location.hash = '#/';
+    } catch (e) {
+      box.hidden = false;
+      box.textContent = erroreAttivazione(e.message);
+      bottone.disabled = false;
+    }
+  });
+}
+
+function schermataTermini() {
+  const t = stato.legale || {};
+  const titolare = t.titolare ? `${esc(t.titolare)}${t.contatto ? ` (${esc(t.contatto)})` : ''}` : 'il gestore di safetyDoc';
+  app.innerHTML = `
+    <section class="pagina testo-legale">
+      <a class="indietro" href="javascript:history.back()">‹ Indietro</a>
+      <h1>Termini d'uso e informativa</h1>
+      <h2>Cos'è safetyDoc</h2>
+      <p>safetyDoc aiuta l'impresa a organizzare adempimenti, documenti e scadenze di sicurezza, ambiente e privacy. Le indicazioni sono una guida: vanno verificate con il proprio consulente e non sostituiscono le valutazioni dei professionisti (RSPP, medico competente, tecnici).</p>
+      <h2>Dove sono i tuoi dati</h2>
+      <p>I dati che inserisci (lavoratori, documenti, macchine, scadenze, allegati) restano <strong>sul tuo dispositivo</strong> e nei backup che fai tu. Non vengono inviati a nessun server.</p>
+      <h2>Account dell'impresa</h2>
+      <p>Per usare safetyDoc l'impresa attiva i propri dispositivi con un link personale. Per gestire l'account trattiamo: ragione sociale, partita IVA o codice fiscale, codice ATECO, comune e provincia, email, cellulare e nome del referente, data di attivazione, accettazione di questi termini, e per ogni dispositivo un codice casuale, la versione dell'app, il tipo di dispositivo, se l'app è installata, data e ora degli accessi. <strong>Non registriamo indirizzi IP.</strong></p>
+      <p>Servono per fornire il servizio, verificare che l'account sia attivo (una volta al giorno) e impedire usi non conformi: chi usa l'app in modo non conforme può essere sospeso. Base giuridica: esecuzione del servizio richiesto e legittimo interesse alla sicurezza del servizio. Gli accessi sono conservati per 12 mesi, i dati dell'account finché l'account esiste.</p>
+      <h2>Dati di utilizzo (facoltativi)</h2>
+      <p>Solo se lo accetti, safetyDoc invia quali schermate, documenti e funzioni usi (mai cosa scrivi), collegati al tuo account, per capire cosa migliorare. Puoi revocare il consenso e cancellarli in Dati. Sono conservati per 12 mesi.</p>
+      <h2>Chi tratta i dati</h2>
+      <p>Titolare del trattamento: ${titolare}. I dati dell'account sono conservati su server nell'Unione europea (Supabase, Irlanda). Puoi chiedere accesso, rettifica, cancellazione o limitazione dei tuoi dati e opporti al trattamento scrivendo al titolare, e hai diritto di reclamo al Garante per la protezione dei dati personali.</p>
+    </section>`;
+}
+
+// ---------- sezione Amministratore ----------
+
+async function salvaSessioneAdmin(s) {
+  sessioneAdmin = s;
+  await store.scriviMeta('admin:sessione', s);
+}
+
+async function rinnovaAdmin() {
+  if (!sessioneAdmin?.refreshToken) return;
+  if (!sessioneValida(sessioneAdmin)) {
+    const s = await rinnova(sessioneAdmin.refreshToken);
+    await salvaSessioneAdmin({ ...s, verificatoIl: sessioneAdmin.verificatoIl });
+  }
+  await rpc('safetydoc_admin_elenco', {}, { accessToken: sessioneAdmin.accessToken, timeoutMs: 8000 }).then(() => salvaSessioneAdmin({ ...sessioneAdmin, verificatoIl: Date.now() }));
+}
+
+async function chiamaAdmin(funzione, corpo = {}) {
+  if (!sessioneValida(sessioneAdmin)) {
+    const s = await rinnova(sessioneAdmin.refreshToken);
+    await salvaSessioneAdmin({ ...s, verificatoIl: sessioneAdmin.verificatoIl });
+  }
+  return rpc(funzione, corpo, { accessToken: sessioneAdmin.accessToken });
+}
+
+const dataOra = (iso) => (iso ? new Date(iso).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : '—');
+const ETICHETTA_STATO_IMPRESA = { invitata: ['info', 'Invitata'], attiva: ['verde', 'Attiva'], sospesa: ['rosso', 'Sospesa'] };
+
+function schermataLoginAdmin(messaggio = '') {
+  app.innerHTML = `
+    <section class="pagina">
+      <h1>Amministratore</h1>
+      <p class="lead">Accedi con l'account amministratore per vedere le imprese, i dispositivi e l'utilizzo, e per gestire gli accessi.</p>
+      ${messaggio ? `<p class="esito esito--errore">${esc(messaggio)}</p>` : ''}
+      <form id="login-admin">
+        <label>Email<input class="campo" name="email" type="email" autocomplete="username" required></label>
+        <label>Password<input class="campo" name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn btn--primario" type="submit">Accedi</button>
+      </form>
+      <p class="nota">È l'account del progetto Supabase. La password non viene salvata: resta solo una sessione su questo dispositivo, che puoi chiudere con «Esci».</p>
+    </section>`;
+  app.querySelector('#login-admin').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const b = ev.target.querySelector('button');
+    b.disabled = true;
+    try {
+      const s = await accedi(String(f.get('email')).trim(), String(f.get('password')));
+      await rpc('safetydoc_admin_elenco', {}, { accessToken: s.accessToken });
+      await salvaSessioneAdmin({ ...s, verificatoIl: Date.now() });
+      schermataAdmin();
+    } catch (e) {
+      schermataLoginAdmin(e.stato === 400 ? 'Email o password non corrette.' : e.codice === '42501' || /autorizzato/.test(e.message) ? 'Questo account non è amministratore di safetyDoc.' : 'Accesso non riuscito: controlla la connessione.');
+    }
+  });
+}
+
+let datiAdmin = null;
+
+async function schermataAdmin(filtro = '', { usaCache = false } = {}) {
+  if (!sessioneAdmin?.refreshToken) return schermataLoginAdmin();
+  if (!(usaCache && datiAdmin)) app.innerHTML = '<section class="pagina"><h1>Amministratore</h1><p>Carico i dati…</p></section>';
+  if (!(usaCache && datiAdmin)) try {
+    datiAdmin = await chiamaAdmin('safetydoc_admin_elenco');
+    await salvaSessioneAdmin({ ...sessioneAdmin, verificatoIl: Date.now() });
+  } catch (e) {
+    if (e.stato === 401 || e.stato === 400 || e.codice === '42501') {
+      await salvaSessioneAdmin(null);
+      return schermataLoginAdmin('Sessione scaduta: accedi di nuovo.');
+    }
+    app.innerHTML = '<section class="pagina"><h1>Amministratore</h1><p class="lead">Serve la connessione a internet per la sezione Amministratore.</p><button class="btn btn--primario" type="button" id="riprova">Riprova</button></section>';
+    app.querySelector('#riprova').addEventListener('click', () => schermataAdmin(filtro));
+    return;
+  }
+  const r = datiAdmin.riepilogo;
+  const q = normalizzaTesto(filtro);
+  const imprese = datiAdmin.imprese.filter((m) => !q || normalizzaTesto([m.ragione_sociale, m.partita_iva, m.comune, m.provincia, m.ateco, m.email, m.referente].join(' ')).includes(q));
+  app.innerHTML = `
+    <section class="pagina admin">
+      <h1>Amministratore</h1>
+      <p class="nota">Collegato come ${esc(sessioneAdmin.email || '')} · <button class="link" type="button" id="esci-admin">Esci</button></p>
+      ${stato.legale?.titolare ? '' : '<p class="riquadro">Completa il <strong>titolare del trattamento</strong> in <code>data/legale.json</code>: compare in termini d\'uso e informativa.</p>'}
+      <div class="contatori" role="list">
+        <span role="listitem" class="contatore contatore--verde"><strong>${r.attive}</strong><span>imprese attive</span></span>
+        <span role="listitem" class="contatore contatore--giallo"><strong>${r.invitate}</strong><span>invitate</span></span>
+        <span role="listitem" class="contatore contatore--rosso"><strong>${r.sospese}</strong><span>sospese</span></span>
+      </div>
+      <p>Dispositivi: ${r.dispositivi} · attivi negli ultimi 7 giorni: <strong>${r.attivi_7}</strong> · negli ultimi 30: <strong>${r.attivi_30}</strong>${r.anonimi ? ` · dispositivi anonimi (prima della registrazione): ${r.anonimi}` : ''}</p>
+
+      <details class="opzioni-doc" id="nuova-impresa-box">
+        <summary>+ Nuova impresa e link di attivazione</summary>
+        <form id="nuova-impresa">
+          <label>Ragione sociale<input class="campo" name="ragione_sociale" required></label>
+          <label>Cellulare per WhatsApp<input class="campo" name="telefono" type="tel"></label>
+          <label>Nome del referente<input class="campo" name="referente"></label>
+          <label>Email<input class="campo" name="email" type="email"></label>
+          <label>Note interne<input class="campo" name="note"></label>
+          <label>Dispositivi ammessi<input class="campo" name="max_dispositivi" type="number" min="1" max="50" value="5"></label>
+          <button class="btn btn--primario" type="submit">Crea e prepara il link</button>
+        </form>
+      </details>
+
+      <div class="azioni">
+        <button class="btn btn--secondario" type="button" id="csv-imprese">Esporta imprese (CSV)</button>
+        <button class="btn btn--secondario" type="button" id="aggiorna-admin">Aggiorna</button>
+      </div>
+      <label>Cerca impresa<input class="campo" id="filtro-imprese" type="search" value="${esc(filtro)}" placeholder="nome, partita IVA, comune, ATECO…"></label>
+      <h2>Imprese <span class="conta">${imprese.length}</span></h2>
+      ${imprese.map(cardImpresaAdmin).join('') || '<p>Nessuna impresa.</p>'}
+
+      <h2>Funzioni più usate (30 giorni, chi ha dato il consenso)</h2>
+      ${(datiAdmin.funzioni || []).length ? `<table class="tabella-admin"><thead><tr><th>Funzione</th><th>Volte</th><th>Dispositivi</th></tr></thead><tbody>${datiAdmin.funzioni.map((f) => `<tr><td>${esc(f.tipo)}${f.nome ? ` · ${esc(f.nome)}` : ''}</td><td>${f.volte}</td><td>${f.dispositivi}</td></tr>`).join('')}</tbody></table>` : '<p class="nota">Ancora nessun dato.</p>'}
+      <h2>Versioni in uso</h2>
+      ${(datiAdmin.versioni || []).length ? `<table class="tabella-admin"><thead><tr><th>Versione</th><th>Dispositivo</th><th>Quanti</th><th>Ultimo uso</th></tr></thead><tbody>${datiAdmin.versioni.map((v) => `<tr><td>${esc(v.versione || '?')}</td><td>${esc(v.piattaforma || '?')}</td><td>${v.dispositivi}</td><td>${esc(dataOra(v.ultimo_uso))}</td></tr>`).join('')}</tbody></table>` : '<p class="nota">Ancora nessun dato.</p>'}
+      <p class="nota">Non vengono registrati indirizzi IP. I dati di utilizzo arrivano solo da chi ha dato il consenso.</p>
+    </section>`;
+  attivaAdmin(filtro);
+}
+
+function cardImpresaAdmin(m) {
+  const [col, et] = ETICHETTA_STATO_IMPRESA[m.stato] || ['info', m.stato];
+  return `<details class="impresa-admin" data-impresa="${esc(m.id)}">
+      <summary>
+        <span class="impresa-admin__nome">${esc(m.ragione_sociale)}</span>
+        <span class="pill pill--${col}">${et}</span>
+        <span class="impresa-admin__dati">${[m.ateco ? `ATECO ${esc(m.ateco)}` : '', [m.comune, m.provincia].filter(Boolean).map(esc).join(' '), `${(m.dispositivi || []).length} dispositivi`, `ultimo accesso ${esc(dataOra(m.ultimo_accesso))}`].filter(Boolean).join(' · ')}</span>
+      </summary>
+      <dl class="sigle">
+        <dt>Partita IVA</dt><dd>${esc(m.partita_iva || '—')}${m.codice_fiscale ? ` · CF ${esc(m.codice_fiscale)}` : ''}</dd>
+        <dt>Referente</dt><dd>${esc(m.referente || '—')}</dd>
+        <dt>Contatti</dt><dd>${esc([m.telefono, m.email].filter(Boolean).join(' · ') || '—')}</dd>
+        <dt>Creata</dt><dd>${esc(dataOra(m.creata_il))}${m.termini_accettati_il ? ` · termini accettati il ${esc(dataOra(m.termini_accettati_il))}` : ' · non ancora attivata'}</dd>
+        <dt>Accessi</dt><dd>${m.accessi_30} negli ultimi 30 giorni</dd>
+        ${m.stato === 'sospesa' ? `<dt>Sospesa</dt><dd>${esc(dataOra(m.sospesa_il))}${m.motivo_sospensione ? ` · ${esc(m.motivo_sospensione)}` : ''}</dd>` : ''}
+        ${m.note ? `<dt>Note</dt><dd>${esc(m.note)}</dd>` : ''}
+      </dl>
+      <div class="azioni">
+        ${m.invito ? `<button class="btn btn--primario" type="button" data-whatsapp="${esc(m.id)}">Invia il link su WhatsApp</button><button class="btn btn--secondario" type="button" data-copia="${esc(m.id)}">Copia il link</button>` : ''}
+        <button class="btn btn--secondario" type="button" data-nuovo-link="${esc(m.id)}">${m.invito ? 'Crea un nuovo link' : 'Crea il link'}</button>
+        ${m.stato === 'sospesa' ? `<button class="btn btn--secondario" type="button" data-riattiva="${esc(m.id)}">Riattiva l'impresa</button>` : `<button class="btn btn--secondario" type="button" data-sospendi="${esc(m.id)}">Sospendi l'impresa</button>`}
+      </div>
+      <h3>Dispositivi</h3>
+      ${(m.dispositivi || []).length ? `<table class="tabella-admin"><thead><tr><th>Dispositivo</th><th>Attivato</th><th>Ultimo accesso</th><th>Uso 30 gg</th><th></th></tr></thead><tbody>${m.dispositivi
+        .map((d) => `<tr><td>${esc(d.piattaforma || '?')} · ${esc(d.versione || '?')}${d.installata ? ' · app' : ''}<br><small>${esc(d.id.slice(0, 8))}</small>${d.stato === 'bloccato' ? `<br><span class="pill pill--rosso">Bloccato</span>${d.motivo_blocco ? ` <small>${esc(d.motivo_blocco)}</small>` : ''}` : ''}</td><td>${esc(dataOra(d.attivato_il))}</td><td>${esc(dataOra(d.ultimo_accesso))}</td><td>${d.eventi_30}</td><td>${d.stato === 'bloccato' ? `<button class="link" type="button" data-sblocca="${esc(d.id)}">Sblocca</button>` : `<button class="link" type="button" data-blocca="${esc(d.id)}">Blocca</button>`}</td></tr>`)
+        .join('')}</tbody></table>` : '<p class="nota">Nessun dispositivo attivato.</p>'}
+      ${(m.funzioni || []).length ? `<h3>Cosa usa (30 giorni)</h3><p>${m.funzioni.map((f) => `${esc(f.tipo)}${f.nome ? ` · ${esc(f.nome)}` : ''} (${f.volte})`).join(', ')}</p>` : ''}
+      <form class="note-impresa" data-note="${esc(m.id)}"><label>Note interne<input class="campo" name="note" value="${esc(m.note || '')}"></label><button class="btn btn--secondario" type="submit">Salva le note</button></form>
+      <p class="nota"><button class="link link--pericolo" type="button" data-elimina="${esc(m.id)}">Elimina l'impresa e i suoi dati dal server</button></p>
+    </details>`;
+}
+
+function attivaAdmin(filtro) {
+  const impresa = (id) => datiAdmin.imprese.find((m) => m.id === id);
+  const ricarica_ = (msg) => {
+    if (msg) avviso(msg);
+    schermataAdmin(app.querySelector('#filtro-imprese')?.value || filtro);
+  };
+  const esegui = async (fn, corpo, msg) => {
+    try {
+      const r = await chiamaAdmin(fn, corpo);
+      ricarica_(msg);
+      return r;
+    } catch (e) {
+      avviso(`Operazione non riuscita: ${e.message}`);
+      return null;
+    }
+  };
+  const inviaWhatsApp = (m, token) => {
+    const link = linkInvito(token, location.href);
+    window.open(urlWhatsApp(m.telefono, messaggioInvito(m, link)), '_blank', 'noopener');
+  };
+  app.querySelector('#esci-admin').addEventListener('click', async () => {
+    await salvaSessioneAdmin(null);
+    avviso('Sei uscito dalla sezione Amministratore.');
+    location.hash = '#/';
+  });
+  app.querySelector('#aggiorna-admin').addEventListener('click', () => ricarica_());
+  let attesa;
+  app.querySelector('#filtro-imprese').addEventListener('input', (e) => {
+    clearTimeout(attesa);
+    attesa = setTimeout(() => {
+      const pos = e.target.selectionStart;
+      schermataAdminFiltra(e.target.value, pos);
+    }, 300);
+  });
+  app.querySelector('#csv-imprese').addEventListener('click', () => scarica(new Blob([csvImprese(datiAdmin.imprese)], { type: 'text/csv' }), `safetydoc-imprese-${oggiIso()}.csv`));
+  app.querySelector('#nuova-impresa').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const d = Object.fromEntries(new FormData(ev.target));
+    if (String(d.ragione_sociale).trim().length < 2) return avviso('Scrivi la ragione sociale.');
+    try {
+      const r = await chiamaAdmin('safetydoc_admin_salva_impresa', { dati: d });
+      if (d.telefono) inviaWhatsApp({ ...d }, r.invito);
+      else {
+        await navigator.clipboard?.writeText(linkInvito(r.invito, location.href)).catch(() => {});
+        avviso('Impresa creata: link copiato, incollalo nel messaggio.');
+      }
+      ricarica_(d.telefono ? 'Impresa creata: invia il messaggio su WhatsApp.' : '');
+    } catch (e) {
+      avviso(`Impresa non creata: ${e.message}`);
+    }
+  });
+  for (const b of app.querySelectorAll('[data-whatsapp]')) b.addEventListener('click', () => inviaWhatsApp(impresa(b.dataset.whatsapp), impresa(b.dataset.whatsapp).invito));
+  for (const b of app.querySelectorAll('[data-copia]'))
+    b.addEventListener('click', async () => {
+      await navigator.clipboard?.writeText(linkInvito(impresa(b.dataset.copia).invito, location.href)).catch(() => {});
+      avviso('Link copiato.');
+    });
+  for (const b of app.querySelectorAll('[data-nuovo-link]'))
+    b.addEventListener('click', async () => {
+      const m = impresa(b.dataset.nuovoLink);
+      if (m.invito && !confirm('Il link precedente smetterà di funzionare (i dispositivi già attivi restano attivi). Continuare?')) return;
+      try {
+        const token = await chiamaAdmin('safetydoc_admin_nuovo_invito', { impresa: m.id });
+        if (m.telefono) inviaWhatsApp(m, token);
+        ricarica_('Nuovo link creato.');
+      } catch (e) {
+        avviso(`Link non creato: ${e.message}`);
+      }
+    });
+  for (const b of app.querySelectorAll('[data-sospendi]'))
+    b.addEventListener('click', () => {
+      const motivo = prompt('Motivo della sospensione (lo vedrà l\'impresa):', 'Uso non conforme ai termini d\'uso');
+      if (motivo === null) return;
+      esegui('safetydoc_admin_stato_impresa', { impresa: b.dataset.sospendi, sospendi: true, motivo }, 'Impresa sospesa: i suoi dispositivi si bloccano alla prossima verifica.');
+    });
+  for (const b of app.querySelectorAll('[data-riattiva]')) b.addEventListener('click', () => esegui('safetydoc_admin_stato_impresa', { impresa: b.dataset.riattiva, sospendi: false, motivo: null }, 'Impresa riattivata.'));
+  for (const b of app.querySelectorAll('[data-blocca]'))
+    b.addEventListener('click', () => {
+      const motivo = prompt('Motivo del blocco di questo dispositivo:', 'Dispositivo non autorizzato');
+      if (motivo === null) return;
+      esegui('safetydoc_admin_stato_dispositivo', { dispositivo: b.dataset.blocca, blocca: true, motivo }, 'Dispositivo bloccato.');
+    });
+  for (const b of app.querySelectorAll('[data-sblocca]')) b.addEventListener('click', () => esegui('safetydoc_admin_stato_dispositivo', { dispositivo: b.dataset.sblocca, blocca: false, motivo: null }, 'Dispositivo sbloccato.'));
+  for (const b of app.querySelectorAll('[data-elimina]'))
+    b.addEventListener('click', () => {
+      const m = impresa(b.dataset.elimina);
+      if (!confirm(`Eliminare «${m.ragione_sociale}» con dispositivi, accessi e dati di utilizzo dal server? Non si può annullare. I dati sui dispositivi dell'impresa non vengono toccati, ma l'app chiederà una nuova attivazione.`)) return;
+      esegui('safetydoc_admin_elimina_impresa', { impresa: m.id }, 'Impresa eliminata dal server.');
+    });
+  for (const f of app.querySelectorAll('[data-note]'))
+    f.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      esegui('safetydoc_admin_salva_impresa', { dati: { id: f.dataset.note, note: new FormData(f).get('note') } }, 'Note salvate.');
+    });
+}
+
+/** Filtra l'elenco senza ricaricare dal server, lasciando il cursore nella casella di ricerca. */
+async function schermataAdminFiltra(filtro, pos) {
+  await schermataAdmin(filtro, { usaCache: true });
+  const c = app.querySelector('#filtro-imprese');
+  c?.focus();
+  if (c && pos !== undefined) c.setSelectionRange(pos, pos);
+}
+
 // ---------- dati di utilizzo anonimi (con consenso) ----------
 
 let codaUso = null;
 
 async function consensoUso() {
-  return (await store.leggiMeta('uso:consenso'))?.scelta || null; // 'si' | 'no' | null (non ancora chiesto)
+  const c = await store.leggiMeta('uso:consenso');
+  // dalla 0.20 i dati di utilizzo sono collegati all'account: il consenso dato prima (anonimo) va richiesto di nuovo
+  return c?.versione === 2 ? c.scelta : null; // 'si' | 'no' | null (non ancora chiesto)
 }
 
 async function idUso() {
@@ -2766,7 +3188,7 @@ async function inviaUso() {
 }
 
 async function impostaConsensoUso(scelta) {
-  await store.scriviMeta('uso:consenso', { scelta, data: new Date().toISOString() });
+  await store.scriviMeta('uso:consenso', { scelta, versione: 2, data: new Date().toISOString() });
   if (scelta === 'si') {
     await registraUso('apertura', 'consenso');
     inviaUso();
@@ -2776,21 +3198,20 @@ async function impostaConsensoUso(scelta) {
   }
 }
 
-const INFORMATIVA_USO = `Se accetti, safetyDoc invia ogni giorno, quando c'è connessione, alcuni dati anonimi: un codice casuale creato solo per questo
-  (non collegato al tuo nome né ai tuoi backup), la versione dell'app, il tipo di dispositivo, se l'app è installata, le prime due cifre del codice
-  ATECO, la fascia di lavoratori (es. 1-5) e quali schermate, documenti e funzioni usi (mai cosa scrivi). Non inviamo nomi, dati dell'impresa,
-  dei lavoratori, documenti o allegati. Servono solo a capire quante imprese usano safetyDoc e cosa migliorare. I dati sono conservati
-  su server nell'Unione europea (Supabase, Irlanda) per 12 mesi; durante l'invio il server vede, come ogni sito, l'indirizzo internet
-  del dispositivo. Puoi cambiare idea quando vuoi in Dati, e cancellare i dati già inviati.`;
+const INFORMATIVA_USO = `Se accetti, safetyDoc invia ogni giorno, quando c'è connessione, quali schermate, documenti e funzioni usi
+  (per esempio «DVR aperto», «promemoria inviato»), insieme alla versione dell'app, al tipo di dispositivo, alla divisione ATECO e alla fascia di
+  lavoratori. Questi dati sono collegati all'account della tua impresa. Non inviamo mai cosa scrivi: nomi dei lavoratori, contenuti dei documenti
+  e allegati restano sul dispositivo. Servono a capire cosa funziona e cosa migliorare. Sono conservati su server nell'Unione europea
+  (Supabase, Irlanda) per 12 mesi e non registriamo gli indirizzi IP. Puoi cambiare idea quando vuoi in Dati, e cancellare i dati già inviati.`;
 
 async function bloccoConsensoOggi() {
   if ((await consensoUso()) !== null) return '';
   return `<section class="riquadro consenso-uso" aria-labelledby="titolo-consenso">
       <h2 id="titolo-consenso">Ci aiuti a migliorare safetyDoc?</h2>
-      <p>Possiamo ricevere dati <strong>anonimi</strong> su come usi l'app: quali schermate e documenti, versione e tipo di dispositivo. Nessun nome, nessun dato dell'impresa o dei lavoratori.</p>
+      <p>Possiamo sapere quali schermate, documenti e funzioni usi, per migliorare l'app. Mai cosa scrivi: lavoratori, documenti e allegati restano sul tuo dispositivo.</p>
       <details><summary>Cosa inviamo esattamente</summary><p class="nota">${INFORMATIVA_USO}</p></details>
       <div class="azioni">
-        <button class="btn btn--primario" type="button" data-consenso="si">Sì, invia dati anonimi</button>
+        <button class="btn btn--primario" type="button" data-consenso="si">Sì, va bene</button>
         <button class="btn btn--secondario" type="button" data-consenso="no">No, grazie</button>
       </div>
     </section>`;
@@ -2808,11 +3229,11 @@ function attivaConsenso(ridisegna) {
 async function bloccoUsoDati() {
   const c = await consensoUso();
   const ultimo = await store.leggiMeta('uso:ultimoInvio');
-  return `<h2 id="dati-utilizzo">Dati di utilizzo anonimi</h2>
+  return `<h2 id="dati-utilizzo">Dati di utilizzo</h2>
       <p>${c === 'si' ? `<strong>Attivo.</strong>${ultimo ? ` Ultimo invio: ${esc(new Date(ultimo).toLocaleString('it-IT'))}.` : ' Nessun invio ancora.'}` : c === 'no' ? '<strong>Non attivo:</strong> non inviamo nulla.' : 'Non hai ancora scelto: per ora non inviamo nulla.'}</p>
       <details><summary>Cosa inviamo e perché</summary><p class="nota">${INFORMATIVA_USO}</p></details>
       <div class="azioni">
-        ${c === 'si' ? '<button class="btn btn--secondario" type="button" data-consenso="no">Non inviare più</button><button class="btn btn--secondario" type="button" id="cancella-uso">Cancella i dati già inviati</button>' : '<button class="btn btn--secondario" type="button" data-consenso="si">Invia dati anonimi</button>'}
+        ${c === 'si' ? '<button class="btn btn--secondario" type="button" data-consenso="no">Non inviare più</button><button class="btn btn--secondario" type="button" id="cancella-uso">Cancella i dati già inviati</button>' : '<button class="btn btn--secondario" type="button" data-consenso="si">Invia i dati di utilizzo</button>'}
       </div>`;
 }
 
@@ -3022,14 +3443,6 @@ async function schermataScadenzario(filtro = '') {
       await annotaPromemoria({ email: 'email', whatsapp: 'WhatsApp', condividi: 'condivisione' }[canale], p.numero);
       setTimeout(() => schermataScadenzario(filtro), 500);
     });
-}
-
-/** Numero in formato internazionale per wa.me (prefisso italiano se manca). */
-function numeroWhatsApp(t) {
-  let n = String(t || '').replace(/[^\d+]/g, '');
-  if (n.startsWith('+')) return n.slice(1);
-  if (n.startsWith('00')) return n.slice(2);
-  return n.startsWith('39') && n.length > 10 ? n : `39${n}`;
 }
 
 // ---------- notifiche ----------
@@ -3381,6 +3794,11 @@ async function instrada() {
   const [, rotta, param, extra, quarto] = (location.hash || '#/').split('/').map((x) => (x ? decodeURIComponent(x) : x));
   aggiornaNav(rotta || '');
   window.scrollTo(0, 0);
+  if (rotta === 'invito') return schermataInvito(param || '');
+  if (rotta === 'termini') return schermataTermini();
+  if (rotta === 'admin') return schermataAdmin();
+  const accesso = await controllaAccesso();
+  if (accesso !== 'ok') return schermataAccessoNegato(accesso);
   if (rotta === 'documento' && param) registraUso('documento', param);
   else if (rotta === 'cerca') registraUso('ricerca');
   else registraUso('schermata', nomeRotta(rotta, param));
@@ -3417,13 +3835,14 @@ async function instrada() {
 
 async function avvia() {
   try {
-    const [q, c, l, d, a, t, se, lv, ar, kn] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json', 'data/archivio.json', 'data/conoscenza.json'].map((u) =>
+    const [q, c, l, d, a, t, se, lv, ar, kn, lg] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json', 'data/archivio.json', 'data/conoscenza.json', 'data/legale.json'].map((u) =>
         fetch(u).then((r) => r.json())
       )
     );
     stato.settori = se;
     stato.conoscenza = kn;
+    stato.legale = lg;
     stato.lavorazioni = lv;
     stato.defArchivio = ar;
     stato.defAttr = t;
@@ -3433,6 +3852,7 @@ async function avvia() {
     stato.catalogo = c;
     stato.defLav = l;
     await ricarica();
+    await caricaAccount();
     store.chiediMemoriaPersistente();
     addEventListener('hashchange', instrada);
     app.addEventListener('submit', (ev) => {
@@ -3448,7 +3868,11 @@ async function avvia() {
     controllaNotifiche().catch(() => {});
     registraUso('apertura').then(inviaUso);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') controllaNotifiche().catch(() => {});
+      if (document.visibilityState === 'visible') {
+        controllaNotifiche().catch(() => {});
+        // verifica dell'account al ritorno nell'app (al massimo ogni 10 minuti)
+        if (!['invito', 'termini', 'admin'].includes((location.hash.split('/')[1] || ''))) controllaAccesso().then((d) => d !== 'ok' && schermataAccessoNegato(d));
+      }
       else inviaUso();
     });
   } catch (e) {
