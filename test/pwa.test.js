@@ -59,3 +59,13 @@ test('manifest completo per l\'installazione', () => {
   for (const x of ['rel="manifest"', 'apple-touch-icon', 'apple-mobile-web-app-capable', 'name="theme-color"', 'name="viewport"']) assert.ok(html.includes(x), `index.html: manca ${x}`);
   assert.equal(dimensioniPng('icons/apple-touch-icon.png'), '180x180');
 });
+
+test('tutti i file JavaScript sono validi (nessun nome dichiarato due volte)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { readdirSync } = await import('node:fs');
+  const dir = new URL('../js/', import.meta.url);
+  for (const f of [...readdirSync(dir).filter((x) => x.endsWith('.js')).map((x) => new URL(x, dir)), new URL('../sw.js', import.meta.url)]) {
+    const r = spawnSync(process.execPath, ['--check', f.pathname], { encoding: 'utf8' });
+    assert.equal(r.status, 0, `${f.pathname}: ${r.stderr}`);
+  }
+});

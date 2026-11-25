@@ -35,20 +35,22 @@ import {
   schermataSenzaRisposta,
   novitaDaMostrare,
   vociControlloIniziale,
-  dataDaMese
+  dataDaMese,
+  valuta
 } from './engine.js';
 import { linkAiuto } from './aiuto.js';
+import { costruisciIndice, cerca, raggruppa, collegati, voce, perDocumento, verifiche, normalizza as normalizzaTesto, TIPI_VOCE } from './conoscenza.js';
 import { oggiLocale, formattaData, interpretaData, mascheraData, erroreData, MESI } from './date.js';
 import { immaginiPerStampa } from './allegati.js';
 import { LINGUE } from './lingue.js';
 import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport } from './allegati.js';
 import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
 import { cifra, decifra } from './cifratura.js';
-import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } from './modelli.js';
+import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, livelloRischio } from './modelli.js';
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.16.0';
+export const VERSIONE_APP = '0.17.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -102,7 +104,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { settori: null, lavorazioni: null, defArchivio: null, archivio: [], questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
+const stato = { conoscenza: null, settori: null, lavorazioni: null, defArchivio: null, archivio: [], questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -442,7 +444,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { archivio: 'documenti', planimetrie: 'documenti', 'archivio-voce': 'documenti', partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
+const SEZIONE = { cerca: 'oggi', sapere: 'oggi', verifiche: 'oggi', archivio: 'documenti', planimetrie: 'documenti', 'archivio-voce': 'documenti', partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -501,6 +503,7 @@ async function schermataOggi() {
   const c = conteggi(p);
   const urgenti = cosaFareAdesso(p);
   const nome = risposte().nome_impresa;
+  const controlli = await calcolaVerifiche();
 
   app.innerHTML = `
     <section class="pagina">
@@ -526,6 +529,8 @@ async function schermataOggi() {
           : `<p class="lead">Non ci sono scadenze nei prossimi 60 giorni. Torna a controllare ogni tanto.</p>`
       }
       <a class="btn btn--secondario" href="#/piano">Vedi il piano completo</a>
+      ${bloccoVerificheOggi(controlli)}
+      ${barraRicerca('', { id: 'cerca-oggi' })}
       ${haDipendenti() ? bloccoLavoratoriOggi() : ''}
       ${bloccoEventiOggi()}
       ${bloccoArchivioOggi()}
@@ -535,6 +540,15 @@ async function schermataOggi() {
       ${richiestaInstallazione && !installata() ? `<p class="nota"><a href="#/dati/installa">Installa safetyDoc sul telefono</a> per aprirlo con un tocco.</p>` : ''}
     </section>`;
   attivaNovita();
+}
+
+function bloccoVerificheOggi(lista) {
+  if (!lista.length) return '';
+  const alte = lista.filter((x) => x.livello === 'alto').length;
+  return `<a class="banner banner--verifiche ${alte ? 'banner--rosso' : ''}" href="#/verifiche">
+      <strong>${lista.length === 1 ? 'Un controllo di coerenza' : `${lista.length} controlli di coerenza`} da guardare${alte ? ` (${alte} ${alte === 1 ? 'importante' : 'importanti'})` : ''}</strong>
+      <span>${esc(lista[0].titolo)}${lista.length > 1 ? ' e altro' : ''}</span>
+    </a>`;
 }
 
 function bloccoLavoratoriOggi() {
@@ -576,6 +590,7 @@ async function schermataPiano() {
     <section class="pagina">
       <h1>Il tuo piano sicurezza</h1>
       <p class="lead">${p.length} cose che riguardano la tua impresa, in ordine di urgenza.</p>
+      ${barraRicerca('', { id: 'cerca-piano' })}
       ${gruppi
         .map(
           (g) => `
@@ -635,7 +650,9 @@ function descriviAteco(info, testo) {
 
 async function schermataDomanda(indice) {
   const elenco = schermate(stato.questionario, risposte());
-  const i = Math.max(0, Math.min(Number(indice) || 0, elenco.length - 1));
+  // si può arrivare anche con l'id della domanda (es. dalle verifiche: #/domanda/chimici)
+  const perId = /^\d*$/.test(String(indice ?? '')) ? -1 : elenco.findIndex((s) => s.domande.some((d) => d.id === indice));
+  const i = perId >= 0 ? perId : Math.max(0, Math.min(Number(indice) || 0, elenco.length - 1));
   const sch = elenco[i];
   const r = risposte();
   const percento = Math.round((i / elenco.length) * 100);
@@ -2172,10 +2189,12 @@ async function schermataDocumenti() {
     <section class="pagina">
       <h1>Documenti pronti</h1>
       <p class="lead">Modelli già compilati con i tuoi dati. Aprili, controllali, stampali o salvali in PDF e falli firmare.</p>
+      ${barraRicerca('', { id: 'cerca-documenti' })}
       ${mancano ? `<a class="banner" href="#/dati"><strong>Completa i dati dell'impresa</strong><span>Così i documenti escono già con nome, sede e titolare.</span></a>` : ''}
       <div class="scorciatoie">
         <a class="btn btn--secondario" href="#/archivio">Archivio documenti e certificati <small>(${archivioAttuale(stato.archivio, 'certificato').length})</small></a>
         <a class="btn btn--secondario" href="#/planimetrie">Planimetrie e layout <small>(${archivioAttuale(stato.archivio, 'planimetria').length})</small></a>
+        <a class="btn btn--secondario" href="#/verifiche">Controlli di coerenza</a>
       </div>
       <h2>Da compilare per l'impresa</h2>
       <div class="lista">${impresa.map((m) => cardDocumento(m, `#/documento/${m.id}`)).join('')}</div>
@@ -2319,10 +2338,14 @@ function campiOpzioni(defs, valori) {
               const v = righe[i]?.[k.id] ?? '';
               const nm = `name="${esc(c.id)}.${i}.${esc(k.id)}" aria-label="${esc(k.etichetta)} riga ${i + 1}"`;
               if (k.tipo === 'scelta') return `<td><select class="campo" ${nm}>${k.valori.map((x) => `<option value="${esc(x.valore)}" ${v === x.valore ? 'selected' : ''}>${esc(x.etichetta)}</option>`).join('')}</select></td>`;
-              return `<td><input class="campo" ${nm} value="${esc(v)}" ${k.tipo === 'numero' ? 'inputmode="decimal"' : ''}></td>`;
+              const lista = k.suggerimenti?.length ? `list="sugg-${esc(c.id)}-${esc(k.id)}"` : '';
+              return `<td><input class="campo" ${nm} value="${esc(v)}" ${lista} ${k.segnaposto ? `placeholder="${esc(k.segnaposto)}"` : ''} ${k.tipo === 'numero' ? 'inputmode="decimal"' : ''}></td>`;
             })
             .join('')}</tr>`).join('')}
-          </tbody></table></div></fieldset>`;
+          </tbody></table></div>${c.colonne
+            .filter((k) => k.suggerimenti?.length)
+            .map((k) => `<datalist id="sugg-${esc(c.id)}-${esc(k.id)}">${k.suggerimenti.map((x) => `<option value="${esc(x)}"></option>`).join('')}</datalist>`)
+            .join('')}</fieldset>`;
       }
       if (c.tipo === 'spunte') {
         const scelti = Array.isArray(val) ? val : [];
@@ -2378,10 +2401,12 @@ async function schermataDocumento(id, lavId) {
 
   const firmatiReg = req && l ? storicoRegistri(l.id, req.id, stato.registri).map((r) => elencoAllegati('registro', r.id)).join('') : '';
   const firmati = elencoAllegati('documento', chiaveDoc) + firmatiReg;
+  const controlli = await calcolaVerifiche();
   app.innerHTML = `
     <section class="pagina pagina--doc">
       <div class="solo-schermo">
         <a class="indietro" href="${l ? `#/lavoratore/${esc(l.id)}` : '#/documenti'}">‹ Indietro</a>
+        ${pannelloAiutoDocumento(id, controlli)}
         ${
           defs.length
             ? `<details class="opzioni-doc" ${salvate ? '' : 'open'}><summary>Dati di questo documento</summary>
@@ -2605,6 +2630,256 @@ async function importa(file) {
 
 // ---------- avvio ----------
 
+// ---------- conoscenza: ricerca, schede di approfondimento, verifiche ----------
+
+let indiceCache = null;
+function indiceConoscenza() {
+  if (!indiceCache)
+    indiceCache = costruisciIndice({ conoscenza: stato.conoscenza, dvr: stato.dvr, catalogo: stato.catalogo, modelli: MODELLI, defAttr: stato.defAttr, lavorazioni: stato.lavorazioni, defLav: stato.defLav, defArchivio: stato.defArchivio });
+  return indiceCache;
+}
+
+// Gli allegati senza categoria (caricati prima delle categorie) valgono per qualsiasi categoria.
+const allegatiPerCategoria = (tipo, id, categoria) => allegatiDi(tipo, id).filter((a) => !categoria || !a.categoria || a.categoria === categoria).length;
+
+const DOCUMENTI_VERIFICATI = ['pos-bozza', 'valutazione-rumore', 'valutazione-vibrazioni', 'valutazione-mmc', 'valutazione-chimico', 'valutazione-incendio'];
+
+async function calcolaVerifiche() {
+  if (!questionarioCompletato()) return [];
+  const opzioniDocumenti = {};
+  for (const d of DOCUMENTI_VERIFICATI) {
+    const o = await store.leggiMeta(`opzioni:${d}`);
+    if (o) opzioniDocumenti[d] = o;
+  }
+  return verifiche({
+    ctx: ctx(),
+    anagrafica: anagrafica(),
+    prodotti: stato.prodotti,
+    attrezzature: stato.attrezzature,
+    lavoratori: haDipendenti() ? stato.lavoratori : [],
+    controlli: stato.controlli,
+    archivio: stato.archivio,
+    eventi: stato.eventi,
+    adempimenti: stato.adempimenti,
+    defAttr: stato.defAttr,
+    opzioniDocumenti,
+    contaAllegati: allegatiPerCategoria,
+    oggi: oggiIso()
+  });
+}
+
+const COLORE_LIVELLO = { alto: 'rosso', medio: 'giallo', basso: 'info' };
+const ETICHETTA_LIVELLO = { alto: 'Importante', medio: 'Da sistemare', basso: 'Da controllare' };
+
+function cardVerifica(x, { conDocumenti = true } = {}) {
+  const docs = conDocumenti ? x.documenti.map((id) => MODELLI.find((m) => m.id === id)).filter(Boolean) : [];
+  return `<article class="verifica verifica--${COLORE_LIVELLO[x.livello]}">
+      <p class="verifica__livello"><span class="pill pill--${COLORE_LIVELLO[x.livello]}">${ETICHETTA_LIVELLO[x.livello]}</span></p>
+      <h3>${esc(x.titolo)}</h3>
+      <p>${esc(x.spiegazione)}</p>
+      ${x.norma ? `<p class="nota">Riferimento: ${esc(x.norma)}</p>` : ''}
+      <a class="btn btn--primario" href="${esc(x.azione.href)}">${esc(x.azione.testo)}</a>
+      ${docs.length ? `<p class="nota">Riguarda: ${docs.map((m) => `<a href="#/documento/${esc(m.id)}">${esc(m.titolo)}</a>`).join(' · ')}</p>` : ''}
+    </article>`;
+}
+
+function barraRicerca(valore = '', { grande = false, id = 'cerca' } = {}) {
+  return `<form class="ricerca${grande ? ' ricerca--grande' : ''}" role="search" data-ricerca>
+      <label class="ricerca__etichetta" for="${id}">${grande ? 'Cosa cerchi?' : 'Cerca rischi, norme, documenti, macchine, corsi'}</label>
+      <div class="ricerca__riga">
+        <input class="campo ricerca__campo" type="search" id="${id}" name="q" value="${esc(valore)}" placeholder="es. muletto, ponteggio, estintori, H350" autocomplete="off" enterkeyhint="search">
+        <button class="btn btn--primario" type="submit">Cerca</button>
+      </div>
+    </form>`;
+}
+
+/** Ricerca nei dati inseriti dall'utente: lavoratori, attrezzature, prodotti, archivio. */
+function cercaNeiMieiDati(testo) {
+  const termini = normalizzaTesto(testo).split(' ').filter((t) => t.length > 1);
+  if (!termini.length) return [];
+  const ok = (...campi) => {
+    const t = normalizzaTesto(campi.filter(Boolean).join(' '));
+    return termini.every((x) => t.includes(x));
+  };
+  const out = [];
+  for (const l of attivi()) if (ok(l.nome, l.cognome, l.mansione)) out.push({ titolo: nomeCompleto(l), sottotitolo: `Lavoratore · ${l.mansione || 'mansione non indicata'}`, href: `#/lavoratore/${l.id}` });
+  for (const a of attrezzatureAttive(stato.attrezzature)) if (ok(a.nome, a.marcaModello, a.matricola, tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta)) out.push({ titolo: a.nome, sottotitolo: `Attrezzatura · ${tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta || ''}`, href: `#/attrezzatura/${a.id}` });
+  for (const p of prodottiAttivi(stato.prodotti)) if (ok(p.nome, p.fornitore, p.uso, p.frasiH)) out.push({ titolo: p.nome, sottotitolo: `Prodotto chimico${p.frasiH ? ` · ${p.frasiH}` : ''}`, href: `#/prodotto/${p.id}` });
+  for (const r of archivioAttuale(stato.archivio)) if (ok(r.titolo, r.note, r.ente)) out.push({ titolo: r.titolo, sottotitolo: r.genere === 'planimetria' ? 'Planimetria' : 'Documento in archivio', href: `#/archivio-voce/${r.id}` });
+  return out.slice(0, 20);
+}
+
+function cardSapere(v, extra = '') {
+  const segno = { rischio: '⚠', adempimento: '✓', documento: '▤', attrezzatura: '⚙', fase: '⌂', appalto: '⇄', requisito: '★', certificato: '▣', planimetria: '▦', norma: '§', sigla: 'Aa' }[v.tipo] || '›';
+  const descrizione = v.tipo === 'sigla' ? v.testo : v.sottotitolo;
+  return `<a class="voce voce--doc" href="${esc(v.href)}">
+      <span class="voce__segno" aria-hidden="true">${segno}</span>
+      <span class="voce__testo"><span class="voce__titolo">${esc(v.titolo)}</span><span class="voce__stato">${esc(descrizione)}${extra}</span></span>
+      <span class="voce__freccia" aria-hidden="true">›</span>
+    </a>`;
+}
+
+/** Cosa sappiamo di una voce rispetto all'impresa: rischio presente, documento disponibile, stato dell'adempimento. */
+function segnoPerImpresa(v) {
+  if (!questionarioCompletato()) return '';
+  if (v.tipo === 'rischio') return valuta(v.dati.presenteSe, ctx()) ? ' · <strong>presente nella tua impresa</strong>' : '';
+  if (v.tipo === 'documento') return modelliDisponibili(ctx()).some((m) => m.id === v.id) ? ' · <strong>disponibile per te</strong>' : '';
+  if (v.tipo === 'adempimento') {
+    const x = piano().find((p) => p.scheda.id === v.id);
+    return x ? ` · <strong>${esc(ETICHETTE[x.colore]?.titolo || '')}</strong>` : '';
+  }
+  return '';
+}
+
+function risultatiRicerca(testo) {
+  if (!normalizzaTesto(testo)) return '';
+  const r = cerca(indiceConoscenza(), testo);
+  const miei = cercaNeiMieiDati(testo);
+  if (!r.risultati.length && !miei.length)
+    return `<p class="lead">Nessun risultato per «${esc(testo)}».</p><p>Prova con un'altra parola, ad esempio il nome della macchina, del prodotto o del lavoro che fai.</p>`;
+  return `${r.parziale ? `<p class="nota">Nessun risultato contiene tutte le parole: ecco i più vicini.</p>` : ''}
+    ${miei.length ? `<h2>Nei tuoi dati <span class="conta">${miei.length}</span></h2><div class="lista">${miei.map((x) => cardSapere({ ...x, tipo: '' })).join('')}</div>` : ''}
+    ${raggruppa(r.risultati)
+      .map((g) => `<h2>${esc(g.titolo)} <span class="conta">${g.voci.length}</span></h2><div class="lista">${g.voci.map((v) => cardSapere(v, segnoPerImpresa(v))).join('')}</div>`)
+      .join('')}`;
+}
+
+const ESEMPI_RICERCA = ['muletto', 'ponteggio', 'estintori', 'vernici', 'gravidanza', 'corso preposto', 'H350', 'DUVRI', 'telecamere', 'rifiuti'];
+
+async function schermataCerca(testo = '') {
+  app.innerHTML = `
+    <section class="pagina">
+      <h1>Cerca</h1>
+      <p class="lead">Rischi, cose da fare, documenti, macchine, lavorazioni, corsi, norme e sigle. Funziona anche senza connessione.</p>
+      ${barraRicerca(testo, { grande: true, id: 'cerca-pagina' })}
+      <p class="esempi">Prova: ${ESEMPI_RICERCA.map((e) => `<a class="pill pill--info" href="#/cerca/${encodeURIComponent(e)}">${esc(e)}</a>`).join(' ')}</p>
+      <div id="risultati" aria-live="polite">${risultatiRicerca(testo)}</div>
+      <p class="nota">Le informazioni sono una guida per orientarti: vanno verificate con il tuo consulente e con il testo ufficiale delle norme.</p>
+    </section>`;
+  const campo = app.querySelector('#cerca-pagina');
+  if (!testo) campo.focus();
+  let attesa;
+  campo.addEventListener('input', () => {
+    clearTimeout(attesa);
+    attesa = setTimeout(() => {
+      const q = campo.value.trim();
+      app.querySelector('#risultati').innerHTML = risultatiRicerca(q);
+      history.replaceState(null, '', q ? `#/cerca/${encodeURIComponent(q)}` : '#/cerca');
+    }, 200);
+  });
+}
+
+const elenco = (voci) => (voci?.length ? `<ul>${voci.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '');
+
+function corpoSapere(v) {
+  const d = v.dati;
+  const presente = questionarioCompletato() && v.tipo === 'rischio' && valuta(d.presenteSe, ctx());
+  if (v.tipo === 'rischio') {
+    const R = (d.probabilita || 0) * (d.magnitudo || 0);
+    const liv = livelloRischio(stato.dvr?.criteri, R);
+    return `${questionarioCompletato() ? `<p><span class="pill pill--${presente ? 'giallo' : 'verde'}">${presente ? 'Presente nella tua impresa' : 'Non risulta dalle tue risposte'}</span></p>` : ''}
+      <h2>Possibili danni</h2><p>${esc(d.danno || '')}</p>
+      <h2>Valutazione tipica</h2><p>Probabilità ${d.probabilita} × danno ${d.magnitudo} = <strong>${R}</strong> (${esc(liv?.etichetta || '')}). Va confermata con il sopralluogo: nel DVR puoi cambiarla.</p>
+      <h2>Misure di prevenzione</h2>${elenco(d.misure)}
+      ${d.miglioramenti?.length ? `<h2>Misure di miglioramento possibili</h2>${elenco(d.miglioramenti)}` : ''}
+      ${d.dpi?.length ? `<h2>DPI</h2>${elenco(d.dpi)}` : ''}
+      <h2>Formazione</h2><p>${esc(d.formazione || '')}</p>
+      <h2>Sorveglianza sanitaria</h2><p>${d.sorveglianza ? 'Sì, secondo il protocollo del medico competente.' : 'Non prevista per questo rischio.'}</p>
+      <p class="nota">Riferimenti: ${esc(d.norma || '')}</p>
+      ${presente ? `<a class="btn btn--primario" href="#/documento/dvr-bozza">Apri il DVR</a>` : ''}`;
+  }
+  if (v.tipo === 'documento') {
+    const disponibile = questionarioCompletato() && modelliDisponibili(ctx()).some((m) => m.id === d.id);
+    return `<p class="lead">${esc(d.descrizione)}</p>
+      <h2>Consigli per compilarlo</h2>${elenco(d.consigli)}
+      ${disponibile ? `<a class="btn btn--primario" href="${d.ambito === 'lavoratore' ? '#/documenti' : `#/documento/${esc(d.id)}`}">Apri il documento</a>` : '<p class="nota">Dalle tue risposte questo documento non ti serve.</p>'}`;
+  }
+  if (v.tipo === 'attrezzatura') {
+    const et = Object.fromEntries((stato.defAttr?.pericoli || []).map((x) => [x.id, x.etichetta]));
+    const mie = attrezzatureAttive(stato.attrezzature).filter((a) => a.tipo === d.id);
+    return `${d.patentino ? '<p class="riquadro"><strong>Serve l\'abilitazione dell\'operatore</strong> (art. 73 c. 5 e Accordo Stato-Regioni): solo chi ha il patentino può usarla.</p>' : ''}
+      <h2>Pericoli tipici</h2>${elenco((d.pericoli || []).map((p) => et[p] || p))}
+      ${d.dpi?.length ? `<h2>DPI</h2>${elenco(d.dpi)}` : ''}
+      <h2>Controlli e verifiche</h2>${(d.controlli || []).map((c) => `<h3>${esc(c.titolo)}</h3><p>${esc(c.aiuto || '')}</p>`).join('')}
+      ${mie.length ? `<h2>Le tue attrezzature di questo tipo</h2><div class="lista">${mie.map((a) => cardSapere({ titolo: a.nome, sottotitolo: [a.marcaModello, a.matricola].filter(Boolean).join(' · '), href: `#/attrezzatura/${a.id}`, tipo: 'attrezzatura' })).join('')}</div>` : ''}
+      <a class="btn btn--secondario" href="#/attrezzature">Le tue attrezzature</a>`;
+  }
+  if (v.tipo === 'fase')
+    return `<h2>Rischi</h2>${elenco(d.rischi)}<h2>Misure</h2>${elenco(d.misure)}<h2>Attrezzature</h2>${elenco(d.attrezzature)}<h2>DPI</h2>${elenco(d.dpi)}
+      <a class="btn btn--primario" href="#/documento/pos-bozza">Apri il POS</a>`;
+  if (v.tipo === 'appalto')
+    return `<h2>Rischi portati dalla ditta esterna</h2>${elenco(d.rischiIntrodotti)}
+      <h2>Interferenze tipiche</h2>${(d.interferenze || []).map((x) => `<h3>${esc(x.attivita)}</h3><p>${esc(x.rischio)}</p><p><strong>Misure:</strong> ${esc(x.misure)}</p>`).join('')}
+      <a class="btn btn--primario" href="#/documento/duvri-bozza">Apri il DUVRI</a>`;
+  if (v.tipo === 'requisito')
+    return `<p class="lead">${esc(d.aiuto || '')}</p><p>${d.ruolo ? `Riguarda chi ha il ruolo: <strong>${esc(d.etichettaRuolo)}</strong>.` : 'Riguarda tutti i lavoratori.'}${d.periodicitaMesi ? ` Si rinnova ogni ${d.periodicitaMesi % 12 ? `${d.periodicitaMesi} mesi` : `${d.periodicitaMesi / 12} ${d.periodicitaMesi === 12 ? 'anno' : 'anni'}`}.` : ''}</p>
+      ${haDipendenti() ? '<a class="btn btn--secondario" href="#/lavoratori">I tuoi lavoratori</a>' : ''}`;
+  if (v.tipo === 'norma')
+    return `<p class="lead">${esc(d.titolo)}</p><p><span class="pill pill--info">${esc(d.ambito)}</span></p>
+      <p class="nota">Il testo ufficiale e aggiornato è su normattiva.it (leggi italiane) ed eur-lex.europa.eu (regolamenti europei).</p>`;
+  if (v.tipo === 'sigla') return `<p class="lead">${esc(d.testo)}</p>`;
+  return `<p>${esc(v.testo)}</p>`;
+}
+
+function schermataSapere(tipo, id) {
+  const ind = indiceConoscenza();
+  const v = voce(ind, tipo, id);
+  if (!v) return (location.hash = '#/cerca');
+  const coll = collegati(ind, v);
+  const altre = v.tipo === 'sigla' ? cerca(ind, v.titolo).risultati.filter((x) => x.chiave !== v.chiave).slice(0, 12) : [];
+  const gruppi = raggruppa(coll).map((g) => ({ ...g, voci: g.voci.slice(0, 8) }));
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="javascript:history.back()">‹ Indietro</a>
+      <p class="sopratitolo">${esc(TIPI_VOCE[v.tipo] || '')}${v.sottotitolo && v.tipo !== 'norma' ? ` · ${esc(v.sottotitolo)}` : ''}</p>
+      <h1>${esc(v.tipo === 'norma' ? v.dati.sigla : v.titolo)}</h1>
+      ${corpoSapere(v)}
+      ${gruppi.length || altre.length ? '<h2 class="collegati">Collegati</h2>' : ''}
+      ${gruppi.map((g) => `<h3>${esc(g.titolo)}</h3><div class="lista">${g.voci.map((x) => cardSapere(x, segnoPerImpresa(x))).join('')}</div>`).join('')}
+      ${altre.length ? `<div class="lista">${altre.map((x) => cardSapere(x, segnoPerImpresa(x))).join('')}</div>` : ''}
+      ${barraRicerca('', { id: 'cerca-sapere' })}
+      <p class="nota">Informazioni di orientamento: verificale con il tuo consulente e con il testo ufficiale delle norme.</p>
+    </section>`;
+}
+
+async function schermataVerifiche() {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const lista = await calcolaVerifiche();
+  app.innerHTML = `
+    <section class="pagina">
+      <h1>Controlli di coerenza</h1>
+      <p class="lead">safetyDoc confronta tra loro le risposte, i lavoratori, le macchine, i prodotti, l'archivio e i documenti, e ti segnala quello che non torna.</p>
+      ${
+        lista.length
+          ? `<p>${lista.length === 1 ? 'C\'è una cosa' : `Ci sono ${lista.length} cose`} da guardare, dalla più importante.</p>${lista.map((x) => cardVerifica(x)).join('')}`
+          : '<p class="riquadro riquadro--ok"><strong>Nessuna incoerenza trovata.</strong> I dati inseriti sono coerenti tra loro. Ricontrolla quando aggiungi lavoratori, macchine o prodotti.</p>'
+      }
+      <p class="nota">I controlli si basano sui dati che hai inserito: non sostituiscono il sopralluogo dell'RSPP.</p>
+    </section>`;
+}
+
+/** Pannello «Aiuto e verifiche» dentro ogni documento. */
+function pannelloAiutoDocumento(modelloId, lista) {
+  const a = perDocumento(indiceConoscenza(), modelloId, lista);
+  if (!a) return '';
+  const n = a.verifiche.length;
+  const link = (vv) => vv.map((x) => `<a href="${esc(x.tipo === 'adempimento' ? x.href : x.href)}">${esc(x.tipo === 'norma' ? x.dati.sigla : x.titolo)}</a>`).join(' · ');
+  return `<details class="opzioni-doc aiuto-doc" ${n && a.verifiche.some((x) => x.livello === 'alto') ? 'open' : ''}>
+      <summary>Aiuto e verifiche${n ? ` <span class="pill pill--${a.verifiche.some((x) => x.livello === 'alto') ? 'rosso' : 'giallo'}">${n}</span>` : ''}</summary>
+      ${
+        n
+          ? `<h3>Da sistemare prima di firmare</h3>${a.verifiche.slice(0, 5).map((x) => cardVerifica(x, { conDocumenti: false })).join('')}${n > 5 ? `<a class="btn btn--secondario" href="#/verifiche">Vedi tutti i ${n} controlli</a>` : ''}`
+          : '<p class="esito esito--ok">Nessuna incoerenza trovata nei dati usati da questo documento.</p>'
+      }
+      <h3>Consigli</h3>${elenco(a.consigli)}
+      ${a.adempimenti.length ? `<p><strong>Cosa fare collegato:</strong> ${link(a.adempimenti)}</p>` : ''}
+      ${a.rischi.length ? `<p><strong>Rischi:</strong> ${link(a.rischi)}</p>` : ''}
+      ${a.norme.length ? `<p><strong>Norme:</strong> ${link(a.norme)}</p>` : ''}
+      ${a.sigle.length ? `<dl class="sigle">${a.sigle.map((g) => `<dt>${esc(g.sigla)}</dt><dd>${esc(g.testo)}</dd>`).join('')}</dl>` : ''}
+      <p class="nota"><a href="#/sapere/documento/${esc(modelloId)}">Scheda completa del documento</a> · <a href="#/cerca">Cerca altro</a></p>
+    </details>`;
+}
+
 async function instrada() {
   const [, rotta, param, extra, quarto] = (location.hash || '#/').split('/').map((x) => (x ? decodeURIComponent(x) : x));
   aggiornaNav(rotta || '');
@@ -2633,17 +2908,21 @@ async function instrada() {
   if (rotta === 'evento') return schermataEvento(param);
   if (rotta === 'documenti') return schermataDocumenti();
   if (rotta === 'documento') return schermataDocumento(param, extra);
+  if (rotta === 'cerca') return schermataCerca(param || '');
+  if (rotta === 'sapere') return schermataSapere(param, extra);
+  if (rotta === 'verifiche') return schermataVerifiche();
   return schermataOggi();
 }
 
 async function avvia() {
   try {
-    const [q, c, l, d, a, t, se, lv, ar] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json', 'data/archivio.json'].map((u) =>
+    const [q, c, l, d, a, t, se, lv, ar, kn] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json', 'data/archivio.json', 'data/conoscenza.json'].map((u) =>
         fetch(u).then((r) => r.json())
       )
     );
     stato.settori = se;
+    stato.conoscenza = kn;
     stato.lavorazioni = lv;
     stato.defArchivio = ar;
     stato.defAttr = t;
@@ -2655,6 +2934,15 @@ async function avvia() {
     await ricarica();
     store.chiediMemoriaPersistente();
     addEventListener('hashchange', instrada);
+    app.addEventListener('submit', (ev) => {
+      const f = ev.target.closest?.('[data-ricerca]');
+      if (!f) return;
+      ev.preventDefault();
+      const q = String(new FormData(f).get('q') || '').trim();
+      const dest = q ? `#/cerca/${encodeURIComponent(q)}` : '#/cerca';
+      if (location.hash === dest) schermataCerca(q);
+      else location.hash = dest;
+    });
     await instrada();
   } catch (e) {
     console.error(e);

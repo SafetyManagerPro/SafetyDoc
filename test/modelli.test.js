@@ -68,3 +68,31 @@ test('stato della sicurezza riporta voci, date e allegati', () => {
   const html = generaDocumento('stato-sicurezza', { anagrafica, oggi: '2026-11-24', piano, allegati: { 'adempimento:x1': 2 } }).html;
   for (const x of ['Valutazione dei rischi', '01/03/2025', 'Nomina RSPP', 'Da fare', '>2<', 'Infortunio', '24/11/2026']) assert.ok(html.includes(x), `manca ${x}`);
 });
+
+test('DVR: valutazione personalizzata di P e D e misure programmate', async () => {
+  const { valutazioniPersonalizzate, generaDocumento, MODELLI } = await import('../js/modelli.js');
+  const { creaContesto } = await import('../js/engine.js');
+  const { readFileSync } = await import('node:fs');
+  const j = (f) => JSON.parse(readFileSync(new URL(`../data/${f}`, import.meta.url)));
+  const p = valutazioniPersonalizzate([
+    { rischio: 'rumore', p: '3', d: '', misura: 'Misura fonometrica', incaricato: 'RSPP', entro: '31/01/2027' },
+    { rischio: 'rumore', p: '1', d: '4', misura: 'Cuffie nuove' },
+    { rischio: '', p: '4', misura: 'ignorata' },
+    { rischio: 'mmc', p: '9', d: 'x', misura: '' }
+  ]);
+  assert.deepEqual(p.rumore, { p: 3, d: 4, misure: [{ misura: 'Misura fonometrica', incaricato: 'RSPP', entro: '31/01/2027' }, { misura: 'Cuffie nuove', incaricato: '', entro: '' }] });
+  assert.deepEqual(p.mmc, { p: null, d: null, misure: [] }, 'valori fuori scala ignorati');
+  assert.equal(Object.keys(p).length, 2);
+
+  const dvr = j('dvr.json');
+  const ctx = creaContesto({ composizione: 'dipendenti', numero_lavoratori: 2, sede: true, rumore_vibrazioni: true }, j('questionario.json'), j('ateco.json'));
+  const m = MODELLI.find((x) => x.id === 'dvr-bozza');
+  const campo = m.opzioni({ dvr, ctx }).find((c) => c.id === 'valutazioni');
+  assert.ok(campo.iniziali.some((r) => r.rischio === 'rumore'));
+  assert.ok(campo.colonne.find((c) => c.id === 'misura').suggerimenti.length > 5);
+  const html = generaDocumento('dvr-bozza', { anagrafica: {}, oggi: '2026-11-25', dvr, ctx, lavoratori: [], opzioni: { valutazioni: [{ rischio: 'rumore', p: '4', d: '3', misura: 'Misura fonometrica', incaricato: 'RSPP', entro: '31/01/2027' }] } }).html;
+  assert.match(html, /R = 12/);
+  assert.match(html, /Valori confermati dopo il sopralluogo/);
+  assert.match(html, /Misura fonometrica – incaricato: RSPP – entro il 31\/01\/2027/);
+  assert.match(html, /<td>Misura fonometrica<br><small>Rischio: Rumore<\/small><\/td><td>Programmata<\/td><td>31\/01\/2027<\/td><td>RSPP<\/td>/);
+});

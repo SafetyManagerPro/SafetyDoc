@@ -191,6 +191,45 @@ export const RISCHI_MATERNITA = [
 
 // ---------- definizioni ----------
 
+const presentiDvr = (d) => (d?.dvr?.pericoli || []).filter((x) => d?.ctx && valuta(x.presenteSe, d.ctx));
+const SCALA = (tipico) => [{ valore: '', etichetta: tipico }, ...[1, 2, 3, 4].map((n) => ({ valore: String(n), etichetta: String(n) }))];
+
+/** Tabella del DVR per confermare P e D di ogni rischio e programmare le misure di miglioramento. */
+function campoValutazioni(d) {
+  const presenti = presentiDvr(d);
+  return {
+    id: 'valutazioni',
+    etichetta: 'Valutazione personalizzata e misure di miglioramento',
+    tipo: 'tabella',
+    aiuto: 'Dopo il sopralluogo conferma o cambia probabilità (P) e danno (D) di ogni rischio: «tipico» lascia il valore proposto. Per programmare una misura scegli il rischio, scrivi la misura (ti suggeriamo le più comuni), chi se ne occupa ed entro quando. Per più misure sullo stesso rischio usa più righe.',
+    righe: presenti.length + 3,
+    iniziali: presenti.map((x) => ({ rischio: x.id, p: '', d: '', misura: '', incaricato: '', entro: '' })),
+    colonne: [
+      { id: 'rischio', etichetta: 'Rischio', tipo: 'scelta', valori: [{ valore: '', etichetta: '—' }, ...presenti.map((x) => ({ valore: x.id, etichetta: x.pericolo }))] },
+      { id: 'p', etichetta: 'P', tipo: 'scelta', valori: SCALA('tipico') },
+      { id: 'd', etichetta: 'D', tipo: 'scelta', valori: SCALA('tipico') },
+      { id: 'misura', etichetta: 'Misura di miglioramento', suggerimenti: [...new Set(presenti.flatMap((x) => x.miglioramenti || []))] },
+      { id: 'incaricato', etichetta: 'Incaricato' },
+      { id: 'entro', etichetta: 'Entro il', segnaposto: 'gg/mm/aaaa' }
+    ]
+  };
+}
+
+/** Valori confermati e misure programmate per ogni rischio, dalla tabella del DVR. */
+export function valutazioniPersonalizzate(righe) {
+  const out = {};
+  for (const r of righe || []) {
+    if (!r?.rischio) continue;
+    const x = (out[r.rischio] ||= { p: null, d: null, misure: [] });
+    const p = Number(r.p);
+    const dd = Number(r.d);
+    if (!x.p && p >= 1 && p <= 4) x.p = p;
+    if (!x.d && dd >= 1 && dd <= 4) x.d = dd;
+    if (String(r.misura || '').trim()) x.misure.push({ misura: r.misura.trim(), incaricato: String(r.incaricato || '').trim(), entro: String(r.entro || '').trim() });
+  }
+  return out;
+}
+
 export const MODELLI = [
   {
     id: 'stato-sicurezza',
@@ -249,16 +288,20 @@ export const MODELLI = [
     allegati: { planimetrie: ['generale', 'layout', 'emergenza', 'impianti', 'deposito', 'altro'], attrezzature: () => true, prodotti: () => true, categorie: ['libretto', 'ce', 'pericoli', 'sds'] },
     ambito: 'impresa',
     attivaSe: { fatto: 'haDipendenti' },
-    opzioni: () => [
+    opzioni: (d) => [
       { id: 'revisione', etichetta: 'Revisione n.', tipo: 'testo', segnaposto: '0' },
       { id: 'orario', etichetta: 'Orario di lavoro', tipo: 'testo', segnaposto: 'es. lun-ven 8-12 e 14-18' },
       { id: 'ciclo', etichetta: 'Descrizione del ciclo lavorativo', tipo: 'area', segnaposto: 'Cosa fa l\'impresa, in quali fasi, in quali locali' },
-      { id: 'presidi', etichetta: 'Presidi di emergenza', tipo: 'area', segnaposto: 'es. 2 estintori a polvere all\'ingresso e in laboratorio, cassetta di pronto soccorso in ufficio, punto di raccolta nel cortile' }
+      { id: 'presidi', etichetta: 'Presidi di emergenza', tipo: 'area', segnaposto: 'es. 2 estintori a polvere all\'ingresso e in laboratorio, cassetta di pronto soccorso in ufficio, punto di raccolta nel cortile' },
+      campoValutazioni(d)
     ],
     genera: (d) => {
       const { anagrafica: a, oggi, dvr, ctx, lavoratori, attivita, opzioni: o = {} } = d;
       const pericoli = (dvr?.pericoli || []).map((x) => ({ ...x, presente: ctx ? valuta(x.presenteSe, ctx) : false }));
-      const presenti = pericoli.filter((x) => x.presente);
+      const pers = valutazioniPersonalizzate(o.valutazioni);
+      const presenti = pericoli
+        .filter((x) => x.presente)
+        .map((x) => ({ ...x, tipicaP: x.probabilita, tipicaD: x.magnitudo, confermata: Boolean(pers[x.id]?.p || pers[x.id]?.d), probabilita: pers[x.id]?.p || x.probabilita, magnitudo: pers[x.id]?.d || x.magnitudo, programmate: pers[x.id]?.misure || [] }));
       const famiglie = [...new Set(pericoli.map((x) => x.famiglia))];
       const mansioni = raggruppaMansioni(lavoratori);
       const n = ctx?.fatti?.lavoratori || (lavoratori || []).length || '';
@@ -350,14 +393,16 @@ export const MODELLI = [
             <table class="doc__tabella doc__tabella--campi"><tbody>
               <tr><th>Possibili danni</th><td>${esc(x.danno || '')}</td></tr>
               <tr><th>Mansioni esposte</th><td>${mansioni.map((m) => esc(m.mansione)).join(', ') || '&nbsp;'}</td></tr>
-              <tr><th>Valutazione</th><td>P = ${v(String(x.probabilita || ''), 2)} · D = ${v(String(x.magnitudo || ''), 2)} · <strong>R = ${R || ''} (${esc(liv?.etichetta || '')})</strong><br><small>Valori tipici da confermare durante il sopralluogo.</small></td></tr>
+              <tr><th>Valutazione</th><td>P = ${v(String(x.probabilita || ''), 2)} · D = ${v(String(x.magnitudo || ''), 2)} · <strong>R = ${R || ''} (${esc(liv?.etichetta || '')})</strong><br><small>${x.confermata ? `Valori confermati dopo il sopralluogo (valori tipici: P ${x.tipicaP}, D ${x.tipicaD}).` : 'Valori tipici da confermare durante il sopralluogo.'}</small></td></tr>
               <tr><th>Misure di prevenzione e protezione</th><td><ul>${x.misure.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></td></tr>
               <tr><th>DPI</th><td>${(x.dpi || []).map(esc).join(', ') || 'Non necessari'}</td></tr>
               <tr><th>Informazione e formazione</th><td>${esc(x.formazione || '')}</td></tr>
               <tr><th>Sorveglianza sanitaria</th><td>${x.sorveglianza ? 'Sì, secondo il protocollo del medico competente' : 'Non prevista per questo rischio'}</td></tr>
               ${st ? `<tr><th>Valutazione specifica o adempimento</th><td>${esc(st)}</td></tr>` : ''}
               <tr><th>Riferimenti normativi</th><td>${esc(x.norma || '')}</td></tr>
-              <tr><th>Misure di miglioramento, incaricato, entro il</th><td style="height:2.2em">${liv && liv.da >= 6 ? `<strong>${esc(liv.azione)}.</strong> ` : ''}</td></tr>
+              <tr><th>Misure di miglioramento, incaricato, entro il</th><td style="height:2.2em">${liv && liv.da >= 6 ? `<strong>${esc(liv.azione)}.</strong> ` : ''}${
+                x.programmate.length ? `<ul>${x.programmate.map((m) => `<li>${esc(m.misura)}${m.incaricato ? ` – incaricato: ${esc(m.incaricato)}` : ''}${m.entro ? ` – entro il ${esc(m.entro)}` : ''}</li>`).join('')}</ul>` : ''
+              }</td></tr>
             </tbody></table></div>`;
           })
           .join('')}
@@ -448,6 +493,9 @@ export const MODELLI = [
 
         <h2>14 · Programma delle misure di miglioramento</h2>
         <table class="doc__tabella"><thead><tr><th>Misura o adempimento</th><th>Stato</th><th>Entro il</th><th>Incaricato</th></tr></thead><tbody>
+          ${presenti
+            .flatMap((x) => x.programmate.map((m) => `<tr><td>${esc(m.misura)}<br><small>Rischio: ${esc(x.pericolo)}</small></td><td>Programmata</td><td>${esc(m.entro)}</td><td>${esc(m.incaricato)}</td></tr>`))
+            .join('')}
           ${migliorare.map((x) => `<tr><td>${esc(x.scheda.titolo)}</td><td>${esc(x.motivo)}</td><td>${x.prossimaScadenza ? esc(data(x.prossimaScadenza)) : ''}</td><td></td></tr>`).join('')}
           <tr><td style="height:2em"></td><td></td><td></td><td></td></tr><tr><td style="height:2em"></td><td></td><td></td><td></td></tr>
         </tbody></table>

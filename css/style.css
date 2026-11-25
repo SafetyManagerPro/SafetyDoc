@@ -356,3 +356,30 @@ dialog.firma h2 { margin-top: 0; }
 .spunta-semplice { display: flex; gap: 10px; align-items: center; font-weight: 400; }
 .spunta-semplice input { width: 22px; height: 22px; }
 .testo-rosso { color: var(--rosso); }
+
+/* ---------- ricerca, schede di approfondimento e controlli di coerenza ---------- */
+.ricerca { margin: 20px 0; }
+.ricerca__etichetta { display: block; font-weight: 600; margin-bottom: 6px; }
+.ricerca__riga { display: flex; gap: 8px; }
+.ricerca__campo { flex: 1; min-width: 0; margin: 0; }
+.ricerca__riga .btn { width: auto; margin: 0; flex: none; }
+.ricerca--grande .ricerca__campo { font-size: 1.15rem; }
+.esempi { line-height: 2.2; }
+.esempi .pill { text-decoration: none; margin-right: 2px; }
+.conta { font-size: 0.85rem; font-weight: 600; color: var(--testo-2); }
+.collegati { margin-top: 32px; border-top: 1px solid var(--bordo); padding-top: 16px; }
+.verifica { border: 1px solid var(--bordo); border-left: 6px solid var(--info); border-radius: var(--raggio); padding: 12px 14px; margin: 12px 0; background: var(--superficie); }
+.verifica--rosso { border-left-color: var(--rosso); }
+.verifica--giallo { border-left-color: var(--giallo); }
+.verifica h3 { margin: 6px 0; font-size: 1.05rem; }
+.verifica p { margin: 6px 0; }
+.verifica .btn { margin-top: 6px; }
+.verifica__livello { margin: 0; }
+.banner--rosso { border-left: 6px solid var(--rosso); }
+.riquadro--ok { background: var(--verde-sfondo); color: var(--verde); }
+.aiuto-doc summary .pill { margin-left: 6px; font-size: 0.8rem; padding: 2px 8px; }
+.aiuto-doc ul { padding-left: 20px; }
+.aiuto-doc li { margin-bottom: 4px; }
+.sigle { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 12px 0; }
+.sigle dt { font-weight: 700; }
+.sigle dd { margin: 0; }

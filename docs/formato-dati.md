@@ -112,3 +112,17 @@ Supabase (eventualmente con sincronizzazione offline); le imprese migrano import
   (rischi introdotti, interferenze con P e D, voci di costo) per il DUVRI.
 - I campi compilati nei documenti (cantiere, ditta, lavorazioni) si salvano in `meta` con chiave
   `opzioni:<documento>` (più `:<lavoratore>` per i documenti personali).
+
+## Banca della conoscenza (`data/conoscenza.json`)
+
+- `norme`: `{ id, sigla, titolo, alias[], ambito }`. Gli `alias` servono a riconoscere la norma nei testi
+  (`riferimento` delle schede, `norma` dei rischi): il confronto ignora punteggiatura e maiuscole e richiede parole intere.
+- `glossario`: `{ sigla, testo }` per le sigle e le parole tecniche.
+- `sinonimi`: `{ parole[], cerca }` – se la domanda contiene una delle `parole`, la ricerca usa anche i termini di `cerca`.
+- `parolePericoli`: collega i rischi scritti a parole (fasi di cantiere, appalti) agli id dei rischi del DVR.
+- `pericoliAttrezzature`: collega i pericoli delle attrezzature agli id dei rischi del DVR.
+- `documenti`: per ogni modello `{ adempimenti[], rischi[], norme[], consigli[] }`, usati nel pannello «Aiuto e verifiche».
+
+In `data/dvr.json` ogni rischio ha `miglioramenti[]`: misure suggerite nella tabella «Valutazione personalizzata» del DVR,
+salvata nelle opzioni del documento (`opzioni:dvr-bozza` → `valutazioni: [{ rischio, p, d, misura, incaricato, entro }]`).
+I controlli di coerenza sono calcolati al momento e non vengono salvati.
