@@ -31,6 +31,10 @@ Dashboard Supabase → **Table Editor** → schema **safetydoc** (oppure SQL Edi
 
 Esempio: `select * from safetydoc.cruscotto_riepilogo;`
 
+Il modo più comodo: **SQL Editor → PRIVATE → «safetyDoc · cruscotto» → Run**. È la query di `supabase/cruscotto.sql`
+(sola lettura), già salvata nel progetto: mostra in un'unica tabella riepilogo, ultimi 14 giorni, funzioni più usate,
+versioni e settori.
+
 ## Script del database
 
 Ogni modifica al database è in `supabase/migrations/` ed è stata applicata dalla dashboard (SQL Editor) del progetto.
