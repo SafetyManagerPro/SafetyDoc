@@ -42,7 +42,7 @@ Ogni modifica al database è in `supabase/migrations/` ed è stata applicata dal
 | File | Applicato il | Contenuto |
 |---|---|---|
 | `20261125160000_safetydoc_utilizzo.sql` | 25/11/2026 | schema `safetydoc`, tabelle `installazioni` ed `eventi_uso`, funzioni `safetydoc_registra` e `safetydoc_cancella`, viste `cruscotto_*` |
-| `20261125200000_safetydoc_richieste.sql` | da applicare | richieste e messaggi, funzioni per impresa e amministratore, `safetydoc_verifica` con le risposte da leggere |
+| `20261125200000_safetydoc_richieste.sql` | 25/11/2026 | richieste e messaggi, funzioni per impresa e amministratore, `safetydoc_verifica` con le risposte da leggere |
 | `20261125180000_safetydoc_account.sql` | 25/11/2026 | fase B: `amministratori`, `imprese`, `inviti`, `dispositivi`, `accessi`, funzioni di attivazione, verifica e amministrazione. Provato con un'impresa di prova poi eliminata |
 
 ## Fase B – account delle imprese e amministrazione (dalla 0.20.0)
