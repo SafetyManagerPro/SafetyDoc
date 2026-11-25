@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.17.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.18.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -46,6 +46,14 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
    controlli che confrontano risposte, lavoratori, macchine, prodotti, archivio e documenti (es. prodotti H350 senza rischio
    cancerogeno, muletto senza operatori abilitati, infortunio dopo il DVR); pannello «Aiuto e verifiche» in ogni documento;
    nel DVR P e D modificabili dopo il sopralluogo e misure di miglioramento con incaricato e scadenza.
+17. **Scadenzario e promemoria al responsabile** – tutte le scadenze in un solo elenco (`js/scadenzario.js`):
+   adempimenti, lavoratori, macchine, certificati in archivio, revisioni dei documenti e denunce INAIL, ognuna con la norma
+   di riferimento e l'indicazione se è obbligo di legge, contratto o buona prassi. La scadenza dei certificati si calcola
+   dalla data di rilascio (DPR 462/2001, DPR 151/2011, DM 1/9/2021, DPR 74/2013, DPR 59/2013, DURC 120 giorni, aggiornamenti
+   dei corsi…); ogni documento ha la sua data e la prossima revisione (la firma sul telefono la registra da sola).
+   Il responsabile (RSPP, consulente o titolare) riceve il promemoria via email, WhatsApp o condivisione e il calendario
+   .ics con gli avvisi; ogni invio resta registrato e l'app ricorda quando rimandarlo. Notifiche sul dispositivo a 30 e
+   7 giorni e alla scadenza, anche ad app chiusa dove il browser lo permette (Chrome su Android con l'app installata).
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta. Quando si aggiungono
 schede si alza `versione` e si aggiunge una voce in `novita`: l'impresa vede le schede nuove che la riguardano.
@@ -61,6 +69,7 @@ icons/, screenshots/  icone (anche per iPhone) e schermate mostrate al momento d
 css/style.css         grafica: telefono prima di tutto, testo grande, tema scuro
 js/app.js             schermate e navigazione
 js/engine.js          regole, piano, semaforo (modulo puro, testato)
+js/scadenzario.js     scadenze calcolate, promemoria e notifiche (modulo puro, testato)
 js/conoscenza.js      indice, ricerca con sinonimi, collegamenti e controlli di coerenza (modulo puro, testato)
 js/merge.js           formato di scambio e unione tra postazioni (modulo puro, testato)
 js/store.js           salvataggio nel browser (IndexedDB): l'unico file da sostituire per passare a Supabase

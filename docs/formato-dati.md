@@ -126,3 +126,17 @@ Supabase (eventualmente con sincronizzazione offline); le imprese migrano import
 In `data/dvr.json` ogni rischio ha `miglioramenti[]`: misure suggerite nella tabella «Valutazione personalizzata» del DVR,
 salvata nelle opzioni del documento (`opzioni:dvr-bozza` → `valutazioni: [{ rischio, p, d, misura, incaricato, entro }]`).
 I controlli di coerenza sono calcolati al momento e non vengono salvati.
+
+## Scadenze calcolate
+
+- `data/archivio.json` → `certificati[].durate[]`: `{ id, etichetta, mesi | giorni, norma, obbligo }` (`obbligo`: `legge`,
+  `contratto`, `prassi`, `norma tecnica`). Nella voce d'archivio si salvano `durata` (id scelto) e `scadenzaCalcolata`
+  (true se la scadenza è quella calcolata e non scritta a mano).
+- `data/conoscenza.json` → `documenti[id].revisione`: `{ scheda }` (la data del documento registra l'adempimento della
+  scheda), `{ mesi, norma, obbligo, nota }` (revisione propria) oppure `{ evento, norma }` (si aggiorna quando cambia qualcosa).
+- La data di un documento con revisione propria è un record di `adempimenti` con `schedaId: "doc:<id del modello>"`:
+  entra nel backup e conserva lo `storico` delle date precedenti.
+- `profilo.responsabile`: `{ nome, ruolo, email, telefono, giorni, frequenza }` – chi riceve i promemoria, quante scadenze
+  includere (entro 30/60/90 giorni) e ogni quanti giorni ricordare l'invio.
+- `meta` (solo sul dispositivo, non nel backup): `promemoria:inviati` (registro degli invii), `scadenzario:prossime`
+  (scadenze senza nomi per il service worker), `scadenzario:notificate` (chiavi `id|soglia|data` già notificate).

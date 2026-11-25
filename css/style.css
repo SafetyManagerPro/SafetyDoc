@@ -383,3 +383,16 @@ dialog.firma h2 { margin-top: 0; }
 .sigle { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 12px 0; }
 .sigle dt { font-weight: 700; }
 .sigle dd { margin: 0; }
+
+/* ---------- scadenzario ---------- */
+.promemoria h2 { margin-top: 0; }
+.promemoria h3 { margin: 16px 0 4px; font-size: 1rem; }
+.promemoria .azioni { margin: 12px 0; }
+.promemoria .azioni .btn { margin: 0; }
+.banner--scadenze { background: var(--info-sfondo); color: var(--info); }
+.banner--scadenze.banner--rosso { background: var(--rosso-sfondo); color: var(--rosso); }
+.revisione-doc summary .pill { margin-left: 6px; font-size: 0.8rem; padding: 2px 8px; }
+.gruppo-apribile summary { cursor: pointer; list-style: none; }
+.gruppo-apribile summary::-webkit-details-marker { display: none; }
+.gruppo-apribile summary h2::after { content: ' ▸'; }
+.gruppo-apribile[open] summary h2::after { content: ' ▾'; }

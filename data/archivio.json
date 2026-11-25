@@ -1,5 +1,5 @@
 {
-  "versione": "0.1.0",
+  "versione": "0.3.0",
   "nota": "Tipi di documenti e di planimetrie che l'impresa conserva e aggiorna nel tempo.",
   "certificati": [
     {
@@ -26,56 +26,297 @@
       "id": "verifica-terra",
       "etichetta": "Verbale di verifica dell'impianto di messa a terra (DPR 462/2001)",
       "gruppo": "Locali e impianti",
-      "aiuto": "Verifica ogni 5 anni; ogni 2 anni per cantieri, locali ad uso medico, ambienti a maggior rischio di incendio e luoghi con pericolo di esplosione"
+      "aiuto": "Verifica ogni 5 anni; ogni 2 anni per cantieri, locali ad uso medico, ambienti a maggior rischio di incendio e luoghi con pericolo di esplosione",
+      "durate": [
+        {
+          "id": "ordinari",
+          "etichetta": "Ambienti ordinari: ogni 5 anni",
+          "mesi": 60,
+          "norma": "DPR 462/2001 art. 4",
+          "obbligo": "legge"
+        },
+        {
+          "id": "speciali",
+          "etichetta": "Cantieri, locali ad uso medico, ambienti a maggior rischio di incendio: ogni 2 anni",
+          "mesi": 24,
+          "norma": "DPR 462/2001 art. 4",
+          "obbligo": "legge"
+        },
+        {
+          "id": "atex",
+          "etichetta": "Luoghi con pericolo di esplosione: ogni 2 anni",
+          "mesi": 24,
+          "norma": "DPR 462/2001 art. 6",
+          "obbligo": "legge"
+        }
+      ]
     },
     {
       "id": "caldaia",
       "etichetta": "Libretto e controllo fumi della caldaia",
-      "gruppo": "Locali e impianti"
+      "gruppo": "Locali e impianti",
+      "durate": [
+        {
+          "id": "gas-100",
+          "etichetta": "Gas o GPL da 10 a 100 kW: controllo di efficienza ogni 4 anni",
+          "mesi": 48,
+          "norma": "DPR 74/2013 Allegato A",
+          "obbligo": "legge"
+        },
+        {
+          "id": "gas-oltre",
+          "etichetta": "Gas o GPL oltre 100 kW: ogni 2 anni",
+          "mesi": 24,
+          "norma": "DPR 74/2013 Allegato A",
+          "obbligo": "legge"
+        },
+        {
+          "id": "liquido-100",
+          "etichetta": "Gasolio, legna o pellet da 10 a 100 kW: ogni 2 anni",
+          "mesi": 24,
+          "norma": "DPR 74/2013 Allegato A",
+          "obbligo": "legge"
+        },
+        {
+          "id": "liquido-oltre",
+          "etichetta": "Gasolio, legna o pellet oltre 100 kW: ogni anno",
+          "mesi": 12,
+          "norma": "DPR 74/2013 Allegato A",
+          "obbligo": "legge"
+        },
+        {
+          "id": "pdc",
+          "etichetta": "Pompa di calore o climatizzatore da 12 a 100 kW: ogni 4 anni",
+          "mesi": 48,
+          "norma": "DPR 74/2013 Allegato A",
+          "obbligo": "legge"
+        }
+      ],
+      "aiuto": "Il controllo di efficienza energetica (bollino) dipende da combustibile e potenza; la manutenzione segue il libretto del costruttore o dell'installatore. Alcune Regioni fissano periodicità diverse."
     },
     {
       "id": "cpi",
       "etichetta": "SCIA antincendio o certificato di prevenzione incendi",
       "gruppo": "Antincendio",
-      "aiuto": "Rinnovo periodico ogni 5 anni (10 anni per alcune attività)"
+      "aiuto": "Rinnovo periodico ogni 5 anni (10 anni per alcune attività)",
+      "durate": [
+        {
+          "id": "cinque",
+          "etichetta": "Rinnovo periodico ogni 5 anni",
+          "mesi": 60,
+          "norma": "DPR 151/2011 art. 5",
+          "obbligo": "legge"
+        },
+        {
+          "id": "dieci",
+          "etichetta": "Attività n. 6, 7, 8, 64, 71, 72 e 77 dell'Allegato I: ogni 10 anni",
+          "mesi": 120,
+          "norma": "DPR 151/2011 art. 5",
+          "obbligo": "legge"
+        }
+      ]
     },
     {
       "id": "manutenzione-antincendio",
       "etichetta": "Verbale o contratto di manutenzione di estintori e presidi",
-      "gruppo": "Antincendio"
+      "gruppo": "Antincendio",
+      "durate": [
+        {
+          "id": "semestrale",
+          "etichetta": "Controllo periodico di estintori, idranti, luci di emergenza: ogni 6 mesi",
+          "mesi": 6,
+          "norma": "DM 1/09/2021 e norme UNI 9994-1",
+          "obbligo": "legge"
+        }
+      ],
+      "aiuto": "Estintori, idranti, porte tagliafuoco e luci di emergenza vanno controllati almeno ogni 6 mesi da un tecnico qualificato (DM 1/9/2021)."
     },
     {
       "id": "autorizzazione-ambientale",
       "etichetta": "Autorizzazione ambientale (AUA, emissioni, scarichi)",
-      "gruppo": "Ambiente"
+      "gruppo": "Ambiente",
+      "durate": [
+        {
+          "id": "aua",
+          "etichetta": "AUA: 15 anni (rinnovo da chiedere 6 mesi prima)",
+          "mesi": 180,
+          "norma": "DPR 59/2013 art. 3 c. 6 e art. 5",
+          "obbligo": "legge"
+        }
+      ],
+      "aiuto": "L'AUA dura 15 anni dal rilascio; il rinnovo si chiede almeno 6 mesi prima della scadenza. Altre autorizzazioni: scrivi la scadenza indicata nell'atto."
     },
     {
       "id": "rifiuti",
       "etichetta": "Iscrizione RENTRI, Albo gestori o documenti sui rifiuti",
-      "gruppo": "Ambiente"
+      "gruppo": "Ambiente",
+      "durate": [
+        {
+          "id": "albo",
+          "etichetta": "Iscrizione all'Albo gestori ambientali: 5 anni",
+          "mesi": 60,
+          "norma": "DM 120/2014",
+          "obbligo": "legge"
+        },
+        {
+          "id": "albo-semplificata",
+          "etichetta": "Iscrizione semplificata (trasporto dei propri rifiuti): 10 anni",
+          "mesi": 120,
+          "norma": "D.Lgs. 152/2006 art. 212 c. 8",
+          "obbligo": "legge"
+        }
+      ]
     },
     {
       "id": "contratto-manutenzione",
       "etichetta": "Contratto di manutenzione",
-      "gruppo": "Contratti e polizze"
+      "gruppo": "Contratti e polizze",
+      "durate": [
+        {
+          "id": "annuale",
+          "etichetta": "Contratto annuale",
+          "mesi": 12,
+          "norma": "Contratto",
+          "obbligo": "contratto"
+        }
+      ]
+    },
+    {
+      "id": "durc",
+      "etichetta": "DURC (regolarità contributiva)",
+      "gruppo": "Contratti e polizze",
+      "aiuto": "Il DURC online vale 120 giorni dalla richiesta. Serve per appalti, subappalti e patente a crediti.",
+      "durate": [
+        {
+          "id": "validita",
+          "etichetta": "Validità 120 giorni",
+          "giorni": 120,
+          "norma": "DM 30/01/2015 art. 7",
+          "obbligo": "legge"
+        }
+      ]
     },
     {
       "id": "assicurazione",
       "etichetta": "Polizza assicurativa",
-      "gruppo": "Contratti e polizze"
+      "gruppo": "Contratti e polizze",
+      "durate": [
+        {
+          "id": "annuale",
+          "etichetta": "Polizza annuale",
+          "mesi": 12,
+          "norma": "Contratto di assicurazione",
+          "obbligo": "contratto"
+        }
+      ]
     },
     {
       "id": "attestato-lavoratore",
       "etichetta": "Attestato o abilitazione di un lavoratore",
       "gruppo": "Lavoratori",
       "collega": "lavoratore",
-      "aiuto": "Corsi non previsti nel piano, abilitazioni, specializzazioni"
+      "aiuto": "Corsi non previsti nel piano, abilitazioni, specializzazioni",
+      "durate": [
+        {
+          "id": "lavoratori",
+          "etichetta": "Formazione lavoratori: aggiornamento ogni 5 anni",
+          "mesi": 60,
+          "norma": "Accordo Stato-Regioni 59/2025",
+          "obbligo": "legge"
+        },
+        {
+          "id": "preposto",
+          "etichetta": "Preposto: aggiornamento ogni 2 anni",
+          "mesi": 24,
+          "norma": "Accordo Stato-Regioni 59/2025",
+          "obbligo": "legge"
+        },
+        {
+          "id": "primo-soccorso",
+          "etichetta": "Primo soccorso: aggiornamento ogni 3 anni",
+          "mesi": 36,
+          "norma": "DM 388/2003 art. 3",
+          "obbligo": "legge"
+        },
+        {
+          "id": "antincendio",
+          "etichetta": "Addetto antincendio: aggiornamento ogni 5 anni",
+          "mesi": 60,
+          "norma": "DM 2/09/2021 art. 5",
+          "obbligo": "legge"
+        },
+        {
+          "id": "rls",
+          "etichetta": "RLS: aggiornamento annuale",
+          "mesi": 12,
+          "norma": "D.Lgs. 81/2008 art. 37 c. 11",
+          "obbligo": "legge"
+        },
+        {
+          "id": "attrezzature",
+          "etichetta": "Abilitazione attrezzature (PLE, gru, carrelli, escavatori): ogni 5 anni",
+          "mesi": 60,
+          "norma": "Accordo Stato-Regioni 59/2025",
+          "obbligo": "legge"
+        },
+        {
+          "id": "ponteggi",
+          "etichetta": "Montaggio ponteggi: aggiornamento ogni 4 anni",
+          "mesi": 48,
+          "norma": "D.Lgs. 81/2008 Allegato XXI",
+          "obbligo": "legge"
+        },
+        {
+          "id": "funi",
+          "etichetta": "Lavori su funi: aggiornamento ogni 5 anni",
+          "mesi": 60,
+          "norma": "D.Lgs. 81/2008 Allegato XXI",
+          "obbligo": "legge"
+        },
+        {
+          "id": "pes-pav",
+          "etichetta": "Lavori elettrici PES/PAV: aggiornamento ogni 5 anni",
+          "mesi": 60,
+          "norma": "Norma CEI 11-27",
+          "obbligo": "norma tecnica"
+        },
+        {
+          "id": "fgas",
+          "etichetta": "Patentino F-gas: 10 anni",
+          "mesi": 120,
+          "norma": "DPR 146/2018",
+          "obbligo": "legge"
+        }
+      ]
     },
     {
       "id": "patente",
       "etichetta": "Patente, CQC o patentino di un lavoratore",
       "gruppo": "Lavoratori",
-      "collega": "lavoratore"
+      "collega": "lavoratore",
+      "durate": [
+        {
+          "id": "cqc",
+          "etichetta": "CQC: rinnovo ogni 5 anni",
+          "mesi": 60,
+          "norma": "D.Lgs. 286/2005",
+          "obbligo": "legge"
+        },
+        {
+          "id": "adr",
+          "etichetta": "Certificato ADR: 5 anni",
+          "mesi": 60,
+          "norma": "Accordo ADR 8.2",
+          "obbligo": "legge"
+        },
+        {
+          "id": "tachigrafo",
+          "etichetta": "Carta del conducente (tachigrafo): 5 anni",
+          "mesi": 60,
+          "norma": "Reg. UE 165/2014",
+          "obbligo": "legge"
+        }
+      ]
     },
     {
       "id": "documento-macchina",
@@ -86,12 +327,30 @@
     {
       "id": "privacy",
       "etichetta": "Documento privacy (registro, nomine, informative firmate)",
-      "gruppo": "Privacy"
+      "gruppo": "Privacy",
+      "durate": [
+        {
+          "id": "annuale",
+          "etichetta": "Riesame annuale delle misure (consigliato)",
+          "mesi": 12,
+          "norma": "Reg. UE 2016/679 art. 24 e 32",
+          "obbligo": "prassi"
+        }
+      ]
     },
     {
       "id": "haccp",
       "etichetta": "Documento HACCP (registrazione, analisi, manuale)",
-      "gruppo": "Alimenti"
+      "gruppo": "Alimenti",
+      "durate": [
+        {
+          "id": "annuale",
+          "etichetta": "Revisione annuale del piano (consigliata)",
+          "mesi": 12,
+          "norma": "Reg. CE 852/2004 art. 5",
+          "obbligo": "prassi"
+        }
+      ]
     },
     {
       "id": "altro",

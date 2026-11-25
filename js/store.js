@@ -117,6 +117,12 @@ export async function salvaConsulente(consulente) {
   await scrivi('profilo', await timbra({ ...profilo, consulente, deleted: false }));
 }
 
+/** Chi riceve i promemoria delle scadenze (RSPP, consulente o datore di lavoro). */
+export async function salvaResponsabile(responsabile) {
+  const profilo = await leggiProfilo();
+  await scrivi('profilo', await timbra({ ...profilo, responsabile, deleted: false }));
+}
+
 export async function leggiMeta(chiave) {
   return (await leggi('meta', chiave))?.valore;
 }

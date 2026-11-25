@@ -282,6 +282,41 @@ export const MODELLI = [
     }
   },
   {
+    id: 'scadenzario',
+    titolo: 'Scadenzario della sicurezza',
+    descrizione: 'Tutte le scadenze dell\'impresa con la data calcolata e la norma di riferimento: adempimenti, lavoratori, macchine, certificati, revisioni dei documenti. Da consegnare al responsabile o da tenere in ufficio.',
+    ambito: 'impresa',
+    attivaSe: { sempre: true },
+    genera: ({ anagrafica: a, oggi, scadenze, responsabile: r = {} }) => {
+      const lista = scadenze || [];
+      const GRUPPI = [
+        ['scaduta', 'Scadute'],
+        ['entro30', 'Entro 30 giorni'],
+        ['dafare', 'Da fare o senza data'],
+        ['entro90', 'Entro 90 giorni'],
+        ['oltre', 'Più avanti']
+      ];
+      const OBBLIGO = { legge: 'Legge', contratto: 'Contratto', prassi: 'Buona prassi', 'norma tecnica': 'Norma tecnica' };
+      const tabella = (voci) => `<table class="doc__tabella"><thead><tr><th>Entro il</th><th>Scadenza</th><th>Riferimento</th><th>Fatto il</th></tr></thead><tbody>${voci
+        .map((x) => `<tr><td>${x.data ? esc(data(x.data)) : '—'}</td><td>${esc(x.titolo)}${x.senzaData ? `<br><small>${esc(x.senzaData)}</small>` : ''}</td><td><small>${esc(x.norma || '')}${x.obbligo ? ` · ${esc(OBBLIGO[x.obbligo] || x.obbligo)}` : ''}</small></td><td style="min-width:5em"></td></tr>`)
+        .join('')}</tbody></table>`;
+      return `${intestazione(a)}
+        <h1>Scadenzario della sicurezza</h1>
+        <p class="doc__rif">Situazione al ${data(oggi)}${r.nome ? ` · responsabile delle scadenze: ${esc(r.nome)}${r.ruolo ? ` (${esc(r.ruolo)})` : ''}` : ''}</p>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          ${GRUPPI.map(([k, t]) => `<tr><th>${t}</th><td>${lista.filter((x) => x.stato === k).length}</td></tr>`).join('')}
+        </tbody></table>
+        ${GRUPPI.map(([k, t]) => {
+          const voci = lista.filter((x) => x.stato === k);
+          return voci.length ? `<h2>${t}</h2>${tabella(voci)}` : '';
+        }).join('')}
+        ${lista.length ? '' : '<p>Nessuna scadenza registrata.</p>'}
+        <p class="doc__nota">Date calcolate da safetyDoc sulla base delle registrazioni e delle norme indicate. «Buona prassi» e «contratto» non sono obblighi di legge. Verificare con il consulente.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['Il responsabile delle scadenze', r.nome])}`;
+    }
+  },
+  {
     id: 'dvr-bozza',
     titolo: 'Documento di valutazione dei rischi (DVR) completo',
     descrizione: 'DVR dettagliato secondo le procedure standardizzate: organigramma, mansioni, criteri, valutazione di ogni rischio con probabilità e danno, attrezzature, prodotti, DPI, formazione, sorveglianza sanitaria, emergenze e programma di miglioramento. Da completare e firmare con RSPP e medico competente.',

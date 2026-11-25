@@ -36,9 +36,11 @@ import {
   novitaDaMostrare,
   vociControlloIniziale,
   dataDaMese,
-  valuta
+  valuta,
+  statoCorrente
 } from './engine.js';
 import { linkAiuto } from './aiuto.js';
+import { raccogliScadenze, raggruppaScadenze, conteggiScadenze, testoPromemoria, daNotificare, testoNotifica, perServiceWorker, revisioneDocumento, statoScadenza, chiaveDocumento, scadenzaArchivio, durataArchivio, giorniTra, AREE } from './scadenzario.js';
 import { costruisciIndice, cerca, raggruppa, collegati, voce, perDocumento, verifiche, normalizza as normalizzaTesto, TIPI_VOCE } from './conoscenza.js';
 import { oggiLocale, formattaData, interpretaData, mascheraData, erroreData, MESI } from './date.js';
 import { immaginiPerStampa } from './allegati.js';
@@ -47,10 +49,10 @@ import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport }
 import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
 import { cifra, decifra } from './cifratura.js';
 import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, livelloRischio } from './modelli.js';
-import { generaIcs, eventiScadenze } from './calendario.js';
+import { generaIcs } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.17.0';
+export const VERSIONE_APP = '0.18.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -444,7 +446,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { cerca: 'oggi', sapere: 'oggi', verifiche: 'oggi', archivio: 'documenti', planimetrie: 'documenti', 'archivio-voce': 'documenti', partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
+const SEZIONE = { scadenzario: 'piano', cerca: 'oggi', sapere: 'oggi', verifiche: 'oggi', archivio: 'documenti', planimetrie: 'documenti', 'archivio-voce': 'documenti', partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -529,6 +531,7 @@ async function schermataOggi() {
           : `<p class="lead">Non ci sono scadenze nei prossimi 60 giorni. Torna a controllare ogni tanto.</p>`
       }
       <a class="btn btn--secondario" href="#/piano">Vedi il piano completo</a>
+      ${await bloccoScadenzarioOggi()}
       ${bloccoVerificheOggi(controlli)}
       ${barraRicerca('', { id: 'cerca-oggi' })}
       ${haDipendenti() ? bloccoLavoratoriOggi() : ''}
@@ -599,6 +602,7 @@ async function schermataPiano() {
         )
         .join('')}
       ${vociControlloIniziale(p).length ? `<a class="btn btn--secondario" href="#/controllo-iniziale/0">Controllo veloce: segna ciò che hai già fatto</a>` : ''}
+      <a class="btn btn--primario" href="#/scadenzario">Scadenzario e promemoria al responsabile</a>
       <a class="btn btn--secondario" href="#/documento/stato-sicurezza">Stampa lo stato della sicurezza</a>
       <h2>Promemoria sul telefono</h2>
       <p>Aggiungi tutte le scadenze al calendario del telefono: ti avviserà 30 e 7 giorni prima.</p>
@@ -610,7 +614,9 @@ async function schermataPiano() {
 }
 
 async function esportaCalendario() {
-  const eventi = eventiScadenze({ piano: piano(), situazioni: haDipendenti() ? attivi().map(situazione) : [], nomeCompleto, macchine: macchine().map(situazioneMacchina), archivio: archivioAttuale(stato.archivio) });
+  const eventi = scadenzeAttuali()
+    .filter((x) => x.data)
+    .map((x) => ({ uid: x.id.replace(/[^a-zA-Z0-9-]/g, '-'), data: x.data, titolo: x.area === 'lavoratori' ? x.titolo : `Sicurezza: ${x.titolo}`, descrizione: [x.cosa, x.norma ? `Riferimento: ${x.norma}` : '', 'Apri safetyDoc per i passi da fare.'].filter(Boolean).join('\n') }));
   if (!eventi.length) return avviso('Non ci sono ancora scadenze: prima segna come fatte le voci del piano.');
   const ics = generaIcs(eventi);
   const nome = `scadenze-sicurezza-${oggiIso()}.ics`;
@@ -1034,7 +1040,7 @@ async function schermataVoceArchivio(id, genereNuovo, collegamento) {
   if (rinnovo) {
     const vecchio = stato.archivio.find((x) => x.id === genereNuovo && !x.deleted);
     if (!vecchio) return (location.hash = '#/archivio');
-    r = { genere: vecchio.genere, tipo: vecchio.tipo, titolo: vecchio.titolo, area: vecchio.area, ente: vecchio.ente, lavoratoreId: vecchio.lavoratoreId, attrezzaturaId: vecchio.attrezzaturaId, sostituisce: vecchio.id };
+    r = { genere: vecchio.genere, tipo: vecchio.tipo, durata: vecchio.durata, titolo: vecchio.titolo, area: vecchio.area, ente: vecchio.ente, lavoratoreId: vecchio.lavoratoreId, attrezzaturaId: vecchio.attrezzaturaId, sostituisce: vecchio.id };
   } else if (nuovo) {
     r = { genere: genereNuovo === 'planimetria' ? 'planimetria' : 'certificato' };
     if (collegamento?.startsWith('lav:')) Object.assign(r, { lavoratoreId: collegamento.slice(4), tipo: 'attestato-lavoratore' });
@@ -1066,7 +1072,9 @@ async function schermataVoceArchivio(id, genereNuovo, collegamento) {
         <label>${pl ? 'Redatta da (tecnico)' : 'Rilasciato da (ente, ditta, tecnico)'}<input class="campo" name="ente" value="${esc(r.ente || '')}"></label>
         ${pl ? '' : `<label>Numero o protocollo<input class="campo" name="numero" value="${esc(r.numero || '')}"></label>`}
         <label>${pl ? 'Data della revisione' : 'Data di rilascio'}<input class="campo" type="date" name="dataRilascio" max="${oggiIso()}" value="${esc(r.dataRilascio || '')}"></label>
-        ${pl ? '' : `<label>Scadenza <small>(se c'è: te la ricordiamo 60 giorni prima)</small><input class="campo" type="date" name="scadenza" data-dopo="dataRilascio" value="${esc(rinnovo ? '' : r.scadenza || '')}"></label>`}
+        ${pl ? '' : `<div id="durata-norma"></div>
+        <label>Scadenza <small>(calcolata dalla norma quando possibile; puoi correggerla)</small><input class="campo" type="date" name="scadenza" data-dopo="dataRilascio" value="${esc(rinnovo ? '' : r.scadenza || '')}"></label>
+        <p class="nota" id="nota-scadenza"></p>`}
         <div id="collega-lav" ${r.lavoratoreId || r.tipo === 'attestato-lavoratore' || r.tipo === 'patente' ? '' : 'hidden'}>
           <label>Lavoratore<select class="campo" name="lavoratoreId"><option value="">—</option>${lav.map((l) => `<option value="${esc(l.id)}" ${r.lavoratoreId === l.id ? 'selected' : ''}>${esc(nomeCompleto(l))}</option>`).join('')}</select></label>
         </div>
@@ -1100,6 +1108,36 @@ async function schermataVoceArchivio(id, genereNuovo, collegamento) {
   };
   form.tipo.addEventListener('change', aiutoTipo);
   aiutoTipo();
+  if (!pl) {
+    // Scadenza calcolata dalla norma (tipo + validità + data di rilascio), finché l'utente non la scrive a mano.
+    let automatica = !r.scadenza || rinnovo || r.scadenzaCalcolata === true;
+    const box = app.querySelector('#durata-norma');
+    const nota = app.querySelector('#nota-scadenza');
+    const calcola = () => {
+      const t = tipi.find((x) => x.id === form.tipo.value);
+      const ris = scadenzaArchivio(t, form.dataRilascio.value, form.durata?.value);
+      if (ris && automatica) impostaData(form.scadenza, ris.scadenza);
+      nota.textContent = ris ? (automatica ? `Calcolata: ${ris.durata.etichetta} (${ris.durata.norma}).` : `Secondo la norma sarebbe il ${dataLeggibile(ris.scadenza)}: ${ris.durata.etichetta} (${ris.durata.norma}).`) : t?.durate?.length ? 'Inserisci la data di rilascio: la scadenza la calcoliamo noi.' : '';
+    };
+    const durate = () => {
+      const t = tipi.find((x) => x.id === form.tipo.value);
+      const scelta = form.durata?.value || r.durata;
+      box.innerHTML = t?.durate?.length > 1
+        ? `<label>Validità secondo la norma<select class="campo" name="durata">${t.durate.map((d) => `<option value="${esc(d.id)}" ${scelta === d.id ? 'selected' : ''}>${esc(d.etichetta)}</option>`).join('')}</select></label>`
+        : t?.durate?.length ? `<input type="hidden" name="durata" value="${esc(t.durate[0].id)}">` : '';
+      form.durata?.addEventListener('change', calcola);
+      calcola();
+    };
+    form.tipo.addEventListener('change', durate);
+    form.dataRilascio.addEventListener('change', calcola);
+    // il campo data visibile viene creato subito dopo: si ascolta sul modulo
+    form.addEventListener('input', (e) => {
+      if (!e.target.classList?.contains('data-campo__testo') || !e.target.closest('.data-campo')?.querySelector('input[name="scadenza"]')) return;
+      automatica = false;
+      calcola();
+    });
+    durate();
+  }
   if (!nuovo && !rinnovo) attivaAllegati(() => schermataVoceArchivio(id));
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -1115,6 +1153,7 @@ async function schermataVoceArchivio(id, genereNuovo, collegamento) {
       numero: testo('numero'),
       dataRilascio: f.get('dataRilascio') || null,
       scadenza: f.get('scadenza') || null,
+      ...(pl ? {} : { durata: f.get('durata') || null, scadenzaCalcolata: Boolean(f.get('scadenza')) && f.get('scadenza') === scadenzaArchivio(tipi.find((x) => x.id === f.get('tipo')), f.get('dataRilascio'), f.get('durata'))?.scadenza }),
       lavoratoreId: f.get('lavoratoreId') || null,
       attrezzaturaId: f.get('attrezzaturaId') || null,
       note: testo('note'),
@@ -1313,7 +1352,9 @@ function attivaFirme({ modello, lavoratore, requisito, registro }) {
     }
     await store.salva('allegati', { collegatoTipo: tipo, collegatoId: id, nome, tipo: 'text/html', dimensione: file.size, file });
     await ricarica();
-    avviso(requisito && lavoratore ? `Documento firmato salvato: «${requisito.titolo}» è registrato a oggi.` : 'Documento firmato salvato.');
+    // La firma di un documento dell'impresa con revisione periodica ne fissa la data (la precedente va nello storico).
+    const datato = !lavoratore && (await registraDataDocumento(modello.id, oggiIso()));
+    avviso(requisito && lavoratore ? `Documento firmato salvato: «${requisito.titolo}» è registrato a oggi.` : datato ? 'Documento firmato salvato con la data di oggi: la prossima revisione è nello scadenzario.' : 'Documento firmato salvato.');
     instrada();
   });
   return { ricollega: collega };
@@ -2253,6 +2294,8 @@ function datiDocumento(l, registro, opzioni) {
     allegati: contaAllegati(),
     lavorazioni: stato.lavorazioni,
     archivio: archivioAttuale(stato.archivio),
+    scadenze: scadenzeAttuali(),
+    responsabile: responsabile(),
     opzioni
   };
 }
@@ -2407,6 +2450,7 @@ async function schermataDocumento(id, lavId) {
       <div class="solo-schermo">
         <a class="indietro" href="${l ? `#/lavoratore/${esc(l.id)}` : '#/documenti'}">‹ Indietro</a>
         ${pannelloAiutoDocumento(id, controlli)}
+        ${bloccoRevisioneDocumento(m)}
         ${
           defs.length
             ? `<details class="opzioni-doc" ${salvate ? '' : 'open'}><summary>Dati di questo documento</summary>
@@ -2438,6 +2482,7 @@ async function schermataDocumento(id, lavId) {
     window.print();
   });
   attivaAllegati(() => schermataDocumento(id, lavId));
+  attivaRevisioneDocumento(m, () => schermataDocumento(id, lavId));
   app.querySelector('#allegati-doc').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const n = await salvaAllegatiDa(ev.target, 'documento', chiaveDoc);
@@ -2519,6 +2564,15 @@ async function schermataDati(sezione) {
         <button class="btn btn--primario" type="submit">Salva il contatto</button>
       </form>
 
+      <h2 id="responsabile">Responsabile delle scadenze</h2>
+      <p>Chi riceve i promemoria dello scadenzario: l'RSPP, il consulente o tu stesso.</p>
+      <form id="form-responsabile">
+        ${CAMPI_RESPONSABILE.map(([k, et, tipo, ac]) => `<label>${esc(et)}<input class="campo" name="${k}" type="${tipo}" autocomplete="${ac}" value="${esc(stato.profilo?.responsabile?.[k] || (k === 'nome' ? responsabile().nome : ''))}"></label>`).join('')}
+        <label>Scadenze da includere nel promemoria<select class="campo" name="giorni">${[30, 60, 90].map((g) => `<option value="${g}" ${responsabile().giorni === g ? 'selected' : ''}>Entro ${g} giorni</option>`).join('')}</select></label>
+        <label>Ricordami di inviare il promemoria<select class="campo" name="frequenza">${[[7, 'Ogni settimana'], [15, 'Ogni 15 giorni'], [30, 'Ogni mese']].map(([g, e]) => `<option value="${g}" ${responsabile().frequenza === g ? 'selected' : ''}>${e}</option>`).join('')}</select></label>
+        <button class="btn btn--primario" type="submit">Salva il responsabile</button>
+      </form>
+
       <h2 id="installa-app">Installa l'app</h2>
       ${bloccoInstallazione()}
 
@@ -2546,8 +2600,19 @@ async function schermataDati(sezione) {
     await ricarica();
     avviso('Contatto salvato.');
   });
+  app.querySelector('#form-responsabile').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const r = {};
+    for (const [k] of CAMPI_RESPONSABILE) r[k] = String(f.get(k) || '').trim();
+    r.giorni = Number(f.get('giorni')) || 60;
+    r.frequenza = Number(f.get('frequenza')) || 30;
+    await store.salvaResponsabile(r);
+    await ricarica();
+    avviso('Responsabile salvato.');
+  });
   attivaInstallazione();
-  const ancora = { consulente: 'consulente', installa: 'installa-app' }[sezione];
+  const ancora = { consulente: 'consulente', installa: 'installa-app', responsabile: 'responsabile' }[sezione];
   if (ancora) app.querySelector(`#${ancora}`)?.scrollIntoView();
   app.querySelector('#esporta').addEventListener('click', esporta);
   app.querySelector('#importa').addEventListener('change', (e) => importa(e.target.files[0]));
@@ -2629,6 +2694,294 @@ async function importa(file) {
 }
 
 // ---------- avvio ----------
+
+// ---------- scadenzario e promemoria al responsabile ----------
+
+const CAMPI_RESPONSABILE = [
+  ['nome', 'Nome e cognome', 'text', 'name'],
+  ['ruolo', 'Ruolo (es. RSPP esterno, consulente, titolare)', 'text', 'organization-title'],
+  ['email', 'Email', 'email', 'email'],
+  ['telefono', 'Cellulare (anche WhatsApp)', 'tel', 'tel']
+];
+
+/** Chi riceve i promemoria: se non è indicato, l'RSPP o il titolare. */
+function responsabile() {
+  const r = { ...(stato.profilo?.responsabile || {}) };
+  const a = anagrafica();
+  if (!r.nome) r.nome = a.rspp || a.titolare || '';
+  if (!r.ruolo) r.ruolo = a.rspp ? 'RSPP' : risposte().dl_rspp ? 'Datore di lavoro e RSPP' : '';
+  r.giorni = Number(r.giorni) || 60;
+  r.frequenza = Number(r.frequenza) || 30;
+  return r;
+}
+
+/** Documenti con una revisione periodica propria e la data in cui sono stati adottati. */
+function documentiConData() {
+  return MODELLI.filter((m) => stato.conoscenza?.documenti?.[m.id]?.revisione?.mesi)
+    .map((m) => ({ modello: m, regola: stato.conoscenza.documenti[m.id].revisione, data: statoCorrente(chiaveDocumento(m.id), stato.adempimenti)?.dataFatto || null }))
+    .filter((x) => x.data);
+}
+
+function scadenzeAttuali() {
+  if (!questionarioCompletato()) return [];
+  return raccogliScadenze({
+    piano: piano(),
+    situazioni: haDipendenti() ? attivi().map(situazione) : [],
+    macchine: macchine().map(situazioneMacchina),
+    archivio: stato.archivio,
+    defArchivio: stato.defArchivio,
+    documenti: documentiConData(),
+    eventi: stato.eventi,
+    catalogo: stato.catalogo,
+    nomeCompleto,
+    oggi: oggiIso()
+  });
+}
+
+const COLORE_STATO = { scaduta: 'rosso', dafare: 'rosso', entro30: 'giallo', entro90: 'info', oltre: 'verde' };
+const ETICHETTA_OBBLIGO = { legge: 'Obbligo di legge', contratto: 'Da contratto', prassi: 'Buona prassi', 'norma tecnica': 'Norma tecnica' };
+
+function cardScadenza(x) {
+  const col = COLORE_STATO[x.stato];
+  const quando = x.data ? (x.stato === 'scaduta' ? `Scaduta il ${dataLeggibile(x.data)}` : `Entro il ${dataLeggibile(x.data)}`) : 'Senza data';
+  return `<a class="voce voce--${col}" href="${esc(x.href)}">
+      <span class="voce__segno" aria-hidden="true">${(ETICHETTE[col] || ETICHETTE.info).icona}</span>
+      <span class="voce__testo">
+        <span class="voce__titolo">${esc(x.titolo)}</span>
+        <span class="voce__stato"><strong>${esc(quando)}</strong>${x.senzaData ? ` · ${esc(x.senzaData)}` : ''}${x.norma ? ` · ${esc(x.norma)}` : ''}${x.obbligo && x.obbligo !== 'legge' ? ` · <em>${esc(ETICHETTA_OBBLIGO[x.obbligo] || x.obbligo)}</em>` : ''}</span>
+      </span>
+      <span class="voce__freccia" aria-hidden="true">›</span>
+    </a>`;
+}
+
+async function registroPromemoria() {
+  return (await store.leggiMeta('promemoria:inviati')) || [];
+}
+
+async function annotaPromemoria(canale, numero) {
+  const elenco = await registroPromemoria();
+  elenco.unshift({ data: new Date().toISOString(), canale, numero, a: responsabile().nome || '' });
+  await store.scriviMeta('promemoria:inviati', elenco.slice(0, 50));
+}
+
+/** Da quanti giorni non si manda il promemoria al responsabile (null se mai). */
+async function giorniDallUltimoPromemoria() {
+  const ultimo = (await registroPromemoria())[0];
+  return ultimo ? giorniTra(ultimo.data.slice(0, 10), oggiIso()) : null;
+}
+
+async function bloccoScadenzarioOggi() {
+  const lista = scadenzeAttuali();
+  const c = conteggiScadenze(lista);
+  const r = responsabile();
+  const g = await giorniDallUltimoPromemoria();
+  const urgenti = c.scaduta + c.entro30;
+  const daMandare = urgenti + c.dafare > 0 && (g === null || g >= r.frequenza);
+  return `<a class="banner banner--scadenze ${c.scaduta ? 'banner--rosso' : ''}" href="#/scadenzario">
+      <strong>Scadenzario: ${c.scaduta} ${c.scaduta === 1 ? 'scaduta' : 'scadute'} · ${c.entro30} entro 30 giorni · ${c.entro90} entro 90</strong>
+      <span>${daMandare ? `Invia il promemoria a ${esc(r.nome || 'il responsabile')}${g === null ? '' : `: l'ultimo è di ${g} giorni fa`}` : 'Tutte le date calcolate secondo le norme, in un solo elenco'}</span>
+    </a>`;
+}
+
+async function schermataScadenzario(filtro = '') {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const tutte = scadenzeAttuali();
+  const lista = filtro ? tutte.filter((x) => x.area === filtro) : tutte;
+  const c = conteggiScadenze(tutte);
+  const r = responsabile();
+  const inviati = await registroPromemoria();
+  const notifiche = 'Notification' in window ? Notification.permission : 'non-supportate';
+  app.innerHTML = `
+    <section class="pagina">
+      <h1>Scadenzario</h1>
+      <p class="lead">Tutte le scadenze dell'impresa in un solo elenco: adempimenti, lavoratori, macchine, certificati, documenti da rivedere e infortuni. Le date sono calcolate dalla norma di riferimento indicata accanto a ciascuna.</p>
+      <div class="contatori" role="list">
+        <span role="listitem" class="contatore contatore--rosso"><strong>${c.scaduta}</strong><span>scadute</span></span>
+        <span role="listitem" class="contatore contatore--giallo"><strong>${c.entro30}</strong><span>entro 30 giorni</span></span>
+        <span role="listitem" class="contatore contatore--verde"><strong>${c.entro90}</strong><span>entro 90 giorni</span></span>
+      </div>
+
+      <section class="riquadro promemoria" aria-labelledby="titolo-promemoria">
+        <h2 id="titolo-promemoria">Promemoria al responsabile</h2>
+        ${
+          r.nome || r.email || r.telefono
+            ? `<p><strong>${esc(r.nome || 'Responsabile')}</strong>${r.ruolo ? ` · ${esc(r.ruolo)}` : ''}${r.email ? `<br>${esc(r.email)}` : ''}${r.telefono ? `<br>${esc(r.telefono)}` : ''} · <a href="#/dati/responsabile">Cambia</a></p>`
+            : `<p>Indica chi deve ricevere i promemoria (RSPP, consulente o tu stesso). <a href="#/dati/responsabile">Inserisci il responsabile</a></p>`
+        }
+        <p class="nota">${inviati.length ? `Ultimo promemoria: ${esc(new Date(inviati[0].data).toLocaleDateString('it-IT'))} via ${esc(inviati[0].canale)}${inviati[0].a ? ` a ${esc(inviati[0].a)}` : ''} (${inviati[0].numero} scadenze).` : 'Nessun promemoria inviato finora.'} Te lo ricordiamo ogni ${r.frequenza} giorni.</p>
+        <label class="spunta-semplice"><input type="checkbox" id="con-nomi"> Includi i nomi dei lavoratori <small>(solo se il destinatario è l'RSPP, il medico o il consulente)</small></label>
+        <div class="azioni">
+          ${r.email ? '<button class="btn btn--primario" type="button" data-invia="email">Invia per email</button>' : ''}
+          ${r.telefono ? '<button class="btn btn--primario" type="button" data-invia="whatsapp">Invia su WhatsApp</button>' : ''}
+          <button class="btn btn--secondario" type="button" data-invia="condividi">${'share' in navigator ? 'Condividi' : 'Copia il testo'}</button>
+          <button class="btn btn--secondario" type="button" id="calendario-resp">Calendario con avvisi (.ics)</button>
+          <a class="btn btn--secondario" href="#/documento/scadenzario">Stampa lo scadenzario</a>
+        </div>
+        <p class="nota">Il calendario aggiunge ogni scadenza con un avviso 30 e 7 giorni prima: mandalo al responsabile, così riceve gli avvisi sul suo telefono.</p>
+        <h3>Notifiche su questo dispositivo</h3>
+        <p id="stato-notifiche">${
+          notifiche === 'granted'
+            ? 'Attive: ti avvisiamo 30 giorni prima, 7 giorni prima e il giorno della scadenza.'
+            : notifiche === 'denied'
+              ? 'Bloccate nelle impostazioni del browser: per riceverle, consentile per safetyDoc.'
+              : notifiche === 'non-supportate'
+                ? 'Questo browser non supporta le notifiche: usa il calendario.'
+                : 'Non ancora attive.'
+        }</p>
+        ${notifiche === 'default' ? '<button class="btn btn--secondario" type="button" id="attiva-notifiche">Attiva le notifiche</button>' : ''}
+      </section>
+
+      <label>Mostra<select class="campo" id="filtro-area"><option value="">Tutte le scadenze (${tutte.length})</option>${Object.entries(AREE)
+        .map(([k, v]) => [k, v, tutte.filter((x) => x.area === k).length])
+        .filter(([, , n]) => n)
+        .map(([k, v, n]) => `<option value="${k}" ${filtro === k ? 'selected' : ''}>${esc(v)} (${n})</option>`)
+        .join('')}</select></label>
+      ${
+        lista.length
+          ? raggruppaScadenze(lista)
+              .map((g) =>
+                g.stato === 'dafare' && !filtro
+                  ? `<details class="gruppo-apribile"><summary><h2 class="gruppo gruppo--rosso">${esc(g.titolo)} <span>${g.voci.length}</span></h2></summary><p class="nota">Adempimenti, corsi e controlli mai registrati o senza data: quando li registri, la scadenza si calcola da sola.</p><div class="lista">${g.voci.map(cardScadenza).join('')}</div></details>`
+                  : `<h2 class="gruppo gruppo--${COLORE_STATO[g.stato]}">${esc(g.titolo)} <span>${g.voci.length}</span></h2><div class="lista">${g.voci.map(cardScadenza).join('')}</div>`
+              )
+              .join('')
+          : '<p>Nessuna scadenza in questo elenco.</p>'
+      }
+      <p class="nota">Le date seguono le norme indicate; «buona prassi» e «da contratto» non sono obblighi di legge ma scadenze utili. Verificale con il tuo consulente.</p>
+    </section>`;
+  app.querySelector('#filtro-area').addEventListener('change', (e) => (location.hash = e.target.value ? `#/scadenzario/${e.target.value}` : '#/scadenzario'));
+  app.querySelector('#calendario-resp').addEventListener('click', async () => {
+    await esportaCalendario();
+    await annotaPromemoria('calendario', tutte.filter((x) => x.data).length);
+  });
+  app.querySelector('#attiva-notifiche')?.addEventListener('click', async () => {
+    const esito = await attivaNotifiche();
+    avviso(esito ? 'Notifiche attive.' : 'Notifiche non attivate.');
+    schermataScadenzario(filtro);
+  });
+  for (const b of app.querySelectorAll('[data-invia]'))
+    b.addEventListener('click', async () => {
+      const canale = b.dataset.invia;
+      const p = testoPromemoria(tutte, { impresa: anagrafica().ragioneSociale || risposte().nome_impresa || '', oggi: oggiIso(), giorni: r.giorni, conNomi: app.querySelector('#con-nomi').checked, responsabile: r.nome });
+      if (canale === 'email') location.href = `mailto:${encodeURIComponent(r.email)}?subject=${encodeURIComponent(p.oggetto)}&body=${encodeURIComponent(p.testo)}`;
+      else if (canale === 'whatsapp') window.open(`https://wa.me/${numeroWhatsApp(r.telefono)}?text=${encodeURIComponent(`${p.oggetto}\n\n${p.testo}`)}`, '_blank', 'noopener');
+      else if ('share' in navigator) {
+        try {
+          await navigator.share({ title: p.oggetto, text: p.testo });
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
+      } else {
+        await navigator.clipboard?.writeText(`${p.oggetto}\n\n${p.testo}`).catch(() => {});
+        avviso('Testo copiato: incollalo nel messaggio al responsabile.');
+      }
+      await annotaPromemoria({ email: 'email', whatsapp: 'WhatsApp', condividi: 'condivisione' }[canale], p.numero);
+      setTimeout(() => schermataScadenzario(filtro), 500);
+    });
+}
+
+/** Numero in formato internazionale per wa.me (prefisso italiano se manca). */
+function numeroWhatsApp(t) {
+  let n = String(t || '').replace(/[^\d+]/g, '');
+  if (n.startsWith('+')) return n.slice(1);
+  if (n.startsWith('00')) return n.slice(2);
+  return n.startsWith('39') && n.length > 10 ? n : `39${n}`;
+}
+
+// ---------- notifiche ----------
+
+async function attivaNotifiche() {
+  if (!('Notification' in window)) return false;
+  const p = await Notification.requestPermission();
+  if (p !== 'granted') return false;
+  try {
+    const reg = await navigator.serviceWorker?.ready;
+    // Chrome su Android con l'app installata: controllo una volta al giorno anche ad app chiusa.
+    if (reg?.periodicSync) await reg.periodicSync.register('scadenze', { minInterval: 24 * 60 * 60 * 1000 });
+  } catch {
+    /* non disponibile: le notifiche arrivano quando apri l'app */
+  }
+  await controllaNotifiche();
+  return true;
+}
+
+/** Aggiorna l'elenco per il service worker e mostra le notifiche nuove. */
+async function controllaNotifiche() {
+  if (!questionarioCompletato()) return;
+  const lista = scadenzeAttuali();
+  await store.scriviMeta('scadenzario:prossime', perServiceWorker(lista));
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const notificate = new Set((await store.leggiMeta('scadenzario:notificate')) || []);
+  const nuove = daNotificare(lista, oggiIso(), notificate);
+  if (!nuove.length) return;
+  const t = testoNotifica(nuove);
+  try {
+    const reg = await navigator.serviceWorker?.ready;
+    const opzioni = { body: t.corpo, tag: 'safetydoc-scadenze', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: '#/scadenzario' } };
+    if (reg?.showNotification) await reg.showNotification(t.titolo, opzioni);
+    else new Notification(t.titolo, opzioni);
+  } catch {
+    return;
+  }
+  await store.scriviMeta('scadenzario:notificate', [...notificate, ...nuove.map((n) => n.chiave)].slice(-500));
+}
+
+// ---------- data e revisione di ogni documento ----------
+
+function regolaRevisione(modelloId) {
+  return stato.conoscenza?.documenti?.[modelloId]?.revisione || null;
+}
+
+/** Riquadro con la data del documento e la prossima revisione calcolata dalla norma. */
+function bloccoRevisioneDocumento(m) {
+  const regola = regolaRevisione(m.id);
+  if (!regola || m.ambito !== 'impresa') return '';
+  if (regola.evento)
+    return `<details class="opzioni-doc revisione-doc"><summary>Quando va aggiornato</summary><p>${esc(regola.evento)}</p><p class="nota">${esc(regola.norma || '')}</p></details>`;
+  const chiave = regola.scheda || chiaveDocumento(m.id);
+  const st = statoCorrente(chiave, stato.adempimenti);
+  const scheda = regola.scheda ? stato.catalogo.schede.find((s) => s.id === regola.scheda) : null;
+  const voce = regola.scheda ? piano().find((v) => v.scheda.id === regola.scheda) : null;
+  const rev = regola.scheda ? { scadenza: voce?.prossimaScadenza || null, norma: scheda?.riferimento || '', obbligo: /consigliat|buona prassi|non fissa/i.test(scheda?.notaScadenza || '') ? 'prassi' : 'legge', nota: scheda?.notaScadenza || scheda?.quando || '' } : revisioneDocumento(regola, st?.dataFatto);
+  const stato_ = rev.scadenza ? statoScadenza(rev.scadenza, oggiIso()) : 'dafare';
+  return `<details class="opzioni-doc revisione-doc" ${!st?.dataFatto || stato_ === 'scaduta' ? 'open' : ''}>
+      <summary>Data e prossima revisione${rev.scadenza ? ` <span class="pill pill--${COLORE_STATO[stato_]}">${esc(dataLeggibile(rev.scadenza))}</span>` : ''}</summary>
+      <p>${st?.dataFatto ? `Documento del <strong>${esc(dataLeggibile(st.dataFatto))}</strong>.` : 'Non hai ancora indicato la data di questo documento.'}
+      ${rev.scadenza ? ` Prossima revisione entro il <strong>${esc(dataLeggibile(rev.scadenza))}</strong>.` : ''}</p>
+      ${rev.nota ? `<p class="nota">${esc(rev.nota)}</p>` : ''}
+      <p class="nota">${esc(rev.norma || '')}${rev.obbligo && rev.obbligo !== 'legge' ? ` · ${esc(ETICHETTA_OBBLIGO[rev.obbligo] || rev.obbligo)}` : ''}</p>
+      <form id="data-documento">
+        <label>Firmato o adottato il<input class="campo" type="date" name="data" max="${oggiIso()}" value="${esc(st?.dataFatto || '')}" required></label>
+        <button class="btn btn--secondario" type="submit">Salva la data</button>
+      </form>
+      ${st?.storico?.length ? `<p class="nota">Versioni precedenti: ${st.storico.map((x) => esc(dataLeggibile(x.dataFatto))).join(', ')}</p>` : ''}
+      <p class="nota">La scadenza entra nello <a href="#/scadenzario">scadenzario</a> e nei promemoria al responsabile.</p>
+    </details>`;
+}
+
+/** Registra la data di un documento: la versione precedente resta nello storico. */
+async function registraDataDocumento(modelloId, data) {
+  const regola = regolaRevisione(modelloId);
+  if (!regola || regola.evento || !data) return false;
+  const chiave = regola.scheda || chiaveDocumento(modelloId);
+  const st = statoCorrente(chiave, stato.adempimenti);
+  if (st?.fatto && st.dataFatto === data) return false;
+  await store.salvaAdempimento(rinnovaAdempimento(st, { schedaId: chiave, fatto: true, dataFatto: data, scadenzaManuale: null, note: st?.note || '' }, oggiIso()));
+  await ricarica();
+  controllaNotifiche();
+  return true;
+}
+
+function attivaRevisioneDocumento(m, ridisegna) {
+  const form = app.querySelector('#data-documento');
+  if (!form) return;
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const data = new FormData(form).get('data');
+    if (await registraDataDocumento(m.id, data)) avviso('Data salvata: la prossima revisione è nello scadenzario.');
+    ridisegna();
+  });
+}
 
 // ---------- conoscenza: ricerca, schede di approfondimento, verifiche ----------
 
@@ -2911,6 +3264,7 @@ async function instrada() {
   if (rotta === 'cerca') return schermataCerca(param || '');
   if (rotta === 'sapere') return schermataSapere(param, extra);
   if (rotta === 'verifiche') return schermataVerifiche();
+  if (rotta === 'scadenzario') return schermataScadenzario(param || '');
   return schermataOggi();
 }
 
@@ -2944,6 +3298,10 @@ async function avvia() {
       else location.hash = dest;
     });
     await instrada();
+    controllaNotifiche().catch(() => {});
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') controllaNotifiche().catch(() => {});
+    });
   } catch (e) {
     console.error(e);
     app.innerHTML = `<section class="pagina"><h1>Qualcosa non ha funzionato</h1><p>Ricarica la pagina. Se il problema continua, il browser potrebbe non essere supportato.</p></section>`;

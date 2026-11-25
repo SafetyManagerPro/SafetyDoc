@@ -1304,7 +1304,10 @@
         "Conferma probabilità (P) e danno (D) di ogni rischio durante il sopralluogo: i valori proposti sono tipici, non misurati. Puoi cambiarli in «Valutazione personalizzata».",
         "Allega le valutazioni specifiche (rumore, vibrazioni, chimico, carichi, incendio): il DVR le richiama ma non le sostituisce.",
         "Rielabora il DVR entro 30 giorni dopo modifiche importanti, nuove macchine, infortuni significativi o quando lo chiede il medico competente (art. 29 c. 3)."
-      ]
+      ],
+      "revisione": {
+        "scheda": "dvr"
+      }
     },
     "registro-formazione": {
       "adempimenti": [
@@ -1340,7 +1343,11 @@
       "consigli": [
         "Il datore di lavoro può fare da RSPP solo nei casi dell'Allegato II del D.Lgs. 81/2008 e dopo il corso specifico.",
         "Fai firmare la presa visione all'RLS (o all'RLST) e conserva l'attestato del corso insieme alla dichiarazione."
-      ]
+      ],
+      "revisione": {
+        "evento": "Resta valida finché fai da RSPP; il corso va aggiornato ogni 5 anni.",
+        "norma": "D.Lgs. 81/2008 art. 34"
+      }
     },
     "nomina-rspp-esterno": {
       "adempimenti": [
@@ -1355,7 +1362,11 @@
         "Chiedi all'RSPP copia dei titoli (art. 32): diploma, moduli A, B e C e aggiornamenti.",
         "Indica nella lettera durata, sopralluoghi previsti e chi fornisce le informazioni all'RSPP.",
         "La nomina non sposta la responsabilità: la valutazione dei rischi resta un obbligo non delegabile del datore di lavoro (art. 17)."
-      ]
+      ],
+      "revisione": {
+        "evento": "Vale per la durata scritta nell'incarico: controlla la data di fine e l'aggiornamento dell'RSPP.",
+        "norma": "D.Lgs. 81/2008 art. 32"
+      }
     },
     "nomina-medico": {
       "adempimenti": [
@@ -1368,7 +1379,11 @@
       "consigli": [
         "Il medico competente serve quando un rischio del DVR richiede la sorveglianza sanitaria (es. rumore, chimico, carichi, videoterminali, lavoro notturno).",
         "Concorda con il medico il protocollo sanitario e la visita annuale agli ambienti di lavoro."
-      ]
+      ],
+      "revisione": {
+        "evento": "Vale per la durata del contratto con il medico competente.",
+        "norma": "D.Lgs. 81/2008 art. 18"
+      }
     },
     "nomina-preposto": {
       "adempimenti": [
@@ -1400,7 +1415,11 @@
       "consigli": [
         "Designa abbastanza addetti da coprire turni, ferie e assenze.",
         "Il livello del corso antincendio dipende dalla valutazione del rischio incendio (livello 1, 2 o 3 del DM 2/9/2021)."
-      ]
+      ],
+      "revisione": {
+        "evento": "Da rifare quando cambiano gli addetti; i corsi hanno le loro scadenze.",
+        "norma": "D.Lgs. 81/2008 art. 18"
+      }
     },
     "consegna-dpi": {
       "adempimenti": [
@@ -1456,7 +1475,10 @@
       "consigli": [
         "La prova di evacuazione va fatta almeno una volta l'anno.",
         "Annota i tempi, chi non ha sentito l'allarme e le uscite usate: i problemi trovati vanno nel programma di miglioramento."
-      ]
+      ],
+      "revisione": {
+        "scheda": "piano-emergenza"
+      }
     },
     "registro-antincendio": {
       "adempimenti": [
@@ -1471,7 +1493,10 @@
       "consigli": [
         "Il controllo periodico di estintori e luci di emergenza va fatto almeno ogni 6 mesi da un tecnico manutentore qualificato.",
         "Annota anche le sorveglianze fatte da te (estintore al suo posto, manometro nel verde, uscite libere)."
-      ]
+      ],
+      "revisione": {
+        "scheda": "presidi-antincendio"
+      }
     },
     "verbale-riunione": {
       "adempimenti": [
@@ -1484,7 +1509,10 @@
       "consigli": [
         "Obbligatoria almeno una volta l'anno sopra i 15 lavoratori; sotto è consigliata e va fatta se l'RLS la chiede.",
         "Argomenti minimi: DVR, infortuni e malattie professionali, DPI, programmi di formazione."
-      ]
+      ],
+      "revisione": {
+        "scheda": "riunione-periodica"
+      }
     },
     "informativa-clienti": {
       "adempimenti": [
@@ -1498,7 +1526,11 @@
       "consigli": [
         "Esponila dove i clienti la vedono o consegnala con il preventivo.",
         "Se usi i dati per pubblicità serve un consenso separato."
-      ]
+      ],
+      "revisione": {
+        "evento": "Aggiornala quando cambiano i trattamenti dei dati.",
+        "norma": "Reg. UE 2016/679 art. 13"
+      }
     },
     "nomina-responsabile-esterno": {
       "adempimenti": [
@@ -1511,7 +1543,11 @@
       "consigli": [
         "Serve per chi tratta dati per tuo conto: commercialista, consulente del lavoro, ditta informatica.",
         "Il contratto deve indicare durata, finalità, misure di sicurezza e cosa succede ai dati alla fine."
-      ]
+      ],
+      "revisione": {
+        "evento": "Vale per la durata del contratto con il fornitore.",
+        "norma": "Reg. UE 2016/679 art. 28"
+      }
     },
     "regole-lavoratore": {
       "adempimenti": [
@@ -1547,7 +1583,11 @@
         "Obbligatorio con 10 o più lavoratori, o quando il locale è soggetto ai controlli dei Vigili del fuoco; sotto basta la procedura semplificata.",
         "Allega la planimetria di emergenza con vie di esodo, uscite, estintori e punto di raccolta, ed esponila nei locali.",
         "Controlla che i nomi degli addetti siano quelli attuali."
-      ]
+      ],
+      "revisione": {
+        "evento": "Aggiornalo quando cambiano locali, uscite, addetti o numero di persone presenti.",
+        "norma": "DM 2/09/2021"
+      }
     },
     "informazione-art36": {
       "adempimenti": [
@@ -1595,7 +1635,13 @@
       "consigli": [
         "L'RLS è eletto dai lavoratori, non nominato dal datore di lavoro.",
         "Se nessuno si candida, l'impresa rientra nell'RLS territoriale e versa il contributo previsto."
-      ]
+      ],
+      "revisione": {
+        "mesi": 36,
+        "norma": "Accordo interconfederale 22/06/1995 e CCNL",
+        "obbligo": "contratto",
+        "nota": "Il mandato dell'RLS dura di regola 3 anni: prepara per tempo la nuova elezione."
+      }
     },
     "valutazione-incendio": {
       "adempimenti": [
@@ -1615,7 +1661,11 @@
       "consigli": [
         "Per le attività a basso rischio basta il minicodice del DM 3/9/2021; per quelle dell'Allegato I del DPR 151/2011 serve un tecnico antincendio.",
         "Il risultato decide il livello del corso degli addetti (1, 2 o 3)."
-      ]
+      ],
+      "revisione": {
+        "evento": "Aggiornala quando cambiano attività, locali, materiali depositati o persone presenti.",
+        "norma": "DM 3/09/2021"
+      }
     },
     "valutazione-rumore": {
       "adempimenti": [
@@ -1631,7 +1681,10 @@
         "Usa i dati di rumore dei libretti o le banche dati solo per una prima stima: sopra 80 dB(A) serve una misura con fonometro fatta da personale qualificato.",
         "Sopra 85 dB(A) diventano obbligatori DPI uditivi, sorveglianza sanitaria e programma di riduzione.",
         "La valutazione va ripetuta almeno ogni 4 anni (art. 181)."
-      ]
+      ],
+      "revisione": {
+        "scheda": "rumore-vibrazioni"
+      }
     },
     "valutazione-vibrazioni": {
       "adempimenti": [
@@ -1646,7 +1699,10 @@
       "consigli": [
         "Il valore di vibrazione di ogni utensile è nel libretto d'uso.",
         "Limiti mano-braccio: azione 2,5 m/s², limite 5 m/s². Corpo intero: azione 0,5 m/s², limite 1 m/s²."
-      ]
+      ],
+      "revisione": {
+        "scheda": "rumore-vibrazioni"
+      }
     },
     "valutazione-mmc": {
       "adempimenti": [
@@ -1661,7 +1717,11 @@
       "consigli": [
         "Misura peso, altezze, distanze e frequenza dell'operazione reale.",
         "Indice oltre 0,85: pianifica la riduzione; oltre 1: sorveglianza sanitaria e interventi."
-      ]
+      ],
+      "revisione": {
+        "evento": "Aggiornala quando cambiano carichi, postazioni o modo di lavorare.",
+        "norma": "D.Lgs. 81/2008 art. 29 c. 3"
+      }
     },
     "valutazione-chimico": {
       "adempimenti": [
@@ -1681,7 +1741,10 @@
         "Parti dalle schede di sicurezza aggiornate: frasi H (sezione 2), DPI (sezione 8).",
         "Con prodotti cancerogeni o mutageni (H340, H350) si applica il Capo II: sostituzione, registro degli esposti, sorveglianza sanitaria.",
         "Il rischio «basso per la sicurezza e irrilevante per la salute» va motivato."
-      ]
+      ],
+      "revisione": {
+        "scheda": "rischio-chimico"
+      }
     },
     "richiesta-visite": {
       "adempimenti": [
@@ -1725,7 +1788,11 @@
       "consigli": [
         "Consegnalo a ogni ditta esterna prima dell'inizio: è richiesto anche quando il DUVRI non serve.",
         "Verifica l'idoneità della ditta: visura camerale, DURC, autocertificazione."
-      ]
+      ],
+      "revisione": {
+        "evento": "Da consegnare a ogni nuova ditta esterna e da aggiornare se cambiano i rischi della sede.",
+        "norma": "D.Lgs. 81/2008 art. 26"
+      }
     },
     "duvri-bozza": {
       "adempimenti": [
@@ -1741,7 +1808,11 @@
         "Il DUVRI non serve per servizi intellettuali, forniture senza installazione e lavori fino a 5 uomini-giorno senza rischi particolari (art. 26 c. 3-bis).",
         "Indica i costi della sicurezza: non sono soggetti a ribasso.",
         "Allegalo al contratto e aggiornalo se cambiano i lavori."
-      ]
+      ],
+      "revisione": {
+        "evento": "Vale per quell'appalto: aggiornalo se cambiano lavori, ditte o durata.",
+        "norma": "D.Lgs. 81/2008 art. 26"
+      }
     },
     "autocertificazione-idoneita": {
       "adempimenti": [
@@ -1755,7 +1826,11 @@
       "consigli": [
         "Il committente la chiede per verificare la tua idoneità tecnico-professionale (art. 26 e Allegato XVII).",
         "Allega visura camerale e DURC aggiornati."
-      ]
+      ],
+      "revisione": {
+        "evento": "Da rifare per ogni nuovo committente; allega DURC (valido 120 giorni) e visura aggiornati.",
+        "norma": "D.Lgs. 81/2008 Allegato XVII"
+      }
     },
     "pos-bozza": {
       "adempimenti": [
@@ -1778,7 +1853,11 @@
         "Seleziona solo le lavorazioni che farai davvero e controlla che le attrezzature elencate siano quelle che porterai.",
         "Con il ponteggio allega PiMUS, libretto e, se serve, progetto.",
         "Dal 2024 serve la patente a crediti per lavorare nei cantieri (salvo SOA dalla III classe)."
-      ]
+      ],
+      "revisione": {
+        "evento": "Vale per quel cantiere: aggiornalo se cambiano lavorazioni, attrezzature o squadra.",
+        "norma": "D.Lgs. 81/2008 art. 96"
+      }
     },
     "stress-preliminare": {
       "adempimenti": [
@@ -1793,7 +1872,10 @@
       "consigli": [
         "Coinvolgi i lavoratori o l'RLS: la valutazione fatta solo dal titolare è debole.",
         "Se dalla valutazione preliminare emergono problemi e le misure non bastano, serve la valutazione approfondita."
-      ]
+      ],
+      "revisione": {
+        "scheda": "stress-lavoro-correlato"
+      }
     },
     "informativa-lavoratrici-madri": {
       "adempimenti": [
@@ -1809,7 +1891,11 @@
       "consigli": [
         "Informa tutte le lavoratrici, anche prima di qualsiasi gravidanza.",
         "Quando una lavoratrice comunica la gravidanza, verifica subito le mansioni vietate e quelle alternative."
-      ]
+      ],
+      "revisione": {
+        "evento": "Da consegnare a ogni nuova lavoratrice.",
+        "norma": "D.Lgs. 151/2001 art. 11"
+      }
     },
     "informativa-minori": {
       "adempimenti": [
@@ -1843,7 +1929,13 @@
       "consigli": [
         "Ogni prodotto deve avere la scheda di sicurezza aggiornata, in italiano, a portata di mano dei lavoratori.",
         "Le schede vanno chieste al fornitore: è obbligato a darle gratuitamente."
-      ]
+      ],
+      "revisione": {
+        "mesi": 12,
+        "norma": "Reg. CE 1907/2006 art. 31",
+        "obbligo": "prassi",
+        "nota": "Ricontrolla ogni anno che le schede di sicurezza siano le ultime versioni del fornitore."
+      }
     },
     "registro-eventi": {
       "adempimenti": [
@@ -1885,6 +1977,30 @@
       "consigli": [
         "Le informazioni sui 14 allergeni devono essere disponibili per iscritto, prima dell'ordine.",
         "Aggiorna il cartello ogni volta che cambi ricette o fornitori."
+      ],
+      "revisione": {
+        "evento": "Aggiornalo a ogni cambio di ricette o fornitori.",
+        "norma": "Reg. UE 1169/2011"
+      }
+    },
+    "scadenzario": {
+      "adempimenti": [
+        "dvr",
+        "formazione-lavoratori",
+        "presidi-antincendio",
+        "messa-a-terra"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008",
+        "dpr-462-2001",
+        "dm-1-9-2021",
+        "dpr-151-2011"
+      ],
+      "consigli": [
+        "Stampalo o mandalo al responsabile ogni mese: le scadenze scadute e quelle entro 30 giorni sono in cima.",
+        "Le date si aggiornano da sole quando registri un corso, un controllo, un certificato rinnovato o la data di un documento firmato.",
+        "«Buona prassi» indica una scadenza consigliata, non un obbligo: decidila con il consulente."
       ]
     }
   }
