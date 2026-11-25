@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.16.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.17.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -40,6 +40,12 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
 14. **Stato della sicurezza** – riepilogo stampabile di adempimenti, lavoratori e macchine con date e allegati.
 15. **Dati** – salvati solo nel dispositivo; si esportano e importano come file JSON, anche protetto da password
    (`js/store.js`, `js/merge.js`, `js/cifratura.js`).
+16. **Cerca e controlli di coerenza** – motore della conoscenza tutto locale, anche senza connessione (`js/conoscenza.js`,
+   `data/conoscenza.json`): ricerca con le parole di tutti i giorni (muletto, frullino, eternit…) tra rischi, adempimenti,
+   documenti, attrezzature, lavorazioni, corsi, norme e sigle, e nei dati inseriti; schede di approfondimento con i collegamenti;
+   controlli che confrontano risposte, lavoratori, macchine, prodotti, archivio e documenti (es. prodotti H350 senza rischio
+   cancerogeno, muletto senza operatori abilitati, infortunio dopo il DVR); pannello «Aiuto e verifiche» in ogni documento;
+   nel DVR P e D modificabili dopo il sopralluogo e misure di miglioramento con incaricato e scadenza.
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta. Quando si aggiungono
 schede si alza `versione` e si aggiunge una voce in `novita`: l'impresa vede le schede nuove che la riguardano.
@@ -55,6 +61,7 @@ icons/, screenshots/  icone (anche per iPhone) e schermate mostrate al momento d
 css/style.css         grafica: telefono prima di tutto, testo grande, tema scuro
 js/app.js             schermate e navigazione
 js/engine.js          regole, piano, semaforo (modulo puro, testato)
+js/conoscenza.js      indice, ricerca con sinonimi, collegamenti e controlli di coerenza (modulo puro, testato)
 js/merge.js           formato di scambio e unione tra postazioni (modulo puro, testato)
 js/store.js           salvataggio nel browser (IndexedDB): l'unico file da sostituire per passare a Supabase
 js/cifratura.js       cifratura dei backup (AES-GCM, PBKDF2)

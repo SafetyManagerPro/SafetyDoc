@@ -1,0 +1,1891 @@
+{
+  "versione": "0.1.0",
+  "nota": "Banca della conoscenza: norme, sinonimi del linguaggio comune, glossario delle sigle e collegamenti tra parole e rischi. Contenuti da validare.",
+  "norme": [
+    {
+      "id": "dlgs-81-2008",
+      "sigla": "D.Lgs. 81/2008",
+      "titolo": "Testo unico sulla salute e sicurezza nei luoghi di lavoro",
+      "alias": [
+        "D.Lgs. 81/2008",
+        "D.Lgs 81/2008",
+        "Testo unico sicurezza"
+      ],
+      "ambito": "Sicurezza"
+    },
+    {
+      "id": "dm-30-11-2012",
+      "sigla": "DM 30/11/2012",
+      "titolo": "Procedure standardizzate per la valutazione dei rischi (DVR delle piccole imprese)",
+      "alias": [
+        "DM 30/11/2012",
+        "DM 30 novembre 2012"
+      ],
+      "ambito": "Sicurezza"
+    },
+    {
+      "id": "asr-59-2025",
+      "sigla": "Accordo Stato-Regioni 59/2025",
+      "titolo": "Formazione in materia di salute e sicurezza: durata, contenuti e aggiornamento dei corsi",
+      "alias": [
+        "Accordo Stato-Regioni 59/2025",
+        "Accordo Stato-Regioni n. 59/2025",
+        "Accordo Stato-Regioni del 2025"
+      ],
+      "ambito": "Sicurezza"
+    },
+    {
+      "id": "asr-2011",
+      "sigla": "Accordo Stato-Regioni 21/12/2011",
+      "titolo": "Formazione dei lavoratori, dei preposti e dei dirigenti (classi di rischio ATECO)",
+      "alias": [
+        "Accordo Stato-Regioni del 21 dicembre 2011"
+      ],
+      "ambito": "Sicurezza"
+    },
+    {
+      "id": "dm-388-2003",
+      "sigla": "DM 388/2003",
+      "titolo": "Primo soccorso aziendale: gruppi di imprese, cassetta e formazione degli addetti",
+      "alias": [
+        "DM 388/2003"
+      ],
+      "ambito": "Sicurezza"
+    },
+    {
+      "id": "dm-11-4-2011",
+      "sigla": "DM 11/04/2011",
+      "titolo": "Verifiche periodiche delle attrezzature di lavoro (Allegato VII del D.Lgs. 81/2008)",
+      "alias": [
+        "DM 11 aprile 2011"
+      ],
+      "ambito": "Attrezzature"
+    },
+    {
+      "id": "dm-132-2024",
+      "sigla": "DM 132/2024",
+      "titolo": "Patente a crediti per imprese e lavoratori autonomi nei cantieri",
+      "alias": [
+        "DM 132/2024"
+      ],
+      "ambito": "Cantieri"
+    },
+    {
+      "id": "di-22-1-2019",
+      "sigla": "DI 22/01/2019",
+      "titolo": "Segnaletica stradale per i lavori in presenza di traffico",
+      "alias": [
+        "DI 22 gennaio 2019",
+        "DI 22/01/2019"
+      ],
+      "ambito": "Cantieri"
+    },
+    {
+      "id": "dpr-177-2011",
+      "sigla": "DPR 177/2011",
+      "titolo": "Lavori in ambienti sospetti di inquinamento o confinati",
+      "alias": [
+        "DPR 177/2011"
+      ],
+      "ambito": "Sicurezza"
+    },
+    {
+      "id": "dpr-462-2001",
+      "sigla": "DPR 462/2001",
+      "titolo": "Verifiche degli impianti di messa a terra e di protezione dalle scariche atmosferiche",
+      "alias": [
+        "DPR 462/2001"
+      ],
+      "ambito": "Impianti"
+    },
+    {
+      "id": "dm-37-2008",
+      "sigla": "DM 37/2008",
+      "titolo": "Impianti negli edifici: installazione a regola d'arte e dichiarazione di conformità",
+      "alias": [
+        "DM 37/2008"
+      ],
+      "ambito": "Impianti"
+    },
+    {
+      "id": "dpr-151-2011",
+      "sigla": "DPR 151/2011",
+      "titolo": "Attività soggette ai controlli di prevenzione incendi dei Vigili del fuoco",
+      "alias": [
+        "DPR 151/2011"
+      ],
+      "ambito": "Antincendio"
+    },
+    {
+      "id": "dm-1-9-2021",
+      "sigla": "DM 1/09/2021",
+      "titolo": "Controlli e manutenzione di impianti, attrezzature e presidi antincendio",
+      "alias": [
+        "DM 1 settembre 2021",
+        "DM 1/9/2021",
+        "DM 1, 2 e 3 settembre 2021"
+      ],
+      "ambito": "Antincendio"
+    },
+    {
+      "id": "dm-2-9-2021",
+      "sigla": "DM 2/09/2021",
+      "titolo": "Gestione della sicurezza antincendio in esercizio e in emergenza, formazione degli addetti",
+      "alias": [
+        "DM 2 settembre 2021",
+        "DM 2/9/2021",
+        "DM 1, 2 e 3 settembre 2021"
+      ],
+      "ambito": "Antincendio"
+    },
+    {
+      "id": "dm-3-9-2021",
+      "sigla": "DM 3/09/2021",
+      "titolo": "Criteri di progettazione antincendio dei luoghi di lavoro («minicodice»)",
+      "alias": [
+        "DM 3 settembre 2021",
+        "DM 3/9/2021",
+        "DM 1, 2 e 3 settembre 2021"
+      ],
+      "ambito": "Antincendio"
+    },
+    {
+      "id": "dm-3-8-2015",
+      "sigla": "DM 3/08/2015",
+      "titolo": "Codice di prevenzione incendi",
+      "alias": [
+        "DM 3/8/2015",
+        "DM 3 agosto 2015"
+      ],
+      "ambito": "Antincendio"
+    },
+    {
+      "id": "dlgs-151-2001",
+      "sigla": "D.Lgs. 151/2001",
+      "titolo": "Testo unico a tutela della maternità e della paternità",
+      "alias": [
+        "D.Lgs. 151/2001"
+      ],
+      "ambito": "Lavoro"
+    },
+    {
+      "id": "l-977-1967",
+      "sigla": "L. 977/1967",
+      "titolo": "Tutela del lavoro dei bambini e degli adolescenti",
+      "alias": [
+        "L. 977/1967"
+      ],
+      "ambito": "Lavoro"
+    },
+    {
+      "id": "dlgs-345-1999",
+      "sigla": "D.Lgs. 345/1999",
+      "titolo": "Protezione dei giovani sul lavoro (modifica la L. 977/1967)",
+      "alias": [
+        "D.Lgs. 345/1999"
+      ],
+      "ambito": "Lavoro"
+    },
+    {
+      "id": "dlgs-262-2000",
+      "sigla": "D.Lgs. 262/2000",
+      "titolo": "Protezione dei giovani sul lavoro (ulteriori modifiche alla L. 977/1967)",
+      "alias": [
+        "D.Lgs. 262/2000"
+      ],
+      "ambito": "Lavoro"
+    },
+    {
+      "id": "dlgs-66-2003",
+      "sigla": "D.Lgs. 66/2003",
+      "titolo": "Organizzazione dell'orario di lavoro e lavoro notturno",
+      "alias": [
+        "D.Lgs. 66/2003"
+      ],
+      "ambito": "Lavoro"
+    },
+    {
+      "id": "l-300-1970",
+      "sigla": "L. 300/1970",
+      "titolo": "Statuto dei lavoratori (anche controlli a distanza e videosorveglianza)",
+      "alias": [
+        "L. 300/1970"
+      ],
+      "ambito": "Lavoro"
+    },
+    {
+      "id": "dpr-1124-1965",
+      "sigla": "DPR 1124/1965",
+      "titolo": "Testo unico sull'assicurazione contro gli infortuni sul lavoro (INAIL)",
+      "alias": [
+        "DPR 1124/1965"
+      ],
+      "ambito": "Lavoro"
+    },
+    {
+      "id": "dlgs-24-2023",
+      "sigla": "D.Lgs. 24/2023",
+      "titolo": "Protezione di chi segnala violazioni (whistleblowing)",
+      "alias": [
+        "D.Lgs. 24/2023"
+      ],
+      "ambito": "Lavoro"
+    },
+    {
+      "id": "dpr-445-2000",
+      "sigla": "DPR 445/2000",
+      "titolo": "Documentazione amministrativa e dichiarazioni sostitutive",
+      "alias": [
+        "DPR 445/2000"
+      ],
+      "ambito": "Impresa"
+    },
+    {
+      "id": "dlgs-231-2001",
+      "sigla": "D.Lgs. 231/2001",
+      "titolo": "Responsabilità amministrativa delle imprese per reati commessi nel loro interesse",
+      "alias": [
+        "D.Lgs. 231/2001"
+      ],
+      "ambito": "Impresa"
+    },
+    {
+      "id": "l-443-1985",
+      "sigla": "L. 443/1985",
+      "titolo": "Legge quadro per l'artigianato",
+      "alias": [
+        "L. 443/1985"
+      ],
+      "ambito": "Impresa"
+    },
+    {
+      "id": "l-580-1993",
+      "sigla": "L. 580/1993",
+      "titolo": "Riordino delle Camere di commercio e registro delle imprese",
+      "alias": [
+        "L. 580/1993"
+      ],
+      "ambito": "Impresa"
+    },
+    {
+      "id": "dpr-633-1972",
+      "sigla": "DPR 633/1972",
+      "titolo": "Imposta sul valore aggiunto (partita IVA)",
+      "alias": [
+        "DPR 633/1972"
+      ],
+      "ambito": "Impresa"
+    },
+    {
+      "id": "l-213-2023",
+      "sigla": "L. 213/2023",
+      "titolo": "Legge di bilancio 2024: tra l'altro obbligo di polizza contro le catastrofi naturali",
+      "alias": [
+        "L. 213/2023"
+      ],
+      "ambito": "Impresa"
+    },
+    {
+      "id": "l-207-2024",
+      "sigla": "L. 207/2024",
+      "titolo": "Legge di bilancio 2025",
+      "alias": [
+        "L. 207/2024"
+      ],
+      "ambito": "Impresa"
+    },
+    {
+      "id": "l-122-1992",
+      "sigla": "L. 122/1992",
+      "titolo": "Disciplina dell'attività di autoriparazione",
+      "alias": [
+        "L. 122/1992"
+      ],
+      "ambito": "Attività regolamentate"
+    },
+    {
+      "id": "l-174-2005",
+      "sigla": "L. 174/2005",
+      "titolo": "Disciplina dell'attività di acconciatore",
+      "alias": [
+        "L. 174/2005"
+      ],
+      "ambito": "Attività regolamentate"
+    },
+    {
+      "id": "l-1-1990",
+      "sigla": "L. 1/1990",
+      "titolo": "Disciplina dell'attività di estetista",
+      "alias": [
+        "L. 1/1990"
+      ],
+      "ambito": "Attività regolamentate"
+    },
+    {
+      "id": "l-82-1994",
+      "sigla": "L. 82/1994",
+      "titolo": "Disciplina delle attività di pulizia, disinfezione e disinfestazione",
+      "alias": [
+        "L. 82/1994"
+      ],
+      "ambito": "Attività regolamentate"
+    },
+    {
+      "id": "reg-1071-2009",
+      "sigla": "Reg. CE 1071/2009",
+      "titolo": "Accesso alla professione di trasportatore su strada",
+      "alias": [
+        "Reg. CE 1071/2009"
+      ],
+      "ambito": "Attività regolamentate"
+    },
+    {
+      "id": "reg-1907-2006",
+      "sigla": "Reg. CE 1907/2006",
+      "titolo": "REACH: registrazione e uso delle sostanze chimiche, schede di sicurezza",
+      "alias": [
+        "Reg. CE 1907/2006",
+        "REACH"
+      ],
+      "ambito": "Chimico"
+    },
+    {
+      "id": "reg-1272-2008",
+      "sigla": "Reg. CE 1272/2008",
+      "titolo": "CLP: classificazione, etichettatura e imballaggio, pittogrammi e frasi H",
+      "alias": [
+        "Reg. CE 1272/2008",
+        "CLP"
+      ],
+      "ambito": "Chimico"
+    },
+    {
+      "id": "l-257-1992",
+      "sigla": "L. 257/1992",
+      "titolo": "Cessazione dell'impiego dell'amianto",
+      "alias": [
+        "L. 257/1992"
+      ],
+      "ambito": "Chimico"
+    },
+    {
+      "id": "dpr-146-2018",
+      "sigla": "DPR 146/2018",
+      "titolo": "Gas fluorurati (F-gas): certificazione di imprese e tecnici, banca dati",
+      "alias": [
+        "DPR 146/2018"
+      ],
+      "ambito": "Ambiente"
+    },
+    {
+      "id": "dlgs-152-2006",
+      "sigla": "D.Lgs. 152/2006",
+      "titolo": "Testo unico ambientale: rifiuti, scarichi, emissioni in atmosfera",
+      "alias": [
+        "D.Lgs. 152/2006"
+      ],
+      "ambito": "Ambiente"
+    },
+    {
+      "id": "dpr-59-2013",
+      "sigla": "DPR 59/2013",
+      "titolo": "Autorizzazione unica ambientale (AUA)",
+      "alias": [
+        "DPR 59/2013"
+      ],
+      "ambito": "Ambiente"
+    },
+    {
+      "id": "dpr-227-2011",
+      "sigla": "DPR 227/2011",
+      "titolo": "Semplificazione degli adempimenti ambientali per le piccole imprese",
+      "alias": [
+        "DPR 227/2011"
+      ],
+      "ambito": "Ambiente"
+    },
+    {
+      "id": "dm-59-2023",
+      "sigla": "DM 59/2023",
+      "titolo": "RENTRI: registro elettronico nazionale per la tracciabilità dei rifiuti",
+      "alias": [
+        "DM 59/2023"
+      ],
+      "ambito": "Ambiente"
+    },
+    {
+      "id": "l-68-2015",
+      "sigla": "L. 68/2015",
+      "titolo": "Delitti contro l'ambiente (ecoreati)",
+      "alias": [
+        "L. 68/2015"
+      ],
+      "ambito": "Ambiente"
+    },
+    {
+      "id": "l-147-2025",
+      "sigla": "L. 147/2025",
+      "titolo": "Conversione del DL 116/2025: misure contro gli illeciti su rifiuti e ambiente",
+      "alias": [
+        "L. 147/2025",
+        "DL 116/2025"
+      ],
+      "ambito": "Ambiente"
+    },
+    {
+      "id": "reg-852-2004",
+      "sigla": "Reg. CE 852/2004",
+      "titolo": "Igiene dei prodotti alimentari e autocontrollo HACCP",
+      "alias": [
+        "Reg. CE 852/2004"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "reg-853-2004",
+      "sigla": "Reg. CE 853/2004",
+      "titolo": "Igiene degli alimenti di origine animale",
+      "alias": [
+        "Reg. CE 853/2004"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "reg-178-2002",
+      "sigla": "Reg. CE 178/2002",
+      "titolo": "Principi della legislazione alimentare e rintracciabilità",
+      "alias": [
+        "Reg. CE 178/2002"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "reg-1935-2004",
+      "sigla": "Reg. CE 1935/2004",
+      "titolo": "Materiali e oggetti a contatto con gli alimenti (MOCA)",
+      "alias": [
+        "Reg. CE 1935/2004"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "reg-1169-2011",
+      "sigla": "Reg. UE 1169/2011",
+      "titolo": "Informazioni sugli alimenti ai consumatori, allergeni",
+      "alias": [
+        "Reg. UE 1169/2011"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "dlgs-231-2017",
+      "sigla": "D.Lgs. 231/2017",
+      "titolo": "Sanzioni sulle informazioni ai consumatori sugli alimenti",
+      "alias": [
+        "D.Lgs. 231/2017"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "gdpr",
+      "sigla": "Reg. UE 2016/679",
+      "titolo": "GDPR: protezione dei dati personali",
+      "alias": [
+        "Reg. UE 2016/679",
+        "GDPR"
+      ],
+      "ambito": "Privacy"
+    },
+    {
+      "id": "dlgs-196-2003",
+      "sigla": "D.Lgs. 196/2003",
+      "titolo": "Codice in materia di protezione dei dati personali",
+      "alias": [
+        "D.Lgs. 196/2003"
+      ],
+      "ambito": "Privacy"
+    }
+  ],
+  "glossario": [
+    {
+      "sigla": "DL",
+      "testo": "Datore di lavoro: il titolare o il legale rappresentante, responsabile della sicurezza dell'impresa."
+    },
+    {
+      "sigla": "RSPP",
+      "testo": "Responsabile del servizio di prevenzione e protezione: valuta i rischi e propone le misure. Può essere il datore di lavoro stesso o un consulente."
+    },
+    {
+      "sigla": "ASPP",
+      "testo": "Addetto al servizio di prevenzione e protezione: aiuta l'RSPP."
+    },
+    {
+      "sigla": "RLS",
+      "testo": "Rappresentante dei lavoratori per la sicurezza, eletto dai lavoratori."
+    },
+    {
+      "sigla": "RLST",
+      "testo": "RLS territoriale: rappresentante esterno dell'organismo paritetico, quando i lavoratori non ne eleggono uno."
+    },
+    {
+      "sigla": "MC",
+      "testo": "Medico competente: fa le visite e i giudizi di idoneità dei lavoratori esposti a rischi."
+    },
+    {
+      "sigla": "DPI",
+      "testo": "Dispositivi di protezione individuale: casco, guanti, scarpe, occhiali, cuffie, mascherine, imbracature."
+    },
+    {
+      "sigla": "DVR",
+      "testo": "Documento di valutazione dei rischi: obbligatorio per chi ha lavoratori."
+    },
+    {
+      "sigla": "DUVRI",
+      "testo": "Documento unico di valutazione dei rischi da interferenze: quando una ditta esterna lavora nella tua sede."
+    },
+    {
+      "sigla": "POS",
+      "testo": "Piano operativo di sicurezza: lo prepara ogni impresa che lavora in un cantiere."
+    },
+    {
+      "sigla": "PSC",
+      "testo": "Piano di sicurezza e coordinamento: lo prepara il coordinatore per il cantiere quando ci sono più imprese."
+    },
+    {
+      "sigla": "PiMUS",
+      "testo": "Piano di montaggio, uso e smontaggio del ponteggio."
+    },
+    {
+      "sigla": "CSP",
+      "testo": "Coordinatore per la sicurezza in fase di progettazione del cantiere."
+    },
+    {
+      "sigla": "CSE",
+      "testo": "Coordinatore per la sicurezza in fase di esecuzione del cantiere."
+    },
+    {
+      "sigla": "SDS",
+      "testo": "Scheda di sicurezza di un prodotto chimico: 16 sezioni con pericoli, uso, conservazione e DPI."
+    },
+    {
+      "sigla": "CLP",
+      "testo": "Regolamento europeo su classificazione ed etichettatura dei prodotti chimici: pittogrammi e frasi H."
+    },
+    {
+      "sigla": "Frasi H",
+      "testo": "Indicazioni di pericolo sull'etichetta e nella scheda di sicurezza (es. H225 infiammabile, H350 può provocare il cancro)."
+    },
+    {
+      "sigla": "CMR",
+      "testo": "Sostanze cancerogene, mutagene o tossiche per la riproduzione (frasi H340, H350, H360)."
+    },
+    {
+      "sigla": "REACH",
+      "testo": "Regolamento europeo sulle sostanze chimiche: tra l'altro obbliga il fornitore a dare la scheda di sicurezza."
+    },
+    {
+      "sigla": "ATEX",
+      "testo": "Atmosfere esplosive: luoghi dove gas, vapori o polveri possono esplodere."
+    },
+    {
+      "sigla": "PLE",
+      "testo": "Piattaforma di lavoro elevabile (cestello): serve l'abilitazione dell'operatore."
+    },
+    {
+      "sigla": "MMC",
+      "testo": "Movimentazione manuale dei carichi: sollevare, spingere, trainare pesi."
+    },
+    {
+      "sigla": "NIOSH",
+      "testo": "Metodo per valutare il sollevamento dei carichi: calcola il peso limite e l'indice di sollevamento."
+    },
+    {
+      "sigla": "VDT",
+      "testo": "Videoterminale: computer usato per almeno 20 ore a settimana."
+    },
+    {
+      "sigla": "LEX,8h",
+      "testo": "Esposizione giornaliera al rumore riferita a 8 ore, in dB(A)."
+    },
+    {
+      "sigla": "A(8)",
+      "testo": "Esposizione giornaliera alle vibrazioni riferita a 8 ore, in m/s²."
+    },
+    {
+      "sigla": "DURC",
+      "testo": "Documento unico di regolarità contributiva: attesta che l'impresa è in regola con INPS, INAIL e Cassa edile."
+    },
+    {
+      "sigla": "CPI",
+      "testo": "Certificato di prevenzione incendi: oggi si ottiene con la SCIA antincendio ai Vigili del fuoco."
+    },
+    {
+      "sigla": "SCIA",
+      "testo": "Segnalazione certificata di inizio attività: comunicazione che permette di iniziare subito un'attività."
+    },
+    {
+      "sigla": "GSA",
+      "testo": "Gestione della sicurezza antincendio: organizzazione delle emergenze secondo il DM 2/9/2021."
+    },
+    {
+      "sigla": "RENTRI",
+      "testo": "Registro elettronico nazionale per la tracciabilità dei rifiuti."
+    },
+    {
+      "sigla": "FIR",
+      "testo": "Formulario di identificazione dei rifiuti: accompagna i rifiuti durante il trasporto."
+    },
+    {
+      "sigla": "MUD",
+      "testo": "Modello unico di dichiarazione ambientale: dichiarazione annuale dei rifiuti."
+    },
+    {
+      "sigla": "AUA",
+      "testo": "Autorizzazione unica ambientale: riunisce le autorizzazioni per scarichi, emissioni e rumore."
+    },
+    {
+      "sigla": "HACCP",
+      "testo": "Sistema di autocontrollo dell'igiene degli alimenti."
+    },
+    {
+      "sigla": "MOCA",
+      "testo": "Materiali e oggetti a contatto con gli alimenti."
+    },
+    {
+      "sigla": "PES / PAV / PEI",
+      "testo": "Persona esperta, avvertita, idonea: qualifiche per i lavori elettrici secondo la norma CEI 11-27."
+    },
+    {
+      "sigla": "CEI 11-27",
+      "testo": "Norma tecnica sui lavori su impianti elettrici."
+    },
+    {
+      "sigla": "INAIL",
+      "testo": "Istituto nazionale assicurazione infortuni sul lavoro: riceve denunce di infortunio e comunicazioni."
+    },
+    {
+      "sigla": "ASL",
+      "testo": "Azienda sanitaria locale: vigila su sicurezza e igiene."
+    },
+    {
+      "sigla": "ITL",
+      "testo": "Ispettorato territoriale del lavoro."
+    },
+    {
+      "sigla": "VVF",
+      "testo": "Vigili del fuoco."
+    },
+    {
+      "sigla": "ATECO",
+      "testo": "Codice dell'attività economica: determina tra l'altro la classe di rischio per la formazione."
+    },
+    {
+      "sigla": "Preposto",
+      "testo": "Chi sovrintende al lavoro degli altri e ne controlla la sicurezza (capocantiere, caposquadra)."
+    },
+    {
+      "sigla": "Quasi incidente",
+      "testo": "Evento che poteva causare un infortunio ma non l'ha causato: va annotato per prevenire."
+    },
+    {
+      "sigla": "Uomini-giorno",
+      "testo": "Durata di un lavoro moltiplicata per il numero di persone (es. 2 persone per 3 giorni = 6)."
+    },
+    {
+      "sigla": "Data certa",
+      "testo": "Prova della data di un documento: firma di tutti con data, PEC o firma digitale."
+    }
+  ],
+  "sinonimi": [
+    {
+      "parole": [
+        "muletto",
+        "muletti",
+        "sollevatore a forche"
+      ],
+      "cerca": "carrello elevatore"
+    },
+    {
+      "parole": [
+        "frullino",
+        "flessibile",
+        "mola"
+      ],
+      "cerca": "smerigliatrice"
+    },
+    {
+      "parole": [
+        "impalcatura",
+        "impalcature"
+      ],
+      "cerca": "ponteggio"
+    },
+    {
+      "parole": [
+        "ponte su ruote"
+      ],
+      "cerca": "trabattello"
+    },
+    {
+      "parole": [
+        "cestello",
+        "piattaforma aerea",
+        "ragno"
+      ],
+      "cerca": "piattaforma elevabile PLE"
+    },
+    {
+      "parole": [
+        "tetto",
+        "tetti",
+        "altezza",
+        "quota",
+        "in alto"
+      ],
+      "cerca": "caduta dall'alto quota"
+    },
+    {
+      "parole": [
+        "eternit",
+        "fibrocemento",
+        "fibre"
+      ],
+      "cerca": "amianto"
+    },
+    {
+      "parole": [
+        "solvente",
+        "solventi",
+        "vernice",
+        "vernici",
+        "diluente",
+        "colla",
+        "colle",
+        "detergente",
+        "detersivi",
+        "acido",
+        "candeggina",
+        "prodotto chimico"
+      ],
+      "cerca": "chimico prodotti chimici schede di sicurezza"
+    },
+    {
+      "parole": [
+        "polvere",
+        "polveri",
+        "silice",
+        "legno duro",
+        "segatura"
+      ],
+      "cerca": "polveri cancerogeni"
+    },
+    {
+      "parole": [
+        "saldatura",
+        "saldare",
+        "cannello",
+        "fiamma",
+        "fiamme",
+        "molatura"
+      ],
+      "cerca": "saldatura permesso fiamme incendio"
+    },
+    {
+      "parole": [
+        "estintore",
+        "estintori",
+        "idrante",
+        "fuoco",
+        "incendi"
+      ],
+      "cerca": "antincendio incendio presidi"
+    },
+    {
+      "parole": [
+        "pronto soccorso",
+        "cassetta",
+        "ferita",
+        "malore"
+      ],
+      "cerca": "primo soccorso"
+    },
+    {
+      "parole": [
+        "visita",
+        "visite",
+        "medico",
+        "idoneità"
+      ],
+      "cerca": "sorveglianza sanitaria medico competente visita medica"
+    },
+    {
+      "parole": [
+        "corso",
+        "corsi",
+        "attestato",
+        "attestati",
+        "patentino"
+      ],
+      "cerca": "formazione"
+    },
+    {
+      "parole": [
+        "guanti",
+        "casco",
+        "elmetto",
+        "scarpe",
+        "occhiali",
+        "mascherina",
+        "maschera",
+        "cuffie",
+        "tappi",
+        "imbracatura"
+      ],
+      "cerca": "DPI dispositivi di protezione"
+    },
+    {
+      "parole": [
+        "sordità",
+        "decibel",
+        "db"
+      ],
+      "cerca": "rumore"
+    },
+    {
+      "parole": [
+        "martello demolitore",
+        "demolitore"
+      ],
+      "cerca": "vibrazioni"
+    },
+    {
+      "parole": [
+        "schiena",
+        "pesi",
+        "peso",
+        "sollevare",
+        "sacchi",
+        "carichi"
+      ],
+      "cerca": "movimentazione manuale dei carichi"
+    },
+    {
+      "parole": [
+        "computer",
+        "pc",
+        "monitor",
+        "schermo",
+        "videoterminale"
+      ],
+      "cerca": "videoterminali VDT"
+    },
+    {
+      "parole": [
+        "notte",
+        "turni",
+        "notturno"
+      ],
+      "cerca": "lavoro notturno"
+    },
+    {
+      "parole": [
+        "incinta",
+        "gravidanza",
+        "maternità",
+        "allattamento"
+      ],
+      "cerca": "lavoratrici madri gravidanza"
+    },
+    {
+      "parole": [
+        "minorenne",
+        "minorenni",
+        "ragazzo",
+        "apprendista"
+      ],
+      "cerca": "lavoratori minori"
+    },
+    {
+      "parole": [
+        "incidente",
+        "infortuni",
+        "denuncia infortunio"
+      ],
+      "cerca": "infortunio registro eventi INAIL"
+    },
+    {
+      "parole": [
+        "ditta esterna",
+        "ditte esterne",
+        "appalto",
+        "appalti",
+        "subappalto",
+        "manutentore"
+      ],
+      "cerca": "DUVRI interferenze appalti"
+    },
+    {
+      "parole": [
+        "telecamere",
+        "videocamere",
+        "gps"
+      ],
+      "cerca": "videosorveglianza privacy"
+    },
+    {
+      "parole": [
+        "dati personali",
+        "gdpr"
+      ],
+      "cerca": "privacy"
+    },
+    {
+      "parole": [
+        "formulario",
+        "smaltimento",
+        "spazzatura"
+      ],
+      "cerca": "rifiuti"
+    },
+    {
+      "parole": [
+        "fogna",
+        "acque reflue"
+      ],
+      "cerca": "scarichi"
+    },
+    {
+      "parole": [
+        "camino",
+        "fumi",
+        "emissione"
+      ],
+      "cerca": "emissioni in atmosfera"
+    },
+    {
+      "parole": [
+        "corrente",
+        "scossa",
+        "quadro elettrico",
+        "impianto elettrico"
+      ],
+      "cerca": "elettrico elettrocuzione"
+    },
+    {
+      "parole": [
+        "caldaia",
+        "gas"
+      ],
+      "cerca": "impianto gas caldaia"
+    },
+    {
+      "parole": [
+        "gru",
+        "argano",
+        "paranco"
+      ],
+      "cerca": "sollevamento"
+    },
+    {
+      "parole": [
+        "compressore",
+        "bombola",
+        "bombole"
+      ],
+      "cerca": "attrezzature a pressione"
+    },
+    {
+      "parole": [
+        "cibo",
+        "alimentari",
+        "ristorante",
+        "bar",
+        "pizzeria"
+      ],
+      "cerca": "alimenti HACCP"
+    },
+    {
+      "parole": [
+        "burnout",
+        "ansia"
+      ],
+      "cerca": "stress lavoro-correlato"
+    },
+    {
+      "parole": [
+        "caldo",
+        "sole",
+        "colpo di calore"
+      ],
+      "cerca": "lavoro all'esterno microclima"
+    },
+    {
+      "parole": [
+        "cisterna",
+        "pozzo",
+        "pozzetto",
+        "silos",
+        "vasca"
+      ],
+      "cerca": "ambienti confinati"
+    },
+    {
+      "parole": [
+        "esplosione",
+        "esplosivo"
+      ],
+      "cerca": "ATEX atmosfere esplosive"
+    },
+    {
+      "parole": [
+        "virus",
+        "batteri",
+        "sangue",
+        "aghi"
+      ],
+      "cerca": "agenti biologici"
+    },
+    {
+      "parole": [
+        "strada",
+        "traffico",
+        "cantiere stradale"
+      ],
+      "cerca": "segnaletica stradale lavori su strada"
+    },
+    {
+      "parole": [
+        "planimetria",
+        "pianta",
+        "layout",
+        "esodo"
+      ],
+      "cerca": "planimetrie emergenza"
+    },
+    {
+      "parole": [
+        "evacuazione",
+        "emergenza",
+        "allarme"
+      ],
+      "cerca": "piano di emergenza evacuazione"
+    }
+  ],
+  "parolePericoli": [
+    {
+      "parole": [
+        "caduta dall'alto",
+        "quota",
+        "coperture",
+        "ponteggi",
+        "scale"
+      ],
+      "pericoli": [
+        "quota"
+      ]
+    },
+    {
+      "parole": [
+        "polveri",
+        "silice",
+        "legno"
+      ],
+      "pericoli": [
+        "cancerogeni",
+        "chimico"
+      ]
+    },
+    {
+      "parole": [
+        "vapori",
+        "nebbie",
+        "prodotti chimici",
+        "colle",
+        "malte",
+        "cemento",
+        "fumi",
+        "gas di scarico",
+        "solventi"
+      ],
+      "pericoli": [
+        "chimico"
+      ]
+    },
+    {
+      "parole": [
+        "rumore"
+      ],
+      "pericoli": [
+        "rumore"
+      ]
+    },
+    {
+      "parole": [
+        "vibrazioni"
+      ],
+      "pericoli": [
+        "vibrazioni"
+      ]
+    },
+    {
+      "parole": [
+        "elettrocuzione",
+        "energia elettrica",
+        "in tensione"
+      ],
+      "pericoli": [
+        "elettrico-impianto",
+        "lavori-elettrici"
+      ]
+    },
+    {
+      "parole": [
+        "movimentazione",
+        "carichi",
+        "sforzi",
+        "posture"
+      ],
+      "pericoli": [
+        "mmc"
+      ]
+    },
+    {
+      "parole": [
+        "incendio",
+        "lavori a caldo",
+        "ustioni",
+        "fiamma"
+      ],
+      "pericoli": [
+        "incendio"
+      ]
+    },
+    {
+      "parole": [
+        "investimento",
+        "mezzi",
+        "ribaltamento",
+        "manovre"
+      ],
+      "pericoli": [
+        "attrezzature-abilitazione",
+        "strada"
+      ]
+    },
+    {
+      "parole": [
+        "tagli",
+        "schiacciamento",
+        "trascinamento",
+        "proiezione",
+        "urti",
+        "seppellimento",
+        "crollo"
+      ],
+      "pericoli": [
+        "attrezzature"
+      ]
+    },
+    {
+      "parole": [
+        "caldo",
+        "freddo",
+        "esterno"
+      ],
+      "pericoli": [
+        "lavoro-esterno"
+      ]
+    },
+    {
+      "parole": [
+        "interferenz",
+        "presenza contemporanea",
+        "personale esterno"
+      ],
+      "pericoli": [
+        "interferenze"
+      ]
+    },
+    {
+      "parole": [
+        "amianto"
+      ],
+      "pericoli": [
+        "amianto"
+      ]
+    },
+    {
+      "parole": [
+        "confinat"
+      ],
+      "pericoli": [
+        "confinati"
+      ]
+    },
+    {
+      "parole": [
+        "esplosione",
+        "atex"
+      ],
+      "pericoli": [
+        "atex"
+      ]
+    },
+    {
+      "parole": [
+        "biologic",
+        "punture di insetti"
+      ],
+      "pericoli": [
+        "biologici"
+      ]
+    }
+  ],
+  "pericoliAttrezzature": {
+    "taglio": "attrezzature",
+    "schiacciamento": "attrezzature",
+    "trascinamento": "attrezzature",
+    "proiezione": "attrezzature",
+    "urti": "attrezzature",
+    "caduta_alto": "quota",
+    "ribaltamento": "attrezzature-abilitazione",
+    "investimento": "attrezzature-abilitazione",
+    "elettrocuzione": "elettrico-impianto",
+    "ustioni": "attrezzature",
+    "incendio": "incendio",
+    "pressione": "attrezzature",
+    "rumore": "rumore",
+    "vibrazioni": "vibrazioni",
+    "polveri": "chimico",
+    "postura": "mmc"
+  },
+  "documenti": {
+    "stato-sicurezza": {
+      "adempimenti": [
+        "dvr",
+        "formazione-lavoratori",
+        "medico-competente",
+        "presidi-antincendio"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Stampalo prima di un incontro con il consulente o di un controllo: mostra in una pagina cosa è in regola e cosa manca.",
+        "Prima di stamparlo carica in Archivio i certificati rinnovati, così le date sono quelle giuste.",
+        "Le voci rosse sono quelle che un ispettore guarda per prime: formazione, visite, DVR e verifiche delle attrezzature."
+      ]
+    },
+    "dvr-bozza": {
+      "adempimenti": [
+        "dvr",
+        "rspp",
+        "medico-competente",
+        "formazione-lavoratori",
+        "dpi",
+        "piano-emergenza"
+      ],
+      "rischi": [
+        "luoghi",
+        "attrezzature",
+        "incendio",
+        "stress",
+        "tutele",
+        "differenze"
+      ],
+      "norme": [
+        "dlgs-81-2008",
+        "dm-30-11-2012",
+        "asr-59-2025"
+      ],
+      "consigli": [
+        "Il DVR deve avere data certa: firma con data di datore di lavoro, RSPP, medico competente e RLS, oppure invio via PEC a sé stessi.",
+        "Conferma probabilità (P) e danno (D) di ogni rischio durante il sopralluogo: i valori proposti sono tipici, non misurati. Puoi cambiarli in «Valutazione personalizzata».",
+        "Allega le valutazioni specifiche (rumore, vibrazioni, chimico, carichi, incendio): il DVR le richiama ma non le sostituisce.",
+        "Rielabora il DVR entro 30 giorni dopo modifiche importanti, nuove macchine, infortuni significativi o quando lo chiede il medico competente (art. 29 c. 3)."
+      ]
+    },
+    "registro-formazione": {
+      "adempimenti": [
+        "formazione-lavoratori",
+        "preposto",
+        "primo-soccorso",
+        "antincendio",
+        "medico-competente"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008",
+        "asr-59-2025",
+        "dm-388-2003",
+        "dm-2-9-2021"
+      ],
+      "consigli": [
+        "Aggiorna le date dei corsi e delle visite nelle schede dei lavoratori: il registro si compila da solo.",
+        "Tieni insieme agli attestati anche il registro presenze del corso e il test finale.",
+        "L'aggiornamento della formazione dei lavoratori è di 6 ore ogni 5 anni; quello degli addetti al primo soccorso ogni 3 anni."
+      ]
+    },
+    "dichiarazione-dl-rspp": {
+      "adempimenti": [
+        "rspp",
+        "formazione-dl-rspp"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008",
+        "asr-59-2025"
+      ],
+      "consigli": [
+        "Il datore di lavoro può fare da RSPP solo nei casi dell'Allegato II del D.Lgs. 81/2008 e dopo il corso specifico.",
+        "Fai firmare la presa visione all'RLS (o all'RLST) e conserva l'attestato del corso insieme alla dichiarazione."
+      ]
+    },
+    "nomina-rspp-esterno": {
+      "adempimenti": [
+        "rspp"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008",
+        "asr-59-2025"
+      ],
+      "consigli": [
+        "Chiedi all'RSPP copia dei titoli (art. 32): diploma, moduli A, B e C e aggiornamenti.",
+        "Indica nella lettera durata, sopralluoghi previsti e chi fornisce le informazioni all'RSPP.",
+        "La nomina non sposta la responsabilità: la valutazione dei rischi resta un obbligo non delegabile del datore di lavoro (art. 17)."
+      ]
+    },
+    "nomina-medico": {
+      "adempimenti": [
+        "medico-competente"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Il medico competente serve quando un rischio del DVR richiede la sorveglianza sanitaria (es. rumore, chimico, carichi, videoterminali, lavoro notturno).",
+        "Concorda con il medico il protocollo sanitario e la visita annuale agli ambienti di lavoro."
+      ]
+    },
+    "nomina-preposto": {
+      "adempimenti": [
+        "preposto"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008",
+        "asr-59-2025"
+      ],
+      "consigli": [
+        "Dal 2021 il preposto va individuato per iscritto in ogni impresa in cui qualcuno sovrintende al lavoro degli altri.",
+        "Il corso per preposti è di 12 ore in presenza, con aggiornamento ogni 2 anni."
+      ]
+    },
+    "designazione-addetti": {
+      "adempimenti": [
+        "primo-soccorso",
+        "antincendio"
+      ],
+      "rischi": [
+        "incendio"
+      ],
+      "norme": [
+        "dlgs-81-2008",
+        "dm-388-2003",
+        "dm-2-9-2021"
+      ],
+      "consigli": [
+        "Designa abbastanza addetti da coprire turni, ferie e assenze.",
+        "Il livello del corso antincendio dipende dalla valutazione del rischio incendio (livello 1, 2 o 3 del DM 2/9/2021)."
+      ]
+    },
+    "consegna-dpi": {
+      "adempimenti": [
+        "dpi"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Indica modello e categoria di ogni DPI: quelli di terza categoria (imbracature, maschere) richiedono anche l'addestramento.",
+        "Consegna la nota informativa del fabbricante e annota le sostituzioni."
+      ]
+    },
+    "informativa-lavoratori": {
+      "adempimenti": [
+        "privacy-lavoratori"
+      ],
+      "rischi": [],
+      "norme": [
+        "gdpr",
+        "dlgs-196-2003"
+      ],
+      "consigli": [
+        "Consegnala all'assunzione e fai firmare la ricevuta.",
+        "Se hai telecamere o GPS serve anche l'accordo sindacale o l'autorizzazione dell'Ispettorato (art. 4 Statuto dei lavoratori)."
+      ]
+    },
+    "autorizzazione-trattamento": {
+      "adempimenti": [
+        "privacy-lavoratori"
+      ],
+      "rischi": [],
+      "norme": [
+        "gdpr",
+        "dlgs-196-2003"
+      ],
+      "consigli": [
+        "Autorizza solo chi tratta davvero i dati e indica quali dati può usare.",
+        "Ricorda le regole pratiche: password personali, armadi chiusi, niente dati su chat private."
+      ]
+    },
+    "verbale-evacuazione": {
+      "adempimenti": [
+        "piano-emergenza"
+      ],
+      "rischi": [
+        "incendio"
+      ],
+      "norme": [
+        "dm-2-9-2021"
+      ],
+      "consigli": [
+        "La prova di evacuazione va fatta almeno una volta l'anno.",
+        "Annota i tempi, chi non ha sentito l'allarme e le uscite usate: i problemi trovati vanno nel programma di miglioramento."
+      ]
+    },
+    "registro-antincendio": {
+      "adempimenti": [
+        "presidi-antincendio"
+      ],
+      "rischi": [
+        "incendio"
+      ],
+      "norme": [
+        "dm-1-9-2021"
+      ],
+      "consigli": [
+        "Il controllo periodico di estintori e luci di emergenza va fatto almeno ogni 6 mesi da un tecnico manutentore qualificato.",
+        "Annota anche le sorveglianze fatte da te (estintore al suo posto, manometro nel verde, uscite libere)."
+      ]
+    },
+    "verbale-riunione": {
+      "adempimenti": [
+        "riunione-periodica"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Obbligatoria almeno una volta l'anno sopra i 15 lavoratori; sotto è consigliata e va fatta se l'RLS la chiede.",
+        "Argomenti minimi: DVR, infortuni e malattie professionali, DPI, programmi di formazione."
+      ]
+    },
+    "informativa-clienti": {
+      "adempimenti": [
+        "privacy"
+      ],
+      "rischi": [],
+      "norme": [
+        "gdpr",
+        "dlgs-196-2003"
+      ],
+      "consigli": [
+        "Esponila dove i clienti la vedono o consegnala con il preventivo.",
+        "Se usi i dati per pubblicità serve un consenso separato."
+      ]
+    },
+    "nomina-responsabile-esterno": {
+      "adempimenti": [
+        "privacy"
+      ],
+      "rischi": [],
+      "norme": [
+        "gdpr"
+      ],
+      "consigli": [
+        "Serve per chi tratta dati per tuo conto: commercialista, consulente del lavoro, ditta informatica.",
+        "Il contratto deve indicare durata, finalità, misure di sicurezza e cosa succede ai dati alla fine."
+      ]
+    },
+    "regole-lavoratore": {
+      "adempimenti": [
+        "formazione-lavoratori",
+        "dpi"
+      ],
+      "rischi": [
+        "differenze"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Scegli la lingua compresa dal lavoratore: l'informazione deve essere comprensibile (art. 36 c. 4).",
+        "Fai firmare la ricevuta e affiancalo nei primi giorni."
+      ]
+    },
+    "piano-emergenza-doc": {
+      "adempimenti": [
+        "piano-emergenza",
+        "primo-soccorso",
+        "antincendio",
+        "presidi-antincendio"
+      ],
+      "rischi": [
+        "incendio"
+      ],
+      "norme": [
+        "dm-2-9-2021",
+        "dm-388-2003"
+      ],
+      "consigli": [
+        "Obbligatorio con 10 o più lavoratori, o quando il locale è soggetto ai controlli dei Vigili del fuoco; sotto basta la procedura semplificata.",
+        "Allega la planimetria di emergenza con vie di esodo, uscite, estintori e punto di raccolta, ed esponila nei locali.",
+        "Controlla che i nomi degli addetti siano quelli attuali."
+      ]
+    },
+    "informazione-art36": {
+      "adempimenti": [
+        "formazione-lavoratori"
+      ],
+      "rischi": [
+        "differenze"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "L'informazione è diversa dalla formazione: spiega rischi, misure, nomi di RSPP, medico e addetti, e va data a ogni lavoratore.",
+        "Fai firmare il verbale e tienilo nel fascicolo del lavoratore."
+      ]
+    },
+    "verbale-addestramento": {
+      "adempimenti": [
+        "formazione-lavoratori",
+        "attrezzature-abilitazione",
+        "lavori-quota",
+        "dpi"
+      ],
+      "rischi": [
+        "attrezzature",
+        "quota"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "L'addestramento è pratico e va fatto da una persona esperta sul posto di lavoro (art. 37 c. 5).",
+        "Obbligatorio per DPI di terza categoria e protezioni dell'udito, e per l'uso delle attrezzature.",
+        "Allega le pagine del libretto sui pericoli: vengono inserite da sole se le carichi nella scheda della macchina."
+      ]
+    },
+    "verbale-elezione-rls": {
+      "adempimenti": [
+        "rls"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "L'RLS è eletto dai lavoratori, non nominato dal datore di lavoro.",
+        "Se nessuno si candida, l'impresa rientra nell'RLS territoriale e versa il contributo previsto."
+      ]
+    },
+    "valutazione-incendio": {
+      "adempimenti": [
+        "antincendio",
+        "presidi-antincendio",
+        "verifica-cpi"
+      ],
+      "rischi": [
+        "incendio"
+      ],
+      "norme": [
+        "dm-3-9-2021",
+        "dm-2-9-2021",
+        "dm-1-9-2021",
+        "dpr-151-2011"
+      ],
+      "consigli": [
+        "Per le attività a basso rischio basta il minicodice del DM 3/9/2021; per quelle dell'Allegato I del DPR 151/2011 serve un tecnico antincendio.",
+        "Il risultato decide il livello del corso degli addetti (1, 2 o 3)."
+      ]
+    },
+    "valutazione-rumore": {
+      "adempimenti": [
+        "rumore-vibrazioni"
+      ],
+      "rischi": [
+        "rumore"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Usa i dati di rumore dei libretti o le banche dati solo per una prima stima: sopra 80 dB(A) serve una misura con fonometro fatta da personale qualificato.",
+        "Sopra 85 dB(A) diventano obbligatori DPI uditivi, sorveglianza sanitaria e programma di riduzione.",
+        "La valutazione va ripetuta almeno ogni 4 anni (art. 181)."
+      ]
+    },
+    "valutazione-vibrazioni": {
+      "adempimenti": [
+        "rumore-vibrazioni"
+      ],
+      "rischi": [
+        "vibrazioni"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Il valore di vibrazione di ogni utensile è nel libretto d'uso.",
+        "Limiti mano-braccio: azione 2,5 m/s², limite 5 m/s². Corpo intero: azione 0,5 m/s², limite 1 m/s²."
+      ]
+    },
+    "valutazione-mmc": {
+      "adempimenti": [
+        "movimentazione-carichi"
+      ],
+      "rischi": [
+        "mmc"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Misura peso, altezze, distanze e frequenza dell'operazione reale.",
+        "Indice oltre 0,85: pianifica la riduzione; oltre 1: sorveglianza sanitaria e interventi."
+      ]
+    },
+    "valutazione-chimico": {
+      "adempimenti": [
+        "rischio-chimico",
+        "schede-sicurezza"
+      ],
+      "rischi": [
+        "chimico",
+        "cancerogeni"
+      ],
+      "norme": [
+        "dlgs-81-2008",
+        "reg-1907-2006",
+        "reg-1272-2008"
+      ],
+      "consigli": [
+        "Parti dalle schede di sicurezza aggiornate: frasi H (sezione 2), DPI (sezione 8).",
+        "Con prodotti cancerogeni o mutageni (H340, H350) si applica il Capo II: sostituzione, registro degli esposti, sorveglianza sanitaria.",
+        "Il rischio «basso per la sicurezza e irrilevante per la salute» va motivato."
+      ]
+    },
+    "richiesta-visite": {
+      "adempimenti": [
+        "medico-competente"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Le visite vanno fatte prima di adibire il lavoratore alla mansione e poi con la periodicità del medico.",
+        "Indica al medico la mansione e i rischi: li prende dal DVR."
+      ]
+    },
+    "permesso-lavoro-caldo": {
+      "adempimenti": [
+        "antincendio"
+      ],
+      "rischi": [
+        "incendio"
+      ],
+      "norme": [
+        "dlgs-81-2008",
+        "dm-2-9-2021"
+      ],
+      "consigli": [
+        "Allontana o copri i materiali combustibili per almeno 10 metri e tieni un estintore a portata di mano.",
+        "Dopo il lavoro resta un addetto per almeno 30-60 minuti a controllare che non ci siano focolai."
+      ]
+    },
+    "info-rischi-ditte": {
+      "adempimenti": [
+        "duvri"
+      ],
+      "rischi": [
+        "interferenze"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Consegnalo a ogni ditta esterna prima dell'inizio: è richiesto anche quando il DUVRI non serve.",
+        "Verifica l'idoneità della ditta: visura camerale, DURC, autocertificazione."
+      ]
+    },
+    "duvri-bozza": {
+      "adempimenti": [
+        "duvri"
+      ],
+      "rischi": [
+        "interferenze"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Il DUVRI non serve per servizi intellettuali, forniture senza installazione e lavori fino a 5 uomini-giorno senza rischi particolari (art. 26 c. 3-bis).",
+        "Indica i costi della sicurezza: non sono soggetti a ribasso.",
+        "Allegalo al contratto e aggiornalo se cambiano i lavori."
+      ]
+    },
+    "autocertificazione-idoneita": {
+      "adempimenti": [
+        "appalti-presso-clienti"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008",
+        "dpr-445-2000"
+      ],
+      "consigli": [
+        "Il committente la chiede per verificare la tua idoneità tecnico-professionale (art. 26 e Allegato XVII).",
+        "Allega visura camerale e DURC aggiornati."
+      ]
+    },
+    "pos-bozza": {
+      "adempimenti": [
+        "pos",
+        "patente-crediti",
+        "lavori-quota",
+        "attrezzature-abilitazione"
+      ],
+      "rischi": [
+        "lavoro-esterno",
+        "quota",
+        "attrezzature"
+      ],
+      "norme": [
+        "dlgs-81-2008",
+        "dm-132-2024"
+      ],
+      "consigli": [
+        "Il POS va consegnato all'impresa affidataria e al coordinatore (CSE) prima di entrare in cantiere.",
+        "Seleziona solo le lavorazioni che farai davvero e controlla che le attrezzature elencate siano quelle che porterai.",
+        "Con il ponteggio allega PiMUS, libretto e, se serve, progetto.",
+        "Dal 2024 serve la patente a crediti per lavorare nei cantieri (salvo SOA dalla III classe)."
+      ]
+    },
+    "stress-preliminare": {
+      "adempimenti": [
+        "stress-lavoro-correlato"
+      ],
+      "rischi": [
+        "stress"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Coinvolgi i lavoratori o l'RLS: la valutazione fatta solo dal titolare è debole.",
+        "Se dalla valutazione preliminare emergono problemi e le misure non bastano, serve la valutazione approfondita."
+      ]
+    },
+    "informativa-lavoratrici-madri": {
+      "adempimenti": [
+        "lavoratrici-madri"
+      ],
+      "rischi": [
+        "tutele"
+      ],
+      "norme": [
+        "dlgs-151-2001",
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Informa tutte le lavoratrici, anche prima di qualsiasi gravidanza.",
+        "Quando una lavoratrice comunica la gravidanza, verifica subito le mansioni vietate e quelle alternative."
+      ]
+    },
+    "informativa-minori": {
+      "adempimenti": [
+        "lavoratori-minori"
+      ],
+      "rischi": [
+        "tutele"
+      ],
+      "norme": [
+        "l-977-1967",
+        "dlgs-345-1999",
+        "dlgs-262-2000"
+      ],
+      "consigli": [
+        "Prima di assumere un minore controlla le lavorazioni vietate dell'Allegato I della L. 977/1967.",
+        "Serve la visita medica preventiva e la valutazione specifica prima dell'inizio."
+      ]
+    },
+    "elenco-prodotti-chimici": {
+      "adempimenti": [
+        "schede-sicurezza",
+        "rischio-chimico"
+      ],
+      "rischi": [
+        "chimico"
+      ],
+      "norme": [
+        "reg-1907-2006",
+        "reg-1272-2008"
+      ],
+      "consigli": [
+        "Ogni prodotto deve avere la scheda di sicurezza aggiornata, in italiano, a portata di mano dei lavoratori.",
+        "Le schede vanno chieste al fornitore: è obbligato a darle gratuitamente."
+      ]
+    },
+    "registro-eventi": {
+      "adempimenti": [
+        "registro-eventi",
+        "infortuni"
+      ],
+      "rischi": [],
+      "norme": [
+        "dlgs-81-2008",
+        "dpr-1124-1965"
+      ],
+      "consigli": [
+        "Registra anche i quasi incidenti: sono il modo migliore per prevenire gli infortuni.",
+        "Infortunio con prognosi oltre 3 giorni: denuncia all'INAIL entro 2 giorni dal certificato."
+      ]
+    },
+    "registro-temperature": {
+      "adempimenti": [
+        "haccp-autocontrollo"
+      ],
+      "rischi": [],
+      "norme": [
+        "reg-852-2004"
+      ],
+      "consigli": [
+        "Annota le temperature ogni giorno, alla stessa ora, e cosa hai fatto se erano fuori limite.",
+        "Conservalo con il piano HACCP."
+      ]
+    },
+    "cartello-allergeni": {
+      "adempimenti": [
+        "allergeni"
+      ],
+      "rischi": [],
+      "norme": [
+        "reg-1169-2011",
+        "dlgs-231-2017"
+      ],
+      "consigli": [
+        "Le informazioni sui 14 allergeni devono essere disponibili per iscritto, prima dell'ordine.",
+        "Aggiorna il cartello ogni volta che cambi ricette o fornitori."
+      ]
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "versione": "0.3.0",
-  "aggiornato": "2026-11-24",
+  "versione": "0.4.0",
+  "aggiornato": "2026-11-25",
   "riferimento": "Procedure standardizzate per la valutazione dei rischi (DM 30 novembre 2012), art. 29 c. 5 del D.Lgs. 81/2008",
   "pericoli": [
     {
@@ -25,7 +25,13 @@
       ],
       "sorveglianza": false,
       "formazione": "Informazione sui percorsi e sulle uscite",
-      "norma": "D.Lgs. 81/2008 Titolo II e Allegato IV"
+      "norma": "D.Lgs. 81/2008 Titolo II e Allegato IV",
+      "miglioramenti": [
+        "Ripristinare pavimenti sconnessi e applicare strisce antiscivolo sui gradini",
+        "Installare o verificare l'illuminazione di emergenza sulle vie di esodo",
+        "Riordinare i depositi e liberare corridoi e uscite, con controllo settimanale",
+        "Verificare microclima e ricambi d'aria nei locali chiusi"
+      ]
     },
     {
       "id": "lavoro-esterno",
@@ -58,7 +64,12 @@
       ],
       "sorveglianza": false,
       "formazione": "Informazione sui rischi dei luoghi esterni e sul caldo",
-      "norma": "D.Lgs. 81/2008 artt. 26 e 96; ordinanze regionali sul caldo"
+      "norma": "D.Lgs. 81/2008 artt. 26 e 96; ordinanze regionali sul caldo",
+      "miglioramenti": [
+        "Procedura per il caldo: pause all'ombra, acqua sempre disponibile, sospensione nelle ore più calde in base alle ordinanze",
+        "Fornire indumenti ad alta visibilità e per il freddo e la pioggia",
+        "Informare i lavoratori sui segnali del colpo di calore e su chi chiamare"
+      ]
     },
     {
       "id": "attrezzature",
@@ -84,7 +95,13 @@
       ],
       "sorveglianza": false,
       "formazione": "Formazione e addestramento all'uso di ogni attrezzatura (art. 73)",
-      "norma": "D.Lgs. 81/2008 Titolo III, Allegati V e VI"
+      "norma": "D.Lgs. 81/2008 Titolo III, Allegati V e VI",
+      "miglioramenti": [
+        "Censire tutte le attrezzature in safetyDoc con libretto e dichiarazione CE",
+        "Programmare la manutenzione secondo il libretto e annotare ogni intervento",
+        "Verificare protezioni e ripari fissi e mobili e i dispositivi di arresto di emergenza",
+        "Addestrare ogni lavoratore all'uso delle attrezzature che gli vengono affidate (art. 73)"
+      ]
     },
     {
       "id": "attrezzature-abilitazione",
@@ -111,7 +128,12 @@
       ],
       "sorveglianza": false,
       "formazione": "Abilitazione degli operatori (Accordo Stato-Regioni)",
-      "norma": "D.Lgs. 81/2008 artt. 71 e 73, Allegato VII"
+      "norma": "D.Lgs. 81/2008 artt. 71 e 73, Allegato VII",
+      "miglioramenti": [
+        "Far conseguire o rinnovare l'abilitazione (Accordo Stato-Regioni) a chi usa le attrezzature",
+        "Rispettare le verifiche periodiche dell'Allegato VII e conservare i verbali",
+        "Delimitare le aree di manovra e separare i percorsi pedonali da quelli dei mezzi"
+      ]
     },
     {
       "id": "elettrico-impianto",
@@ -133,7 +155,13 @@
       "dpi": [],
       "sorveglianza": false,
       "formazione": "Informazione sull'uso corretto di prese e prolunghe",
-      "norma": "D.Lgs. 81/2008 artt. 80-86; DM 37/2008; DPR 462/2001"
+      "norma": "D.Lgs. 81/2008 artt. 80-86; DM 37/2008; DPR 462/2001",
+      "miglioramenti": [
+        "Far verificare l'impianto da un installatore abilitato e ottenere la dichiarazione di conformità (DM 37/2008)",
+        "Programmare la verifica periodica della messa a terra (DPR 462/2001)",
+        "Prova periodica dei differenziali con il tasto «T» e annotazione",
+        "Eliminare prolunghe e prese multiple volanti, sostituire cavi danneggiati"
+      ]
     },
     {
       "id": "lavori-elettrici",
@@ -159,7 +187,12 @@
       ],
       "sorveglianza": false,
       "formazione": "Formazione CEI 11-27 e attribuzione PES/PAV/PEI",
-      "norma": "D.Lgs. 81/2008 artt. 82-83; norma CEI 11-27"
+      "norma": "D.Lgs. 81/2008 artt. 82-83; norma CEI 11-27",
+      "miglioramenti": [
+        "Attribuire per iscritto le qualifiche PES/PAV/PEI dopo il corso CEI 11-27",
+        "Adottare una procedura scritta di messa fuori tensione, blocco e cartellonistica",
+        "Dotare la squadra di DPI e attrezzi isolati verificati"
+      ]
     },
     {
       "id": "quota",
@@ -185,7 +218,13 @@
       ],
       "sorveglianza": false,
       "formazione": "Formazione e addestramento ai DPI di terza categoria e al montaggio delle opere provvisionali",
-      "norma": "D.Lgs. 81/2008 Titolo IV Capo II"
+      "norma": "D.Lgs. 81/2008 Titolo IV Capo II",
+      "miglioramenti": [
+        "Preferire protezioni collettive (parapetti, ponteggi, PLE) alle imbracature",
+        "Fare il corso e l'addestramento per l'uso dei DPI anticaduta di terza categoria",
+        "Verificare prima dell'uso scale, trabattelli, imbracature e punti di ancoraggio",
+        "Redigere un piano di soccorso per il recupero di chi resta sospeso all'imbracatura"
+      ]
     },
     {
       "id": "confinati",
@@ -212,7 +251,12 @@
       ],
       "sorveglianza": true,
       "formazione": "Formazione e addestramento specifici, prove di recupero",
-      "norma": "DPR 177/2011; D.Lgs. 81/2008 artt. 66 e 121"
+      "norma": "DPR 177/2011; D.Lgs. 81/2008 artt. 66 e 121",
+      "miglioramenti": [
+        "Qualificare l'impresa secondo il DPR 177/2011 prima di qualsiasi accesso",
+        "Procedura scritta con permesso di lavoro, misura dei gas e sorveglianza esterna",
+        "Formazione e addestramento specifici, comprese le prove di recupero"
+      ]
     },
     {
       "id": "incendio",
@@ -233,7 +277,13 @@
       "dpi": [],
       "sorveglianza": false,
       "formazione": "Formazione degli addetti antincendio e informazione a tutti sulle procedure",
-      "norma": "DM 1, 2 e 3 settembre 2021; D.Lgs. 81/2008 artt. 43-46"
+      "norma": "DM 1, 2 e 3 settembre 2021; D.Lgs. 81/2008 artt. 43-46",
+      "miglioramenti": [
+        "Aggiornare la valutazione del rischio incendio secondo il DM 3/9/2021",
+        "Contratto di manutenzione dei presidi antincendio con controllo semestrale",
+        "Fare la prova di evacuazione almeno una volta l'anno",
+        "Ridurre il materiale combustibile depositato e tenerlo lontano da fonti di calore"
+      ]
     },
     {
       "id": "atex",
@@ -258,7 +308,12 @@
       ],
       "sorveglianza": false,
       "formazione": "Formazione sulle zone classificate e sulle procedure",
-      "norma": "D.Lgs. 81/2008 Titolo XI"
+      "norma": "D.Lgs. 81/2008 Titolo XI",
+      "miglioramenti": [
+        "Redigere il documento sulla protezione contro le esplosioni (art. 294)",
+        "Aspirazione localizzata delle polveri e pulizia frequente per evitare accumuli",
+        "Attrezzature e impianti adatti alle zone ATEX e verifica degli impianti elettrici"
+      ]
     },
     {
       "id": "rumore",
@@ -282,7 +337,12 @@
       ],
       "sorveglianza": true,
       "formazione": "Formazione sull'uso dei DPI uditivi sopra 80 dB(A)",
-      "norma": "D.Lgs. 81/2008 Titolo VIII Capo II"
+      "norma": "D.Lgs. 81/2008 Titolo VIII Capo II",
+      "miglioramenti": [
+        "Misurare il rumore (fonometro) per conoscere l'esposizione LEX,8h",
+        "Scegliere macchine meno rumorose e fare la manutenzione che riduce il rumore",
+        "Delimitare e segnalare le aree oltre 85 dB(A) e fornire DPI uditivi adatti"
+      ]
     },
     {
       "id": "vibrazioni",
@@ -306,7 +366,12 @@
       ],
       "sorveglianza": true,
       "formazione": "Informazione sull'uso corretto degli utensili e sulle pause",
-      "norma": "D.Lgs. 81/2008 Titolo VIII Capo III"
+      "norma": "D.Lgs. 81/2008 Titolo VIII Capo III",
+      "miglioramenti": [
+        "Calcolare l'esposizione A(8) con i dati dei libretti o con la banca dati vibrazioni",
+        "Preferire utensili con impugnature antivibranti e alternare i compiti",
+        "Manutenzione di utensili e sedili dei mezzi per ridurre le vibrazioni"
+      ]
     },
     {
       "id": "chimico",
@@ -333,7 +398,13 @@
       ],
       "sorveglianza": true,
       "formazione": "Formazione sulle etichette, sulle schede di sicurezza e sull'uso dei DPI",
-      "norma": "D.Lgs. 81/2008 Titolo IX Capo I; Reg. CE 1907/2006 e 1272/2008"
+      "norma": "D.Lgs. 81/2008 Titolo IX Capo I; Reg. CE 1907/2006 e 1272/2008",
+      "miglioramenti": [
+        "Raccogliere le schede di sicurezza aggiornate di tutti i prodotti",
+        "Sostituire i prodotti più pericolosi con altri meno pericolosi",
+        "Aspirazione localizzata o ventilazione nelle zone di uso",
+        "Armadi e contenitori etichettati per lo stoccaggio, separando i prodotti incompatibili"
+      ]
     },
     {
       "id": "cancerogeni",
@@ -358,7 +429,13 @@
       ],
       "sorveglianza": true,
       "formazione": "Formazione specifica sui cancerogeni",
-      "norma": "D.Lgs. 81/2008 Titolo IX Capo II, Allegato XLII"
+      "norma": "D.Lgs. 81/2008 Titolo IX Capo II, Allegato XLII",
+      "miglioramenti": [
+        "Sostituire, se possibile, il materiale o il processo che produce l'agente cancerogeno",
+        "Utensili con aspirazione alla fonte e aspiratori di classe H o M",
+        "Istituire il registro degli esposti con il medico competente",
+        "Pulizia con aspiratore, mai con aria compressa o scopa"
+      ]
     },
     {
       "id": "amianto",
@@ -383,7 +460,12 @@
       ],
       "sorveglianza": true,
       "formazione": "Formazione specifica (corso amianto)",
-      "norma": "D.Lgs. 81/2008 Titolo IX Capo III; L. 257/1992"
+      "norma": "D.Lgs. 81/2008 Titolo IX Capo III; L. 257/1992",
+      "miglioramenti": [
+        "Far fare il censimento dei materiali sospetti da un tecnico e le analisi",
+        "Affidare rimozione e bonifica solo a ditte iscritte all'Albo (categoria 10)",
+        "Vietare a tutti di forare, tagliare o rompere materiali sospetti"
+      ]
     },
     {
       "id": "biologici",
@@ -409,7 +491,12 @@
       ],
       "sorveglianza": true,
       "formazione": "Formazione sulle procedure igieniche e sui DPI",
-      "norma": "D.Lgs. 81/2008 Titolo X"
+      "norma": "D.Lgs. 81/2008 Titolo X",
+      "miglioramenti": [
+        "Protocollo di pulizia e disinfezione delle superfici e delle attrezzature",
+        "Procedura per tagli e punture con materiale contaminato",
+        "Valutare con il medico competente le vaccinazioni utili"
+      ]
     },
     {
       "id": "mmc",
@@ -434,7 +521,13 @@
       ],
       "sorveglianza": true,
       "formazione": "Formazione e addestramento alle corrette tecniche di movimentazione",
-      "norma": "D.Lgs. 81/2008 Titolo VI, Allegato XXXIII; norme ISO 11228"
+      "norma": "D.Lgs. 81/2008 Titolo VI, Allegato XXXIII; norme ISO 11228",
+      "miglioramenti": [
+        "Fare la valutazione con il metodo NIOSH o le norme ISO 11228",
+        "Usare carrelli, transpallet o sollevatori e ridurre il peso delle confezioni",
+        "Riorganizzare i ripiani: i pesi tra altezza fianchi e spalle",
+        "Formazione pratica sulla movimentazione corretta"
+      ]
     },
     {
       "id": "vdt",
@@ -456,7 +549,12 @@
       "dpi": [],
       "sorveglianza": true,
       "formazione": "Informazione sulla postazione e sulle pause",
-      "norma": "D.Lgs. 81/2008 Titolo VII, Allegato XXXIV"
+      "norma": "D.Lgs. 81/2008 Titolo VII, Allegato XXXIV",
+      "miglioramenti": [
+        "Adeguare postazioni: sedia regolabile, schermo all'altezza degli occhi, luce senza riflessi",
+        "Programmare le pause di 15 minuti ogni 2 ore",
+        "Visite mediche per chi lavora al computer 20 ore a settimana o più"
+      ]
     },
     {
       "id": "stress",
@@ -477,7 +575,12 @@
       "dpi": [],
       "sorveglianza": false,
       "formazione": "Informazione sull'organizzazione del lavoro",
-      "norma": "D.Lgs. 81/2008 art. 28 c. 1-bis; Accordo europeo 8/10/2004"
+      "norma": "D.Lgs. 81/2008 art. 28 c. 1-bis; Accordo europeo 8/10/2004",
+      "miglioramenti": [
+        "Raccogliere gli indicatori (assenze, infortuni, turnover, segnalazioni) ogni anno",
+        "Coinvolgere i lavoratori o l'RLS nella valutazione preliminare",
+        "Chiarire ruoli, carichi di lavoro e orari"
+      ]
     },
     {
       "id": "notturno",
@@ -499,7 +602,12 @@
       "dpi": [],
       "sorveglianza": true,
       "formazione": "Informazione su turni, guida sicura e divieto di alcol",
-      "norma": "D.Lgs. 66/2003; D.Lgs. 81/2008 art. 41 c. 4"
+      "norma": "D.Lgs. 66/2003; D.Lgs. 81/2008 art. 41 c. 4",
+      "miglioramenti": [
+        "Visite mediche prima di adibire al lavoro notturno e poi ogni 2 anni",
+        "Procedura per la guida sicura e il divieto di alcol e droghe",
+        "Programmare la manutenzione dei mezzi aziendali"
+      ]
     },
     {
       "id": "strada",
@@ -523,7 +631,12 @@
       ],
       "sorveglianza": false,
       "formazione": "Formazione segnaletica stradale (DI 22/01/2019)",
-      "norma": "DI 22 gennaio 2019; Codice della strada"
+      "norma": "DI 22 gennaio 2019; Codice della strada",
+      "miglioramenti": [
+        "Formazione sulla segnaletica stradale per i lavori su strada (DI 22/1/2019)",
+        "Schemi segnaletici scritti per ogni tipo di cantiere stradale",
+        "Indumenti ad alta visibilità di classe 3"
+      ]
     },
     {
       "id": "interferenze",
@@ -545,7 +658,12 @@
       "dpi": [],
       "sorveglianza": false,
       "formazione": "Informazione alle ditte esterne e ai propri lavoratori",
-      "norma": "D.Lgs. 81/2008 art. 26"
+      "norma": "D.Lgs. 81/2008 art. 26",
+      "miglioramenti": [
+        "Verificare l'idoneità di ogni ditta esterna prima dell'affidamento",
+        "Redigere il DUVRI o le informazioni sui rischi della sede prima dell'inizio",
+        "Riunione di coordinamento e verbale prima dei lavori"
+      ]
     },
     {
       "id": "tutele",
@@ -566,7 +684,12 @@
       "dpi": [],
       "sorveglianza": true,
       "formazione": "Informazione alle lavoratrici e ai genitori dei minori",
-      "norma": "D.Lgs. 151/2001; L. 977/1967"
+      "norma": "D.Lgs. 151/2001; L. 977/1967",
+      "miglioramenti": [
+        "Informare tutte le lavoratrici sui rischi per gravidanza e allattamento",
+        "Individuare in anticipo le mansioni alternative compatibili",
+        "Verificare prima dell'assunzione di un minore le lavorazioni vietate"
+      ]
     },
     {
       "id": "differenze",
@@ -585,7 +708,12 @@
       "dpi": [],
       "sorveglianza": false,
       "formazione": "Formazione comprensibile, anche in altre lingue, e affiancamento",
-      "norma": "D.Lgs. 81/2008 art. 28 c. 1"
+      "norma": "D.Lgs. 81/2008 art. 28 c. 1",
+      "miglioramenti": [
+        "Formazione nella lingua compresa dai lavoratori stranieri",
+        "Affiancamento dei neoassunti e dei lavoratori interinali",
+        "Considerare età e condizioni particolari nell'assegnazione dei compiti"
+      ]
     }
   ],
   "criteri": {
