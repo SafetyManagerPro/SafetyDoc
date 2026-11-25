@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.15.1. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.16.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -29,12 +29,16 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
 10. **Aiuto a fare** – firma sul telefono o sul tablet dei documenti (la copia firmata resta allegata e registra la
    voce del lavoratore) ed esempi tipici di attrezzature, prodotti e mansioni per settore (`data/settori.json`); regole di sicurezza ed
    emergenza in 5 lingue straniere accanto all'italiano (`js/lingue.js`).
-11. **Controllo veloce** – subito dopo il questionario chiede, voce per voce, «Hai già fatto…?» con una data
+11. **Archivio e planimetrie** – certificati, dichiarazioni di conformità, autorizzazioni, contratti, attestati in più
+   e documenti delle macchine con scadenza e versioni (la vecchia resta nello storico); planimetrie e layout con
+   revisioni, inseriti da soli in DVR, piano di emergenza, valutazione incendio, POS e DUVRI (`data/archivio.json`).
+   Gli adempimenti rinnovati conservano lo storico delle date e dei file.
+12. **Controllo veloce** – subito dopo il questionario chiede, voce per voce, «Hai già fatto…?» con una data
    indicativa: chi è già in regola non parte con tutto rosso.
-12. **Chiedi aiuto** – il recapito del consulente o dell'associazione; da ogni voce si chiama o si scrive (telefono,
+13. **Chiedi aiuto** – il recapito del consulente o dell'associazione; da ogni voce si chiama o si scrive (telefono,
    WhatsApp, email) con un messaggio già pronto che non contiene dati dei lavoratori (`js/aiuto.js`).
-13. **Stato della sicurezza** – riepilogo stampabile di adempimenti, lavoratori e macchine con date e allegati.
-14. **Dati** – salvati solo nel dispositivo; si esportano e importano come file JSON, anche protetto da password
+14. **Stato della sicurezza** – riepilogo stampabile di adempimenti, lavoratori e macchine con date e allegati.
+15. **Dati** – salvati solo nel dispositivo; si esportano e importano come file JSON, anche protetto da password
    (`js/store.js`, `js/merge.js`, `js/cifratura.js`).
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta. Quando si aggiungono

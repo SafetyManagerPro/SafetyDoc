@@ -1,0 +1,140 @@
+{
+  "versione": "0.1.0",
+  "nota": "Tipi di documenti e di planimetrie che l'impresa conserva e aggiorna nel tempo.",
+  "certificati": [
+    {
+      "id": "agibilita",
+      "etichetta": "Agibilità o conformità edilizia dei locali",
+      "gruppo": "Locali e impianti"
+    },
+    {
+      "id": "conformita-elettrico",
+      "etichetta": "Dichiarazione di conformità dell'impianto elettrico (DM 37/2008)",
+      "gruppo": "Locali e impianti"
+    },
+    {
+      "id": "conformita-gas",
+      "etichetta": "Dichiarazione di conformità dell'impianto gas o termico",
+      "gruppo": "Locali e impianti"
+    },
+    {
+      "id": "conformita-altro",
+      "etichetta": "Dichiarazione di conformità di altri impianti",
+      "gruppo": "Locali e impianti"
+    },
+    {
+      "id": "verifica-terra",
+      "etichetta": "Verbale di verifica dell'impianto di messa a terra (DPR 462/2001)",
+      "gruppo": "Locali e impianti",
+      "aiuto": "Verifica ogni 5 anni; ogni 2 anni per cantieri, locali ad uso medico, ambienti a maggior rischio di incendio e luoghi con pericolo di esplosione"
+    },
+    {
+      "id": "caldaia",
+      "etichetta": "Libretto e controllo fumi della caldaia",
+      "gruppo": "Locali e impianti"
+    },
+    {
+      "id": "cpi",
+      "etichetta": "SCIA antincendio o certificato di prevenzione incendi",
+      "gruppo": "Antincendio",
+      "aiuto": "Rinnovo periodico ogni 5 anni (10 anni per alcune attività)"
+    },
+    {
+      "id": "manutenzione-antincendio",
+      "etichetta": "Verbale o contratto di manutenzione di estintori e presidi",
+      "gruppo": "Antincendio"
+    },
+    {
+      "id": "autorizzazione-ambientale",
+      "etichetta": "Autorizzazione ambientale (AUA, emissioni, scarichi)",
+      "gruppo": "Ambiente"
+    },
+    {
+      "id": "rifiuti",
+      "etichetta": "Iscrizione RENTRI, Albo gestori o documenti sui rifiuti",
+      "gruppo": "Ambiente"
+    },
+    {
+      "id": "contratto-manutenzione",
+      "etichetta": "Contratto di manutenzione",
+      "gruppo": "Contratti e polizze"
+    },
+    {
+      "id": "assicurazione",
+      "etichetta": "Polizza assicurativa",
+      "gruppo": "Contratti e polizze"
+    },
+    {
+      "id": "attestato-lavoratore",
+      "etichetta": "Attestato o abilitazione di un lavoratore",
+      "gruppo": "Lavoratori",
+      "collega": "lavoratore",
+      "aiuto": "Corsi non previsti nel piano, abilitazioni, specializzazioni"
+    },
+    {
+      "id": "patente",
+      "etichetta": "Patente, CQC o patentino di un lavoratore",
+      "gruppo": "Lavoratori",
+      "collega": "lavoratore"
+    },
+    {
+      "id": "documento-macchina",
+      "etichetta": "Documento di una macchina (collaudo, omologazione, modifica)",
+      "gruppo": "Macchine",
+      "collega": "attrezzatura"
+    },
+    {
+      "id": "privacy",
+      "etichetta": "Documento privacy (registro, nomine, informative firmate)",
+      "gruppo": "Privacy"
+    },
+    {
+      "id": "haccp",
+      "etichetta": "Documento HACCP (registrazione, analisi, manuale)",
+      "gruppo": "Alimenti"
+    },
+    {
+      "id": "altro",
+      "etichetta": "Altro documento",
+      "gruppo": "Altro"
+    }
+  ],
+  "planimetrie": [
+    {
+      "id": "generale",
+      "etichetta": "Planimetria generale dei locali",
+      "gruppo": "Planimetrie"
+    },
+    {
+      "id": "layout",
+      "etichetta": "Layout di reparti, postazioni e macchine",
+      "gruppo": "Planimetrie"
+    },
+    {
+      "id": "emergenza",
+      "etichetta": "Planimetria di emergenza (vie di esodo, presidi, punto di raccolta)",
+      "gruppo": "Planimetrie",
+      "aiuto": "Va esposta nei locali"
+    },
+    {
+      "id": "impianti",
+      "etichetta": "Schema degli impianti (elettrico, gas, aria compressa)",
+      "gruppo": "Planimetrie"
+    },
+    {
+      "id": "deposito",
+      "etichetta": "Aree di deposito, rifiuti e prodotti chimici",
+      "gruppo": "Planimetrie"
+    },
+    {
+      "id": "cantiere",
+      "etichetta": "Layout di cantiere",
+      "gruppo": "Planimetrie"
+    },
+    {
+      "id": "altro",
+      "etichetta": "Altra planimetria o disegno",
+      "gruppo": "Planimetrie"
+    }
+  ]
+}

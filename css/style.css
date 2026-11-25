@@ -257,6 +257,9 @@ select.campo { appearance: auto; }
 .data-campo__testo:user-invalid { border-color: var(--rosso, #b42318); }
 .data-mese { border: 0; padding: 0; margin: 0 0 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 0; }
 .data-mese legend { grid-column: 1 / -1; font-weight: 600; margin-bottom: 6px; padding: 0; }
+.scorciatoie { display: grid; gap: 8px; margin: 12px 0 8px; }
+.scorciatoie .btn { margin: 0; }
+.scorciatoie small { font-weight: 400; opacity: 0.8; }
 .opzioni-doc { margin: 12px 0 16px; padding: 12px 14px; border: 2px solid var(--primario); border-radius: var(--raggio); background: var(--superficie); }
 .tabella-campi { border: 0; padding: 0; margin: 12px 0; min-width: 0; }
 .tabella-campi__scorri { overflow-x: auto; -webkit-overflow-scrolling: touch; }

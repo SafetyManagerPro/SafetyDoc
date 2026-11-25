@@ -62,6 +62,13 @@ Collezioni:
   `luogo`, `lavoratoreId`, `descrizione`, `causa`, `giorniPrognosi`, `dataCertificato`, `dataDenuncia`, `misure`,
   `misureFatte`. Nessuna diagnosi: solo i giorni di prognosi che servono per le scadenze INAIL (oltre 3 giorni
   denuncia, da 1 a 3 comunicazione statistica, entro 2 giorni dal certificato).
+- `archivio`: documenti e planimetrie che cambiano nel tempo: `genere` (`certificato` o `planimetria`), `tipo` (id
+  definiti in `data/archivio.json`), `titolo`, `area`, `ente`, `numero`, `dataRilascio`, `scadenza`, `lavoratoreId`,
+  `attrezzaturaId`, `note`, `sostituisce` e `sostituitoDa` (catena delle versioni: in uso è quella senza
+  `sostituitoDa`).
+- `adempimenti`: con `storico` (registrazioni precedenti: `dataFatto`, `scadenzaManuale`, `note`, `sostituitoIl`);
+  i file allegati hanno `riferitoA` con la data della registrazione a cui appartengono.
+- `registri`: anche `ente` e `numeroAttestato` per corsi e attestati.
 - `allegati`: foto e PDF collegati a un'altra voce: `collegatoTipo` (`adempimento`, `registro`, `controllo`,
   `attrezzatura`, `prodotto`, `evento`, `documento`), `collegatoId`, `nome`, `tipo` (MIME), `dimensione`, `file` (Blob),
   `categoria` (per le attrezzature `libretto`, `ce`, `pericoli`, `verifica`, `foto`, `altro`; per i prodotti `sds`,
@@ -75,11 +82,11 @@ Collezioni:
 ```json
 {
   "formato": "safetydoc-export",
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "versioneApp": "0.1.0",
   "esportatoIl": "2026-11-23T18:00:00.000Z",
   "deviceId": "…",
-  "collezioni": { "profilo": [], "adempimenti": [], "lavoratori": [], "registri": [], "attrezzature": [], "controlli": [], "prodotti": [], "eventi": [], "allegati": [] }
+  "collezioni": { "profilo": [], "adempimenti": [], "lavoratori": [], "registri": [], "attrezzature": [], "controlli": [], "prodotti": [], "eventi": [], "archivio": [], "allegati": [] }
 }
 ```
 

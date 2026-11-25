@@ -671,6 +671,16 @@
         "id": "altro",
         "etichetta": "Altro"
       }
+    ],
+    "archivio": [
+      {
+        "id": "documento",
+        "etichetta": "Documento"
+      },
+      {
+        "id": "foto",
+        "etichetta": "Foto"
+      }
     ]
   }
 }

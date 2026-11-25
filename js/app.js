@@ -26,6 +26,11 @@ import {
   situazioneEvento,
   urgenzeEventi,
   eventiPerAnno,
+  archivioAttuale,
+  versioniPrecedenti,
+  situazioneArchivio,
+  urgenzeArchivio,
+  rinnovaAdempimento,
   domandeSenzaRisposta,
   schermataSenzaRisposta,
   novitaDaMostrare,
@@ -43,7 +48,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI } fr
 import { generaIcs, eventiScadenze } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.15.1';
+export const VERSIONE_APP = '0.16.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -97,7 +102,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { settori: null, lavorazioni: null, questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
+const stato = { settori: null, lavorazioni: null, defArchivio: null, archivio: [], questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -137,6 +142,7 @@ async function ricarica() {
   stato.controlli = await store.tutti('controlli');
   stato.prodotti = await store.tutti('prodotti');
   stato.eventi = await store.tutti('eventi');
+  stato.archivio = await store.tutti('archivio');
   stato.allegati = await store.tutti('allegati');
 }
 
@@ -175,7 +181,7 @@ function campoAllegato(tipo) {
     }`;
 }
 
-async function salvaAllegatiDa(form, tipo, id) {
+async function salvaAllegatiDa(form, tipo, id, riferitoA = null) {
   const files = [...(form.querySelector('input[name="allegato"]')?.files || [])];
   let n = 0;
   for (const f of files) {
@@ -183,7 +189,7 @@ async function salvaAllegatiDa(form, tipo, id) {
       const p = await preparaFile(f);
       const categoria = form.querySelector('[name="categoria"]')?.value || null;
       const pagine = form.querySelector('[name="pagine"]')?.value.trim() || '';
-      await store.salva('allegati', { collegatoTipo: tipo, collegatoId: id, nome: p.nome, tipo: p.tipo, dimensione: p.dimensione, file: p.file, categoria, pagine, inStampa: true });
+      await store.salva('allegati', { collegatoTipo: tipo, collegatoId: id, nome: p.nome, tipo: p.tipo, dimensione: p.dimensione, file: p.file, categoria, pagine, inStampa: true, ...(riferitoA ? { riferitoA } : {}) });
       n++;
     } catch (e) {
       avviso(e.message);
@@ -192,8 +198,12 @@ async function salvaAllegatiDa(form, tipo, id) {
   return n;
 }
 
-function elencoAllegati(tipo, id) {
-  const lista = allegatiDi(tipo, id);
+/**
+ * Per gli adempimenti rinnovati "periodo" è la data della registrazione: con attuale=true si vedono anche i file
+ * senza data (caricati prima dello storico), con attuale=false solo quelli di quella data.
+ */
+function elencoAllegati(tipo, id, periodo, attuale = true) {
+  const lista = allegatiDi(tipo, id).filter((a) => periodo === undefined || a.riferitoA === periodo || (attuale && !a.riferitoA));
   if (!lista.length) return '';
   return `<ul class="allegati">${lista
     .map(
@@ -346,6 +356,14 @@ function miglioraCampoData(nativo) {
   if (nativo.dataset.dopo) nativo.form?.elements[nativo.dataset.dopo]?.addEventListener('change', () => testo.value && aggiorna(true));
 }
 
+/** Imposta il valore di un campo data, anche quando è già stato trasformato. */
+function impostaData(nativo, iso) {
+  if (!nativo) return;
+  nativo.value = iso || '';
+  const testo = nativo.closest('.data-campo')?.querySelector('.data-campo__testo');
+  if (testo) testo.value = formattaData(iso || '');
+}
+
 function miglioraDate(radice = document) {
   radice.querySelectorAll('input[type="date"]:not([data-migliorato])').forEach(miglioraCampoData);
 }
@@ -424,7 +442,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
+const SEZIONE = { archivio: 'documenti', planimetrie: 'documenti', 'archivio-voce': 'documenti', partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -510,6 +528,7 @@ async function schermataOggi() {
       <a class="btn btn--secondario" href="#/piano">Vedi il piano completo</a>
       ${haDipendenti() ? bloccoLavoratoriOggi() : ''}
       ${bloccoEventiOggi()}
+      ${bloccoArchivioOggi()}
       ${bloccoProdottiOggi()}
       ${bloccoMacchineOggi()}
       ${bloccoAiuto('la sicurezza della mia impresa')}
@@ -576,7 +595,7 @@ async function schermataPiano() {
 }
 
 async function esportaCalendario() {
-  const eventi = eventiScadenze({ piano: piano(), situazioni: haDipendenti() ? attivi().map(situazione) : [], nomeCompleto, macchine: macchine().map(situazioneMacchina) });
+  const eventi = eventiScadenze({ piano: piano(), situazioni: haDipendenti() ? attivi().map(situazione) : [], nomeCompleto, macchine: macchine().map(situazioneMacchina), archivio: archivioAttuale(stato.archivio) });
   if (!eventi.length) return avviso('Non ci sono ancora scadenze: prima segna come fatte le voci del piano.');
   const ics = generaIcs(eventi);
   const nome = `scadenze-sicurezza-${oggiIso()}.ics`;
@@ -809,7 +828,15 @@ async function schermataScheda(id) {
           ? ''
           : `
       <form class="registra" id="registra">
-        <h2>${st?.fatto ? 'Aggiorna' : 'Segna come fatto'}</h2>
+        <h2>${st?.fatto ? 'Rinnovo o correzione' : 'Segna come fatto'}</h2>
+        ${
+          st?.fatto
+            ? `<fieldset class="scelte-radio"><legend>Cosa vuoi fare?</legend>
+          <label class="spunta"><input type="radio" name="modo" value="rinnovo" checked><span>L'ho fatto di nuovo (rinnovo): la registrazione del ${esc(dataLeggibile(st.dataFatto))} passa nello storico</span></label>
+          <label class="spunta"><input type="radio" name="modo" value="correggi"><span>Correggo i dati già inseriti</span></label>
+        </fieldset>`
+            : ''
+        }
         <label>Data in cui l'hai fatto
           <input class="campo" type="date" name="dataFatto" required max="${oggiIso()}" value="${esc(st?.dataFatto || oggiIso())}">
         </label>
@@ -823,11 +850,21 @@ async function schermataScheda(id) {
         <label>Note <small>(facoltative: chi l'ha fatto, dove trovi il documento)</small>
           <textarea class="campo" name="note" rows="3">${esc(st?.note || '')}</textarea>
         </label>
-        ${elencoAllegati('adempimento', st?.id)}
+        <div id="allegati-attuali">${elencoAllegati('adempimento', st?.id, st?.dataFatto || null)}</div>
         ${campoAllegato()}
         <button class="btn btn--primario btn--grande" type="submit">Fatto</button>
         ${st?.fatto ? `<button class="btn btn--testo" type="button" id="annulla">Segna di nuovo come da fare</button>` : ''}
-      </form>`
+      </form>
+      ${
+        st?.storico?.length
+          ? `<h2>Storico</h2><ul class="storico">${st.storico
+              .map(
+                (x) => `<li><strong>${esc(dataLeggibile(x.dataFatto))}</strong>${x.scadenzaManuale ? ` · scadenza ${esc(dataLeggibile(x.scadenzaManuale))}` : ''}${x.note ? `<br><small>${esc(x.note)}</small>` : ''}
+              ${elencoAllegati('adempimento', st.id, x.dataFatto, false)}</li>`
+              )
+              .join('')}</ul>`
+          : ''
+      }`
       }
       ${bloccoAiuto(scheda.titolo)}
     </section>`;
@@ -835,18 +872,37 @@ async function schermataScheda(id) {
   const form = app.querySelector('#registra');
   if (!form) return;
   attivaAllegati(() => schermataScheda(id));
+  if (st?.fatto) {
+    const allegatiAttuali = app.querySelector('#allegati-attuali');
+    const applicaModo = () => {
+      const rinnovo = form.querySelector('input[name="modo"]:checked')?.value !== 'correggi';
+      impostaData(form.elements.dataFatto, rinnovo ? oggiIso() : st.dataFatto);
+      impostaData(form.elements.scadenzaManuale, rinnovo ? '' : st.scadenzaManuale);
+      form.elements.note.value = rinnovo ? '' : st.note || '';
+      if (allegatiAttuali) allegatiAttuali.hidden = rinnovo;
+      form.querySelector('button[type="submit"]').textContent = rinnovo ? 'Registra il rinnovo' : 'Salva la correzione';
+    };
+    form.querySelectorAll('input[name="modo"]').forEach((r) => r.addEventListener('change', applicaModo));
+    applicaModo();
+  }
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const f = new FormData(form);
-    const salvato = await store.salvaAdempimento({
-      ...(st || {}),
-      schedaId: id,
-      fatto: true,
-      dataFatto: f.get('dataFatto'),
-      scadenzaManuale: f.get('scadenzaManuale') || null,
-      note: f.get('note') || ''
-    });
-    await salvaAllegatiDa(form, 'adempimento', salvato.id);
+    const rinnovo = f.get('modo') !== 'correggi';
+    const dati = { schedaId: id, fatto: true, dataFatto: f.get('dataFatto'), scadenzaManuale: f.get('scadenzaManuale') || null, note: f.get('note') || '' };
+    if (rinnovo && st?.fatto && st.dataFatto !== dati.dataFatto) {
+      // I file della registrazione precedente restano legati a quella data nello storico.
+      for (const a of stato.allegati.filter((x) => !x.deleted && x.collegatoTipo === 'adempimento' && x.collegatoId === st.id && !x.riferitoA)) {
+        await store.salva('allegati', { ...a, riferitoA: st.dataFatto });
+      }
+    }
+    if (!rinnovo && st?.dataFatto && st.dataFatto !== dati.dataFatto) {
+      for (const a of stato.allegati.filter((x) => !x.deleted && x.collegatoTipo === 'adempimento' && x.collegatoId === st.id && x.riferitoA === st.dataFatto)) {
+        await store.salva('allegati', { ...a, riferitoA: dati.dataFatto });
+      }
+    }
+    const salvato = await store.salvaAdempimento(rinnovo ? rinnovaAdempimento(st, dati, oggiIso()) : { ...(st || {}), ...dati });
+    await salvaAllegatiDa(form, 'adempimento', salvato.id, dati.dataFatto);
     await ricarica();
     avviso('Salvato.');
     schermataScheda(id);
@@ -893,6 +949,195 @@ function vaiNuoveDomande() {
   const i = schermataSenzaRisposta(stato.questionario, risposte());
   soloNuoveDomande = i >= 0;
   location.replace(i >= 0 ? `#/domanda/${i}` : '#/');
+}
+
+// ---------- archivio di documenti, certificati e planimetrie ----------
+
+const tipiArchivio = (genere) => (genere === 'planimetria' ? stato.defArchivio?.planimetrie : stato.defArchivio?.certificati) || [];
+const tipoArchivio = (r) => tipiArchivio(r.genere).find((t) => t.id === r.tipo);
+const allegatiArchivio = (id) => stato.allegati.filter((a) => !a.deleted && a.collegatoTipo === 'archivio' && a.collegatoId === id);
+const sitArchivio = (r) => situazioneArchivio(r, oggiIso(), allegatiArchivio(r.id).length);
+
+function cardArchivio(r) {
+  const s = sitArchivio(r);
+  const e = ETICHETTE[s.colore] || ETICHETTE.info;
+  const extra = [
+    tipoArchivio(r)?.etichetta,
+    r.area,
+    r.genere === 'planimetria' ? (r.dataRilascio ? `rev. ${dataLeggibile(r.dataRilascio)}` : '') : r.dataRilascio ? `del ${dataLeggibile(r.dataRilascio)}` : '',
+    r.lavoratoreId ? nomeCompleto(stato.lavoratori.find((l) => l.id === r.lavoratoreId) || {}) : '',
+    r.attrezzaturaId ? stato.attrezzature.find((m) => m.id === r.attrezzaturaId)?.nome : ''
+  ].filter(Boolean);
+  return `<a class="voce voce--${s.colore}" href="#/archivio-voce/${esc(r.id)}">
+    <span class="voce__segno" aria-hidden="true">${e.icona}</span>
+    <span class="voce__testo"><span class="voce__titolo">${esc(r.titolo)}</span>
+    <span class="voce__stato">${esc(s.motivo)}${s.scadenza ? ` · ${s.colore === 'rosso' ? 'scaduto il' : 'scade il'} ${esc(dataLeggibile(s.scadenza))}` : ''}${extra.length ? `<br><small>${esc(extra.join(' · '))}</small>` : ''}</span></span>
+    <span class="voce__freccia" aria-hidden="true">›</span></a>`;
+}
+
+async function schermataArchivio(genere) {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const pl = genere === 'planimetria';
+  const voci = archivioAttuale(stato.archivio, pl ? 'planimetria' : 'certificato');
+  const gruppi = [...new Set(tipiArchivio(pl ? 'planimetria' : 'certificato').map((t) => t.gruppo))];
+  const perTipo = (t) => voci.filter((r) => r.tipo === t.id);
+  const superate = stato.archivio.filter((r) => !r.deleted && r.sostituitoDa && r.genere === (pl ? 'planimetria' : 'certificato')).length;
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/documenti">‹ Documenti</a>
+      <h1>${pl ? 'Planimetrie e layout' : 'Archivio documenti e certificati'}</h1>
+      <p class="lead">${
+        pl
+          ? 'Planimetrie dei locali, layout di reparti e macchine, vie di esodo, schemi degli impianti. Vengono inserite da sole in DVR, piano di emergenza, valutazione incendio e DUVRI. Quando cambiano, carica la nuova revisione: la precedente resta archiviata.'
+          : 'Certificati, dichiarazioni di conformità, verbali, autorizzazioni, contratti, attestati in più dei lavoratori e documenti delle macchine. Indica la scadenza: te la ricordiamo. Quando rinnovi un documento carica la versione nuova: la vecchia resta nello storico.'
+      }</p>
+      <a class="btn btn--primario btn--grande" href="#/archivio-voce/nuovo/${pl ? 'planimetria' : 'certificato'}">${pl ? 'Aggiungi una planimetria o un layout' : 'Aggiungi un documento'}</a>
+      ${
+        voci.length
+          ? pl
+            ? `<div class="lista">${voci.map(cardArchivio).join('')}</div>`
+            : gruppi
+                .map((g) => {
+                  const lista = tipiArchivio('certificato').filter((t) => t.gruppo === g).flatMap(perTipo);
+                  return lista.length ? `<h2>${esc(g)}</h2><div class="lista">${lista.map(cardArchivio).join('')}</div>` : '';
+                })
+                .join('')
+          : `<p>${pl ? 'Nessuna planimetria caricata.' : 'Nessun documento in archivio.'}</p>`
+      }
+      ${superate ? `<p class="nota">${superate} ${superate === 1 ? 'versione precedente è conservata' : 'versioni precedenti sono conservate'} nello storico dei documenti.</p>` : ''}
+      <p class="nota">${pl ? '<a href="#/archivio">Vai all\'archivio dei documenti e certificati</a>' : '<a href="#/planimetrie">Vai alle planimetrie e ai layout</a>'}</p>
+    </section>`;
+}
+
+async function schermataVoceArchivio(id, genereNuovo, collegamento) {
+  if (!questionarioCompletato()) return schermataBenvenuto();
+  const nuovo = id === 'nuovo';
+  const rinnovo = id === 'rinnovo';
+  let r;
+  if (rinnovo) {
+    const vecchio = stato.archivio.find((x) => x.id === genereNuovo && !x.deleted);
+    if (!vecchio) return (location.hash = '#/archivio');
+    r = { genere: vecchio.genere, tipo: vecchio.tipo, titolo: vecchio.titolo, area: vecchio.area, ente: vecchio.ente, lavoratoreId: vecchio.lavoratoreId, attrezzaturaId: vecchio.attrezzaturaId, sostituisce: vecchio.id };
+  } else if (nuovo) {
+    r = { genere: genereNuovo === 'planimetria' ? 'planimetria' : 'certificato' };
+    if (collegamento?.startsWith('lav:')) Object.assign(r, { lavoratoreId: collegamento.slice(4), tipo: 'attestato-lavoratore' });
+    if (collegamento?.startsWith('attr:')) Object.assign(r, { attrezzaturaId: collegamento.slice(5), tipo: 'documento-macchina' });
+  } else {
+    r = stato.archivio.find((x) => x.id === id && !x.deleted);
+    if (!r) return (location.hash = '#/archivio');
+  }
+  const pl = r.genere === 'planimetria';
+  const tipi = tipiArchivio(r.genere);
+  const sit = nuovo || rinnovo ? null : sitArchivio(r);
+  const precedenti = nuovo || rinnovo ? [] : versioniPrecedenti(r, stato.archivio);
+  const successiva = r.sostituitoDa ? stato.archivio.find((x) => x.id === r.sostituitoDa) : null;
+  const lav = attivi();
+  const mac = macchine();
+  const indietro = r.lavoratoreId && collegamento ? `#/lavoratore/${r.lavoratoreId}` : r.attrezzaturaId && collegamento ? `#/attrezzatura/${r.attrezzaturaId}` : pl ? '#/planimetrie' : '#/archivio';
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="${esc(indietro)}">‹ ${pl ? 'Planimetrie' : 'Archivio'}</a>
+      ${sit ? `<p class="pill pill--${sit.colore}"><span aria-hidden="true">${(ETICHETTE[sit.colore] || ETICHETTE.info).icona}</span> ${esc(sit.motivo)}${sit.scadenza ? ` · ${esc(dataLeggibile(sit.scadenza))}` : ''}</p>` : ''}
+      <h1>${rinnovo ? 'Nuova versione' : nuovo ? (pl ? 'Nuova planimetria' : 'Nuovo documento') : esc(r.titolo)}</h1>
+      ${rinnovo ? `<p class="lead">Carica il documento rinnovato o la nuova revisione. La versione precedente resterà nello storico.</p>` : ''}
+      ${successiva ? `<p class="riquadro">Questa è una versione superata. <a href="#/archivio-voce/${esc(successiva.id)}">Apri la versione in uso</a>.</p>` : ''}
+      <form id="voce-archivio">
+        <label>Tipo<select class="campo" name="tipo" required>${tipi.map((t) => `<option value="${esc(t.id)}" ${r.tipo === t.id ? 'selected' : ''}>${esc(t.etichetta)}</option>`).join('')}</select></label>
+        <p class="nota" id="aiuto-tipo"></p>
+        <label>Titolo <small>(come lo riconosci, es. «${pl ? 'Piano terra – laboratorio' : 'Conformità impianto elettrico capannone'}»)</small><input class="campo" name="titolo" required value="${esc(r.titolo || '')}"></label>
+        ${pl ? `<label>Area, piano o reparto<input class="campo" name="area" value="${esc(r.area || '')}"></label>` : ''}
+        <label>${pl ? 'Redatta da (tecnico)' : 'Rilasciato da (ente, ditta, tecnico)'}<input class="campo" name="ente" value="${esc(r.ente || '')}"></label>
+        ${pl ? '' : `<label>Numero o protocollo<input class="campo" name="numero" value="${esc(r.numero || '')}"></label>`}
+        <label>${pl ? 'Data della revisione' : 'Data di rilascio'}<input class="campo" type="date" name="dataRilascio" max="${oggiIso()}" value="${esc(r.dataRilascio || '')}"></label>
+        ${pl ? '' : `<label>Scadenza <small>(se c'è: te la ricordiamo 60 giorni prima)</small><input class="campo" type="date" name="scadenza" data-dopo="dataRilascio" value="${esc(rinnovo ? '' : r.scadenza || '')}"></label>`}
+        <div id="collega-lav" ${r.lavoratoreId || r.tipo === 'attestato-lavoratore' || r.tipo === 'patente' ? '' : 'hidden'}>
+          <label>Lavoratore<select class="campo" name="lavoratoreId"><option value="">—</option>${lav.map((l) => `<option value="${esc(l.id)}" ${r.lavoratoreId === l.id ? 'selected' : ''}>${esc(nomeCompleto(l))}</option>`).join('')}</select></label>
+        </div>
+        <div id="collega-attr" ${r.attrezzaturaId || r.tipo === 'documento-macchina' ? '' : 'hidden'}>
+          <label>Macchina o attrezzatura<select class="campo" name="attrezzaturaId"><option value="">—</option>${mac.map((m) => `<option value="${esc(m.id)}" ${r.attrezzaturaId === m.id ? 'selected' : ''}>${esc(m.nome)}</option>`).join('')}</select></label>
+        </div>
+        <label>Note<textarea class="campo" name="note" rows="2">${esc(rinnovo ? '' : r.note || '')}</textarea></label>
+        ${campoAllegato('archivio')}
+        <button class="btn btn--primario btn--grande" type="submit">${rinnovo ? 'Salva la nuova versione' : 'Salva'}</button>
+      </form>
+      ${
+        nuovo || rinnovo
+          ? ''
+          : `<h2>${pl ? 'File della planimetria' : 'File del documento'}</h2>
+      ${elencoAllegatiDettaglio('archivio', r.id) || '<p>Nessun file caricato: fotografa il documento o allega il PDF.</p>'}
+      ${r.sostituitoDa ? '' : `<a class="btn btn--secondario" href="#/archivio-voce/rinnovo/${esc(r.id)}">${pl ? 'Carica una nuova revisione' : 'Carica la versione rinnovata'}</a>`}
+      ${
+        precedenti.length
+          ? `<h2>Versioni precedenti</h2><div class="lista">${precedenti.map(cardArchivio).join('')}</div>`
+          : ''
+      }
+      <button class="btn btn--testo" type="button" id="elimina">Elimina</button>`
+      }
+    </section>`;
+  const form = app.querySelector('#voce-archivio');
+  const aiutoTipo = () => {
+    const t = tipi.find((x) => x.id === form.tipo.value);
+    app.querySelector('#aiuto-tipo').textContent = t?.aiuto || '';
+    app.querySelector('#collega-lav').hidden = !(t?.collega === 'lavoratore' || form.lavoratoreId.value);
+    app.querySelector('#collega-attr').hidden = !(t?.collega === 'attrezzatura' || form.attrezzaturaId.value);
+  };
+  form.tipo.addEventListener('change', aiutoTipo);
+  aiutoTipo();
+  if (!nuovo && !rinnovo) attivaAllegati(() => schermataVoceArchivio(id));
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(form);
+    const testo = (k) => String(f.get(k) || '').trim();
+    const salvato = await store.salva('archivio', {
+      ...(nuovo || rinnovo ? {} : r),
+      genere: r.genere,
+      tipo: testo('tipo'),
+      titolo: testo('titolo'),
+      area: testo('area'),
+      ente: testo('ente'),
+      numero: testo('numero'),
+      dataRilascio: f.get('dataRilascio') || null,
+      scadenza: f.get('scadenza') || null,
+      lavoratoreId: f.get('lavoratoreId') || null,
+      attrezzaturaId: f.get('attrezzaturaId') || null,
+      note: testo('note'),
+      sostituisce: r.sostituisce || null,
+      sostituitoDa: nuovo || rinnovo ? null : r.sostituitoDa || null
+    });
+    const n = await salvaAllegatiDa(form, 'archivio', salvato.id);
+    if (rinnovo) {
+      const vecchio = stato.archivio.find((x) => x.id === r.sostituisce);
+      if (vecchio) await store.salva('archivio', { ...vecchio, sostituitoDa: salvato.id });
+    }
+    await ricarica();
+    avviso(rinnovo ? 'Nuova versione salvata: la precedente è nello storico.' : n || !nuovo ? 'Salvato.' : 'Salvato. Ricorda di allegare il file del documento.');
+    location.hash = `#/archivio-voce/${salvato.id}`;
+  });
+  app.querySelector('#elimina')?.addEventListener('click', async () => {
+    if (!confirm(`Eliminare «${r.titolo}»? Se è stato rinnovato, usa invece «Carica la versione rinnovata».`)) return;
+    if (r.sostituisce) {
+      const prec = stato.archivio.find((x) => x.id === r.sostituisce);
+      if (prec) await store.salva('archivio', { ...prec, sostituitoDa: null });
+    }
+    await store.elimina('archivio', r);
+    await ricarica();
+    location.hash = pl ? '#/planimetrie' : '#/archivio';
+  });
+}
+
+function bloccoArchivioOggi() {
+  const urg = urgenzeArchivio(stato.archivio, oggiIso(), (id) => allegatiArchivio(id).length).filter((s) => s.colore === 'rosso' || s.scadenza);
+  if (!urg.length) return '';
+  return `<h2>Documenti e certificati</h2><div class="lista">${urg.slice(0, 3).map((s) => cardArchivio(s.voce)).join('')}</div>
+    ${urg.length > 3 ? `<a class="btn btn--secondario" href="#/archivio">Vedi tutti (${urg.length})</a>` : ''}`;
+}
+
+/** Documenti in archivio collegati a un lavoratore o a una macchina. */
+function bloccoArchivioCollegati(campo, id, nuovoHref, titolo) {
+  const voci = archivioAttuale(stato.archivio).filter((r) => r[campo] === id);
+  return `<h2>${esc(titolo)}</h2>
+    ${voci.length ? `<div class="lista">${voci.map(cardArchivio).join('')}</div>` : '<p class="nota">Nessun documento in archivio.</p>'}
+    <a class="btn btn--secondario" href="${esc(nuovoHref)}">Aggiungi un documento</a>`;
 }
 
 // ---------- partenza rapida per settore ----------
@@ -1498,6 +1743,7 @@ async function schermataLavoratore(id) {
         })
         .join('')}</div>
       ${docs.length ? `<h2>Documenti per ${esc(l.nome || 'questo lavoratore')}</h2><div class="lista">${docs.map((m) => cardDocumento(m, `#/documento/${m.id}/${l.id}`)).join('')}</div>` : ''}
+      ${bloccoArchivioCollegati('lavoratoreId', l.id, `#/archivio-voce/nuovo/certificato/lav:${l.id}`, 'Altri attestati, abilitazioni e patenti')}
       <a class="btn btn--secondario" href="#/lavoratore-modifica/${esc(l.id)}">Modifica i dati o i ruoli</a>
     </section>`;
 }
@@ -1611,7 +1857,13 @@ async function schermataRegistro(lavId, reqId) {
             : ''
         }
         ${req.conDettagli ? `<label>${esc(req.conDettagli)}<textarea class="campo" name="dettagli" rows="3"></textarea></label>` : ''}
-        <label>Note <small>(ente del corso, numero attestato, dove trovi il documento)</small><textarea class="campo" name="note" rows="2"></textarea></label>
+        ${
+          req.id === 'visita-medica'
+            ? ''
+            : `<label>Ente formatore o docente<input class="campo" name="ente" autocomplete="organization"></label>
+        <label>Numero dell'attestato<input class="campo" name="numeroAttestato"></label>`
+        }
+        <label>Note <small>(dove trovi il documento originale)</small><textarea class="campo" name="note" rows="2"></textarea></label>
         ${campoAllegato()}
         <button class="btn btn--primario btn--grande" type="submit">Salva</button>
       </form>
@@ -1621,7 +1873,7 @@ async function schermataRegistro(lavId, reqId) {
               .map(
                 (r) => `<li><strong>${dataLeggibile(r.data)}</strong>${r.scadenzaManuale ? ` · scadenza ${dataLeggibile(r.scadenzaManuale)}` : ''}${
                   r.esito ? ` · ${esc(ESITI_VISITA[r.esito])}` : ''
-                }${r.dettagli ? `<br>${esc(r.dettagli)}` : ''}${r.note ? `<br><small>${esc(r.note)}</small>` : ''}
+                }${r.ente || r.numeroAttestato ? `<br>${esc([r.ente, r.numeroAttestato ? `attestato n. ${r.numeroAttestato}` : ''].filter(Boolean).join(' · '))}` : ''}${r.dettagli ? `<br>${esc(r.dettagli)}` : ''}${r.note ? `<br><small>${esc(r.note)}</small>` : ''}
                 ${req.modello ? `<br><a href="#/documento/${esc(req.modello)}/${esc(l.id)}">Stampa il documento</a>` : ''}
                 ${elencoAllegati('registro', r.id)}
                 <button class="btn btn--testo btn--piccolo" data-elimina="${esc(r.id)}" type="button">Elimina la registrazione</button></li>`
@@ -1641,6 +1893,8 @@ async function schermataRegistro(lavId, reqId) {
       scadenzaManuale: f.get('scadenzaManuale') || null,
       esito: f.get('esito') || null,
       dettagli: String(f.get('dettagli') || '').trim(),
+      ente: String(f.get('ente') || '').trim(),
+      numeroAttestato: String(f.get('numeroAttestato') || '').trim(),
       note: String(f.get('note') || '').trim()
     });
     await salvaAllegatiDa(ev.target, 'registro', salvato.id);
@@ -1756,6 +2010,7 @@ async function schermataAttrezzatura(id) {
       <h2>Libretto e documenti</h2>
       ${elencoAllegatiDettaglio('attrezzatura', a.id) || '<p>Nessun documento allegato. Carica il libretto d\'uso e manutenzione (PDF o foto delle pagine) e la dichiarazione CE.</p>'}
       <form id="documenti-macchina">${campoAllegato('attrezzatura')}<button class="btn btn--secondario" type="submit">Allega</button></form>
+      ${bloccoArchivioCollegati('attrezzaturaId', a.id, `#/archivio-voce/nuovo/certificato/attr:${a.id}`, 'Collaudi, omologazioni e altri documenti con scadenza')}
       <a class="btn btn--secondario" href="#/attrezzatura-modifica/${esc(a.id)}">Modifica i dati</a>
     </section>`;
   attivaAllegati(() => schermataAttrezzatura(id));
@@ -1918,7 +2173,11 @@ async function schermataDocumenti() {
       <h1>Documenti pronti</h1>
       <p class="lead">Modelli già compilati con i tuoi dati. Aprili, controllali, stampali o salvali in PDF e falli firmare.</p>
       ${mancano ? `<a class="banner" href="#/dati"><strong>Completa i dati dell'impresa</strong><span>Così i documenti escono già con nome, sede e titolare.</span></a>` : ''}
-      <h2>Per l'impresa</h2>
+      <div class="scorciatoie">
+        <a class="btn btn--secondario" href="#/archivio">Archivio documenti e certificati <small>(${archivioAttuale(stato.archivio, 'certificato').length})</small></a>
+        <a class="btn btn--secondario" href="#/planimetrie">Planimetrie e layout <small>(${archivioAttuale(stato.archivio, 'planimetria').length})</small></a>
+      </div>
+      <h2>Da compilare per l'impresa</h2>
       <div class="lista">${impresa.map((m) => cardDocumento(m, `#/documento/${m.id}`)).join('')}</div>
       ${
         perLav.length
@@ -1974,6 +2233,7 @@ function datiDocumento(l, registro, opzioni) {
     }),
     allegati: contaAllegati(),
     lavorazioni: stato.lavorazioni,
+    archivio: archivioAttuale(stato.archivio),
     opzioni
   };
 }
@@ -1986,6 +2246,13 @@ function allegatiDelDocumento(m, chiaveDoc, opzioni) {
   const scelta = (fn) => (fn ? fn(opzioni || {}) : null);
   const out = [];
   const aggiungi = (a, origine, titolo) => out.push({ id: a.id, origine, collegatoId: a.collegatoId, titolo, categoria: etichettaCategoria(a.collegatoTipo, a.categoria) || 'Documento', nome: a.nome });
+  if (spec.planimetrie) {
+    for (const pl of archivioAttuale(stato.archivio, 'planimetria').filter((r) => spec.planimetrie.includes(r.tipo))) {
+      for (const a of stato.allegati.filter((x) => x.collegatoTipo === 'archivio' && x.collegatoId === pl.id && stampabili(x))) {
+        out.push({ id: a.id, origine: 'archivio', collegatoId: pl.id, titolo: pl.titolo + (pl.area ? ` – ${pl.area}` : ''), categoria: tipoArchivio(pl)?.etichetta || 'Planimetria', nome: a.nome });
+      }
+    }
+  }
   const filtroA = scelta(spec.attrezzature);
   const nomiA = spec.attrezzatureNomi ? new Set(spec.attrezzatureNomi(opzioni || {})) : null;
   if (filtroA || nomiA) {
@@ -2339,7 +2606,7 @@ async function importa(file) {
 // ---------- avvio ----------
 
 async function instrada() {
-  const [, rotta, param, extra] = (location.hash || '#/').split('/').map((x) => (x ? decodeURIComponent(x) : x));
+  const [, rotta, param, extra, quarto] = (location.hash || '#/').split('/').map((x) => (x ? decodeURIComponent(x) : x));
   aggiornaNav(rotta || '');
   window.scrollTo(0, 0);
   if (rotta === 'domanda') return schermataDomanda(param);
@@ -2356,6 +2623,9 @@ async function instrada() {
   if (rotta === 'attrezzatura-modifica') return schermataModificaAttrezzatura(param);
   if (rotta === 'controllo') return schermataControllo(param, extra);
   if (rotta === 'nuove-domande') return vaiNuoveDomande();
+  if (rotta === 'archivio') return schermataArchivio(param);
+  if (rotta === 'planimetrie') return schermataArchivio('planimetria');
+  if (rotta === 'archivio-voce') return schermataVoceArchivio(param, extra, quarto);
   if (rotta === 'partenza') return schermataPartenza();
   if (rotta === 'prodotti') return schermataProdotti();
   if (rotta === 'prodotto') return schermataProdotto(param);
@@ -2368,13 +2638,14 @@ async function instrada() {
 
 async function avvia() {
   try {
-    const [q, c, l, d, a, t, se, lv] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json'].map((u) =>
+    const [q, c, l, d, a, t, se, lv, ar] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json', 'data/archivio.json'].map((u) =>
         fetch(u).then((r) => r.json())
       )
     );
     stato.settori = se;
     stato.lavorazioni = lv;
+    stato.defArchivio = ar;
     stato.defAttr = t;
     stato.dvr = d;
     stato.ateco = a;

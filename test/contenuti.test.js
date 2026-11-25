@@ -48,7 +48,7 @@ test('eventi per anno', () => {
 });
 
 test('backup: le nuove raccolte esistono e i vecchi file vengono migrati', () => {
-  assert.equal(SCHEMA_VERSION, 4);
+  assert.equal(SCHEMA_VERSION, 5);
   for (const c of ['prodotti', 'eventi']) assert.ok(COLLEZIONI.includes(c));
   const m = migra({ schemaVersion: 3, collezioni: { profilo: [] } });
   assert.deepEqual(m.collezioni.prodotti, []);

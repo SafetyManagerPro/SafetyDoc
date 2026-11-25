@@ -109,6 +109,27 @@ export function rifAllegati(allegatiDoc, origine, id) {
   return lista.length ? lista.map((x) => `<span class="doc__rif-all">All. ${esc(x.n)}</span>`).join(', ') : '';
 }
 
+/** Riferimenti a tutte le planimetrie allegate: "Piano terra (All. A2)". */
+function rifPlanimetrie(allegatiDoc) {
+  const pl = (allegatiDoc || []).filter((x) => x.origine === 'archivio');
+  const titoli = [...new Set(pl.map((x) => x.titolo))];
+  return titoli.map((t) => `${esc(t)} (${pl.filter((x) => x.titolo === t).map((x) => `<span class="doc__rif-all">All. ${esc(x.n)}</span>`).join(', ')})`).join('; ');
+}
+
+/** Tabella dei documenti e certificati in archivio con validità. */
+function tabellaArchivio(archivio, oggi) {
+  const voci = (archivio || []).filter((r) => r.genere === 'certificato');
+  if (!voci.length) return '<p class="doc__nota">Nessun certificato registrato nell\'archivio di safetyDoc.</p>';
+  return `<table class="doc__tabella"><thead><tr><th>Documento</th><th>Rilasciato</th><th>Scadenza</th></tr></thead><tbody>${voci
+    .map(
+      (r) =>
+        `<tr><td>${esc(r.titolo)}${r.ente ? `<br><small>${esc(r.ente)}${r.numero ? ` · n. ${esc(r.numero)}` : ''}</small>` : ''}</td><td>${esc(data(r.dataRilascio))}</td><td>${
+          r.scadenza ? `${esc(data(r.scadenza))}${r.scadenza < oggi ? ' <strong>SCADUTO</strong>' : ''}` : '—'
+        }</td></tr>`
+    )
+    .join('')}</tbody></table>`;
+}
+
 /** Elenco e spazio per le pagine degli allegati, riempito dall'app con le immagini. */
 export function appendiceAllegati(allegatiDoc) {
   if (!(allegatiDoc || []).length) return '';
@@ -177,7 +198,7 @@ export const MODELLI = [
     descrizione: 'Riepilogo stampabile di tutti gli adempimenti, dei lavoratori e delle macchine, con date e documenti allegati. Utile per il consulente o in caso di controllo.',
     ambito: 'impresa',
     attivaSe: { sempre: true },
-    genera: ({ anagrafica: a, oggi, piano, situazioni, macchine, allegati }) => {
+    genera: ({ anagrafica: a, oggi, piano, situazioni, macchine, allegati, archivio }) => {
       const n = (k) => (allegati && allegati[k]) || 0;
       const STATO = { rosso: 'Da fare', giallo: 'In scadenza', verde: 'In regola', info: 'Quando capita' };
       const voci = piano || [];
@@ -214,6 +235,8 @@ export const MODELLI = [
         <table class="doc__tabella">${testa}<tbody>${adempimenti || '<tr><td colspan="5">Nessuna voce.</td></tr>'}</tbody></table>
         ${lav ? `<h2>Lavoratori</h2><table class="doc__tabella">${testa}<tbody>${lav}</tbody></table>` : ''}
         ${mac ? `<h2>Macchine e attrezzature</h2><table class="doc__tabella">${testa}<tbody>${mac}</tbody></table>` : ''}
+        <h2>Certificati e documenti in archivio</h2>
+        ${tabellaArchivio(archivio, oggi)}
         ${quandoCapita.length ? `<h2>Da applicare quando capita</h2><ul>${quandoCapita.map((x) => `<li>${esc(x.scheda.titolo)}</li>`).join('')}</ul>` : ''}
         <p class="doc__nota">Riepilogo prodotto con safetyDoc sulla base dei dati inseriti dall'impresa. Non sostituisce i documenti originali, che vanno conservati. Per le visite mediche è riportato solo il giudizio di idoneità.</p>
         ${firme(['Il datore di lavoro', titolare(a)])}`;
@@ -223,7 +246,7 @@ export const MODELLI = [
     id: 'dvr-bozza',
     titolo: 'Documento di valutazione dei rischi (DVR) completo',
     descrizione: 'DVR dettagliato secondo le procedure standardizzate: organigramma, mansioni, criteri, valutazione di ogni rischio con probabilità e danno, attrezzature, prodotti, DPI, formazione, sorveglianza sanitaria, emergenze e programma di miglioramento. Da completare e firmare con RSPP e medico competente.',
-    allegati: { attrezzature: () => true, prodotti: () => true, categorie: ['libretto', 'ce', 'pericoli', 'sds'] },
+    allegati: { planimetrie: ['generale', 'layout', 'emergenza', 'impianti', 'deposito', 'altro'], attrezzature: () => true, prodotti: () => true, categorie: ['libretto', 'ce', 'pericoli', 'sds'] },
     ambito: 'impresa',
     attivaSe: { fatto: 'haDipendenti' },
     opzioni: () => [
@@ -279,8 +302,12 @@ export const MODELLI = [
           <tr><th>Numero di lavoratori</th><td>${esc(String(n))}</td></tr>
           <tr><th>Orario di lavoro</th><td>${esc(o.orario || '')}</td></tr>
         </tbody></table>
+        <h3>Luoghi di lavoro: planimetrie e layout</h3>
+        <p>${rifPlanimetrie(d.allegatiDoc) || 'Da allegare: planimetria dei locali con indicazione di reparti, postazioni, macchine, vie di esodo e presidi.'}</p>
         <h3>Organigramma della sicurezza</h3>
         ${organigramma(a, lavoratori, dlRspp)}
+        <h3>Certificati e documenti dell'impresa</h3>
+        ${tabellaArchivio(d.archivio, oggi)}
 
         <h2>3 · Ciclo lavorativo e mansioni (Modulo 1.2)</h2>
         <p style="min-height:3em">${o.ciclo ? esc(o.ciclo).replace(/\n/g, '<br>') : '&nbsp;'}</p>
@@ -443,7 +470,7 @@ export const MODELLI = [
           (s) => `<tr><th colspan="4">${esc(nomeCompleto(s.lavoratore))}${s.lavoratore.mansione ? ` · ${esc(s.lavoratore.mansione)}` : ''}</th></tr>
           ${s.voci
             .map(
-              (x) => `<tr><td>${esc(x.requisito.titolo)}</td><td>${x.registro ? esc(data(x.registro.data)) : '—'}</td><td>${
+              (x) => `<tr><td>${esc(x.requisito.titolo)}</td><td>${x.registro ? esc(data(x.registro.data)) : '—'}${x.registro?.ente || x.registro?.numeroAttestato ? `<br><small>${esc([x.registro.ente, x.registro.numeroAttestato ? `n. ${x.registro.numeroAttestato}` : ''].filter(Boolean).join(' · '))}</small>` : ''}</td><td>${
                 x.prossimaScadenza ? esc(data(x.prossimaScadenza)) : '—'
               }</td><td>${esc(x.motivo)}${x.registro?.esito ? ` (${esc(ESITI_VISITA[x.registro.esito] || '')})` : ''}</td></tr>`
             )
@@ -794,6 +821,7 @@ export const MODELLI = [
     id: 'piano-emergenza-doc',
     titolo: 'Piano di emergenza ed evacuazione',
     descrizione: 'Organizzazione delle emergenze: addetti, presidi, procedure per incendio, infortunio, terremoto, fuga di gas ed evacuazione, numeri utili e registro delle prove.',
+    allegati: { planimetrie: ['emergenza', 'generale'] },
     ambito: 'impresa',
     attivaSe: { fatto: 'haDipendenti' },
     opzioni: () => [
@@ -803,7 +831,7 @@ export const MODELLI = [
       { id: 'interruttori', etichetta: 'Dove si tolgono corrente, gas e acqua', tipo: 'area' },
       { id: 'persone', etichetta: 'Massimo di persone presenti (lavoratori e clienti)', tipo: 'numero' }
     ],
-    genera: ({ anagrafica: a, oggi, lavoratori, opzioni: o = {} }) => `${intestazione(a)}
+    genera: ({ anagrafica: a, oggi, lavoratori, opzioni: o = {}, allegatiDoc }) => `${intestazione(a)}
         <h1>Piano di emergenza ed evacuazione</h1>
         <p class="doc__rif">D.Lgs. 81/2008 artt. 18 c. 1 lett. t e 43-46; DM 2 settembre 2021 (GSA) e DM 3 settembre 2021</p>
         <h2>1 · Dati generali</h2>
@@ -845,7 +873,8 @@ export const MODELLI = [
         <h2>5 · Prove di evacuazione</h2>
         <p>La prova di evacuazione si svolge almeno una volta all'anno e si registra con il verbale della prova.</p>
         <table class="doc__tabella"><thead><tr><th>Data</th><th>Esito e osservazioni</th><th>Firma</th></tr></thead><tbody>${Array.from({ length: 3 }, () => '<tr><td style="height:2em"></td><td></td><td></td></tr>').join('')}</tbody></table>
-        <p class="doc__nota">Allegare la planimetria con vie di esodo, uscite, presidi e punto di raccolta, ed esporla nei locali.</p>
+        <h2>6 · Planimetrie</h2>
+        <p>${rifPlanimetrie(allegatiDoc) || 'Da allegare: planimetria con vie di esodo, uscite, presidi e punto di raccolta.'} Le planimetrie di emergenza vanno esposte nei locali.</p>
         ${luogoData(a, oggi)}
         ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['L\'RLS, per presa visione', a.rls])}`
   },
@@ -960,6 +989,7 @@ export const MODELLI = [
     id: 'valutazione-incendio',
     titolo: 'Valutazione del rischio di incendio (DM 3 settembre 2021)',
     descrizione: 'Valutazione secondo il «minicodice»: pericoli, occupanti, verifica del basso rischio, misure di prevenzione, esodo, estintori, rivelazione, gestione della sicurezza e livello di formazione degli addetti.',
+    allegati: { planimetrie: ['emergenza', 'generale', 'impianti', 'deposito'] },
     ambito: 'impresa',
     attivaSe: { any: [{ fatto: 'haDipendenti' }, { q: 'sede', eq: true }] },
     opzioni: (d) => [
@@ -981,7 +1011,7 @@ export const MODELLI = [
       { id: 'illuminazione', etichetta: 'Illuminazione di emergenza', tipo: 'casella' },
       { id: 'segnaletica', etichetta: 'Segnaletica di esodo e dei presidi', tipo: 'casella' }
     ],
-    genera: ({ anagrafica: a, oggi, lavoratori, opzioni: o = {} }) => {
+    genera: ({ anagrafica: a, oggi, lavoratori, opzioni: o = {}, allegatiDoc }) => {
       const br = bassoRischioIncendio(o);
       const livello = br.basso ? 1 : o.soggetta === 'si' ? 2 : 2;
       const ore = { 1: 4, 2: 8, 3: 16 }[livello];
@@ -998,6 +1028,7 @@ export const MODELLI = [
           <tr><th>Lavoratori</th><td>${(lavoratori || []).length}</td></tr>
           <tr><th>Massimo di persone presenti</th><td>${persone ?? ''}</td></tr>
           <tr><th>Persone vulnerabili</th><td>${o.vulnerabili ? 'Presenti: prevedere assistenza dedicata durante l\'esodo' : 'Non presenti abitualmente'}</td></tr>
+          <tr><th>Planimetrie</th><td>${rifPlanimetrie(allegatiDoc) || 'Da allegare'}</td></tr>
         </tbody></table>
         <h2>2 · Pericoli di incendio</h2>
         <table class="doc__tabella"><thead><tr><th>Materiali combustibili</th><th>Sorgenti di innesco</th></tr></thead><tbody>
@@ -1350,9 +1381,10 @@ export const MODELLI = [
     id: 'info-rischi-ditte',
     titolo: 'Informazioni sui rischi per le ditte esterne',
     descrizione: 'Da consegnare a ogni ditta o lavoratore autonomo che lavora nella tua sede: rischi presenti, regole ed emergenze.',
+    allegati: { planimetrie: ['generale', 'emergenza'] },
     ambito: 'impresa',
     attivaSe: { q: 'appalti_in_sede', eq: true },
-    genera: ({ anagrafica: a, oggi, dvr, ctx, lavoratori, ruoli }) => {
+    genera: ({ anagrafica: a, oggi, dvr, ctx, lavoratori, ruoli, allegatiDoc }) => {
       const presenti = pericoliPresenti(dvr, ctx);
       const addetti = (ruolo) => (lavoratori || []).filter((l) => (l.ruoli || []).includes(ruolo)).map(nomeCompleto).join(', ');
       return `${intestazione(a)}
@@ -1370,6 +1402,7 @@ export const MODELLI = [
           <li>Esporre la tessera di riconoscimento con fotografia.</li>
         </ul>
         <h2>Emergenze</h2>
+        ${rifPlanimetrie(allegatiDoc) ? `<p>Planimetrie con vie di esodo e presidi: ${rifPlanimetrie(allegatiDoc)}</p>` : ''}
         <table class="doc__tabella doc__tabella--campi"><tbody>
           <tr><th>Referente dell'impresa</th><td>${esc(titolare(a))} ${a.contatto ? `· ${esc(a.contatto)}` : ''}</td></tr>
           <tr><th>Addetti al primo soccorso</th><td>${esc(addetti('primo_soccorso'))}</td></tr>
@@ -1387,6 +1420,7 @@ export const MODELLI = [
     id: 'duvri-bozza',
     titolo: 'DUVRI completo (rischi da interferenze)',
     descrizione: 'Documento unico di valutazione dei rischi da interferenze: dati delle due imprese, verifica dell\'idoneità, rischi della sede e della ditta, valutazione delle interferenze con probabilità e danno, misure, costi della sicurezza, verbale di coordinamento.',
+    allegati: { planimetrie: ['generale', 'layout', 'emergenza'] },
     ambito: 'impresa',
     attivaSe: { all: [{ fatto: 'haDipendenti' }, { q: 'appalti_in_sede', eq: true }] },
     opzioni: (d) => [
@@ -1444,6 +1478,7 @@ export const MODELLI = [
           <tr><th>Addetti alle emergenze</th><td>${esc([conRuolo(lavoratori, 'primo_soccorso'), conRuolo(lavoratori, 'antincendio')].filter(Boolean).join(', '))}</td><td></td></tr>
         </tbody></table>
 
+        ${rifPlanimetrie(d.allegatiDoc) ? `<p><strong>Planimetrie dei luoghi:</strong> ${rifPlanimetrie(d.allegatiDoc)}</p>` : ''}
         <h2>3 · Descrizione dell'appalto</h2>
         <table class="doc__tabella doc__tabella--campi"><tbody>
           <tr><th>Tipo</th><td>${esc(tipo?.titolo || '')}</td></tr>
@@ -1548,7 +1583,7 @@ export const MODELLI = [
     id: 'pos-bozza',
     titolo: 'Piano operativo di sicurezza (POS) completo',
     descrizione: 'POS dettagliato con tutti i contenuti dell\'Allegato XV: dati del cantiere e dell\'impresa, lavoratori e incarichi, organizzazione, attrezzature, prodotti, analisi di ogni fase di lavoro con rischi, misure e DPI, emergenze e documenti da tenere in cantiere.',
-    allegati: { attrezzature: (o) => (id) => !(o.attrezzatureCantiere || []).length || o.attrezzatureCantiere.includes(id), prodotti: (o) => (id) => !(o.prodottiCantiere || []).length || o.prodottiCantiere.includes(id), categorie: ['libretto', 'ce', 'pericoli', 'verifica', 'sds'] },
+    allegati: { planimetrie: ['cantiere'], attrezzature: (o) => (id) => !(o.attrezzatureCantiere || []).length || o.attrezzatureCantiere.includes(id), prodotti: (o) => (id) => !(o.prodottiCantiere || []).length || o.prodottiCantiere.includes(id), categorie: ['libretto', 'ce', 'pericoli', 'verifica', 'sds'] },
     ambito: 'impresa',
     attivaSe: { all: [{ q: 'cantiere', eq: true }, { fatto: 'haDipendenti' }] },
     opzioni: (d) => [
@@ -1605,6 +1640,7 @@ export const MODELLI = [
           <tr><th>Inizio e durata</th><td>${esc(o.inizio ? data(o.inizio) : '')} ${o.durata ? `· ${esc(o.durata)}` : ''}</td></tr>
         </tbody></table>
 
+        ${rifPlanimetrie(d.allegatiDoc) ? `<p><strong>Layout di cantiere:</strong> ${rifPlanimetrie(d.allegatiDoc)}</p>` : ''}
         <h2>2 · Impresa esecutrice (lett. a)</h2>
         <table class="doc__tabella doc__tabella--campi"><tbody>
           <tr><th>Ragione sociale e sede</th><td>${esc(a.ragioneSociale || '')} · ${esc([a.sede, a.comune].filter(Boolean).join(', '))}</td></tr>

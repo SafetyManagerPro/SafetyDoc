@@ -513,3 +513,57 @@ export function novitaDaMostrare(catalogo, versioneVista, idAttive) {
     .map((n) => ({ ...n, schede: (n.schede || []).filter((id) => attive.has(id)) }))
     .filter((n) => n.schede.length);
 }
+
+// ---------- archivio di documenti e planimetrie ----------
+
+/** Voci in uso: non sostituite da una versione più recente e non archiviate. */
+export const archivioAttuale = (archivio, genere) =>
+  (archivio || []).filter((r) => !r.deleted && !r.sostituitoDa && !r.dismesso && (!genere || r.genere === genere));
+
+/** Versioni precedenti di una voce, dalla più recente alla più vecchia. */
+export function versioniPrecedenti(voce, archivio) {
+  const tutte = (archivio || []).filter((r) => !r.deleted);
+  const out = [];
+  let id = voce?.sostituisce;
+  const visti = new Set();
+  while (id && !visti.has(id)) {
+    visti.add(id);
+    const r = tutte.find((x) => x.id === id);
+    if (!r) break;
+    out.push(r);
+    id = r.sostituisce;
+  }
+  return out;
+}
+
+/** Semaforo di un documento in archivio in base alla scadenza e alla presenza del file. */
+export function situazioneArchivio(voce, oggi, numeroAllegati = 1) {
+  if (voce.sostituitoDa) return { voce, colore: 'info', motivo: 'Sostituito da una versione più recente' };
+  if (voce.scadenza && voce.scadenza < oggi) return { voce, colore: 'rosso', motivo: 'Scaduto', scadenza: voce.scadenza };
+  if (voce.scadenza) {
+    const giorni = (Date.parse(voce.scadenza) - Date.parse(oggi)) / 86400000;
+    if (giorni <= GIORNI_PREAVVISO) return { voce, colore: 'giallo', motivo: 'In scadenza', scadenza: voce.scadenza };
+  }
+  if (!numeroAllegati) return { voce, colore: 'giallo', motivo: 'Manca il file del documento', scadenza: voce.scadenza || null };
+  return { voce, colore: 'verde', motivo: voce.scadenza ? 'Valido' : 'Senza scadenza', scadenza: voce.scadenza || null };
+}
+
+export function urgenzeArchivio(archivio, oggi, contaAllegati = () => 1) {
+  const ordine = { rosso: 0, giallo: 1 };
+  return archivioAttuale(archivio)
+    .map((r) => situazioneArchivio(r, oggi, contaAllegati(r.id)))
+    .filter((s) => s.colore === 'rosso' || s.colore === 'giallo')
+    .sort((a, b) => ordine[a.colore] - ordine[b.colore] || String(a.scadenza || '').localeCompare(String(b.scadenza || '')));
+}
+
+/**
+ * Rinnovo di un adempimento: se cambia la data in cui è stato fatto, la registrazione precedente
+ * passa nello storico invece di essere sovrascritta.
+ */
+export function rinnovaAdempimento(attuale, nuovo, oggi) {
+  const storico = [...(attuale?.storico || [])];
+  if (attuale?.fatto && attuale.dataFatto && nuovo.dataFatto && nuovo.dataFatto !== attuale.dataFatto) {
+    storico.unshift({ dataFatto: attuale.dataFatto, scadenzaManuale: attuale.scadenzaManuale || null, note: attuale.note || '', sostituitoIl: oggi });
+  }
+  return { ...(attuale || {}), ...nuovo, storico };
+}
