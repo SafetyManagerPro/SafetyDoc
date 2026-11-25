@@ -42,6 +42,7 @@ Ogni modifica al database è in `supabase/migrations/` ed è stata applicata dal
 | File | Applicato il | Contenuto |
 |---|---|---|
 | `20261125160000_safetydoc_utilizzo.sql` | 25/11/2026 | schema `safetydoc`, tabelle `installazioni` ed `eventi_uso`, funzioni `safetydoc_registra` e `safetydoc_cancella`, viste `cruscotto_*` |
+| `20261125200000_safetydoc_richieste.sql` | da applicare | richieste e messaggi, funzioni per impresa e amministratore, `safetydoc_verifica` con le risposte da leggere |
 | `20261125180000_safetydoc_account.sql` | 25/11/2026 | fase B: `amministratori`, `imprese`, `inviti`, `dispositivi`, `accessi`, funzioni di attivazione, verifica e amministrazione. Provato con un'impresa di prova poi eliminata |
 
 ## Fase B – account delle imprese e amministrazione (dalla 0.20.0)
@@ -73,5 +74,23 @@ Funzioni per l'app (chiave pubblica): `safetydoc_invito_info`, `safetydoc_attiva
 Funzioni per l'amministratore (solo utenti autenticati in `amministratori`): `safetydoc_admin_elenco`,
 `safetydoc_admin_salva_impresa`, `safetydoc_admin_nuovo_invito`, `safetydoc_admin_stato_impresa`,
 `safetydoc_admin_stato_dispositivo`, `safetydoc_admin_elimina_impresa`.
+
+## Richieste e assistenza (dalla 0.21.0)
+
+- L'impresa scrive da **Dati → Richieste e assistenza** (`#/richieste`): tipo (aiuto, informazione, errore, modifica,
+  miglioria), oggetto, testo, pagina da cui scrive. Vede solo le richieste della propria impresa, risponde, chiude o riapre.
+  Limiti: 20 richieste e 100 messaggi al giorno per impresa, testo fino a 4000 caratteri, niente allegati.
+- L'amministratore le trova in cima a **#/admin** (aperte, da leggere, chiuse) e risponde da `#/admin/richiesta/<id>`,
+  scegliendo lo stato; con «Avvisa su WhatsApp» manda all'impresa un messaggio già pronto.
+- La verifica giornaliera restituisce `risposte_da_leggere`: in Oggi compare l'avviso delle nuove risposte.
+
+| Tabella | Contenuto |
+|---|---|
+| `richieste` | numero, impresa, dispositivo, tipo, oggetto, pagina, versione, stato, letta da impresa/amministratore |
+| `messaggi` | conversazione di ogni richiesta (autore impresa o admin, testo, data) |
+
+Funzioni per l'app: `safetydoc_richieste_elenco`, `safetydoc_richiesta_nuova`, `safetydoc_richiesta_scrivi`,
+`safetydoc_richiesta_letta` (tutte con la chiave del dispositivo). Per l'amministratore: `safetydoc_admin_richieste`,
+`safetydoc_admin_richiesta`.
 
 Da completare: titolare del trattamento in `data/legale.json` (compare in termini e informativa).
