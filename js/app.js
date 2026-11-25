@@ -42,6 +42,7 @@ import {
 import { linkAiuto } from './aiuto.js';
 import { accoda, pacchetto, invia, cancellaDati, piattaforma } from './utilizzo.js';
 import { rpc, accedi, rinnova } from './supabase.js';
+import { TIPI_RICHIESTA, STATI_RICHIESTA, datiRichiesta, erroriRichiesta, erroreRichiesta, avvisoRisposta } from './richieste.js';
 import { GRAZIA_MS, RIVERIFICA_MS, ROTTE_LIBERE, decidiAccesso, daRiverificare, applicaVerifica, erroreAttivazione, datiAttivazione, erroriAttivazione, linkInvito, numeroWhatsApp, messaggioInvito, urlWhatsApp, csvImprese, sessioneValida } from './account.js';
 import { raccogliScadenze, raggruppaScadenze, conteggiScadenze, testoPromemoria, daNotificare, testoNotifica, perServiceWorker, revisioneDocumento, statoScadenza, chiaveDocumento, scadenzaArchivio, durataArchivio, giorniTra, AREE } from './scadenzario.js';
 import { costruisciIndice, cerca, raggruppa, collegati, voce, perDocumento, verifiche, normalizza as normalizzaTesto, TIPI_VOCE } from './conoscenza.js';
@@ -55,7 +56,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, liv
 import { generaIcs } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.20.0';
+export const VERSIONE_APP = '0.21.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -449,7 +450,7 @@ function piano() {
   });
 }
 
-const SEZIONE = { scadenzario: 'piano', cerca: 'oggi', sapere: 'oggi', verifiche: 'oggi', archivio: 'documenti', planimetrie: 'documenti', 'archivio-voce': 'documenti', partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
+const SEZIONE = { richieste: 'dati', scadenzario: 'piano', cerca: 'oggi', sapere: 'oggi', verifiche: 'oggi', archivio: 'documenti', planimetrie: 'documenti', 'archivio-voce': 'documenti', partenza: 'attrezzature', scheda: 'piano', 'controllo-iniziale': 'piano', prodotti: 'piano', prodotto: 'piano', eventi: 'piano', evento: 'piano', lavoratore: 'lavoratori', 'lavoratore-modifica': 'lavoratori', registro: 'lavoratori', documento: 'documenti', attrezzatura: 'attrezzature', 'attrezzatura-modifica': 'attrezzature', controllo: 'attrezzature' };
 
 function aggiornaNav(rotta) {
   const sezione = SEZIONE[rotta] ?? rotta;
@@ -514,6 +515,7 @@ async function schermataOggi() {
     <section class="pagina">
       ${await bannerBackup()}
       ${await bloccoConsensoOggi()}
+      ${bloccoRisposteOggi()}
       ${await bannerNovita(p)}
       <p class="sopratitolo">${esc(nome || 'La tua impresa')}</p>
       <h1>${urgenti.length ? 'Cosa fare adesso' : 'Sei in regola'}</h1>
@@ -2570,6 +2572,10 @@ async function schermataDati(sezione) {
         <button class="btn btn--primario" type="submit">Salva il contatto</button>
       </form>
 
+      <h2 id="richieste">Richieste e assistenza</h2>
+      <p>Chiedi aiuto o informazioni, segnala un problema, proponi modifiche o miglioramenti.</p>
+      <a class="btn btn--primario" href="#/richieste">Richieste e assistenza${account?.risposte ? ` (${account.risposte} nuove risposte)` : ''}</a>
+
       ${await bloccoUsoDati()}
 
       <h2 id="responsabile">Responsabile delle scadenze</h2>
@@ -2935,6 +2941,7 @@ async function schermataAdmin(filtro = '', { usaCache = false } = {}) {
   if (!(usaCache && datiAdmin)) app.innerHTML = '<section class="pagina"><h1>Amministratore</h1><p>Carico i dati…</p></section>';
   if (!(usaCache && datiAdmin)) try {
     datiAdmin = await chiamaAdmin('safetydoc_admin_elenco');
+    richiesteAdmin = await chiamaAdmin('safetydoc_admin_richieste').catch(() => []);
     await salvaSessioneAdmin({ ...sessioneAdmin, verificatoIl: Date.now() });
   } catch (e) {
     if (e.stato === 401 || e.stato === 400 || e.codice === '42501') {
@@ -2959,6 +2966,8 @@ async function schermataAdmin(filtro = '', { usaCache = false } = {}) {
         <span role="listitem" class="contatore contatore--rosso"><strong>${r.sospese}</strong><span>sospese</span></span>
       </div>
       <p>Dispositivi: ${r.dispositivi} · attivi negli ultimi 7 giorni: <strong>${r.attivi_7}</strong> · negli ultimi 30: <strong>${r.attivi_30}</strong>${r.anonimi ? ` · dispositivi anonimi (prima della registrazione): ${r.anonimi}` : ''}</p>
+
+      ${bloccoRichiesteAdmin()}
 
       <details class="opzioni-doc" id="nuova-impresa-box">
         <summary>+ Nuova impresa e link di attivazione</summary>
@@ -3124,6 +3133,239 @@ async function schermataAdminFiltra(filtro, pos) {
   const c = app.querySelector('#filtro-imprese');
   c?.focus();
   if (c && pos !== undefined) c.setSelectionRange(pos, pos);
+}
+
+// ---------- richieste e assistenza (ticket) ----------
+
+let ultimaRotta = '';
+
+const cardStatoRichiesta = (stato) => {
+  const [col, et] = STATI_RICHIESTA[stato] || ['info', stato];
+  return `<span class="pill pill--${col}">${esc(et)}</span>`;
+};
+
+function senzaAccountRichieste() {
+  app.innerHTML = `<section class="pagina"><h1>Richieste e assistenza</h1><p class="lead">Le richieste si inviano da un dispositivo attivato con il link dell'impresa.</p>${
+    sessioneAdmin?.refreshToken ? '<a class="btn btn--primario" href="#/admin">Vai alle richieste delle imprese</a>' : ''
+  }</section>`;
+}
+
+async function caricaRichieste() {
+  return rpc('safetydoc_richieste_elenco', { dispositivo: account.dispositivo, chiave: account.chiave });
+}
+
+async function schermataRichieste() {
+  if (!account?.chiave) return senzaAccountRichieste();
+  app.innerHTML = '<section class="pagina"><h1>Richieste e assistenza</h1><p>Carico le richieste…</p></section>';
+  let elenco = [];
+  let errore = '';
+  try {
+    elenco = navigator.onLine ? await caricaRichieste() : [];
+    if (!navigator.onLine) errore = 'Serve la connessione a internet per vedere e inviare le richieste.';
+  } catch (e) {
+    errore = erroreRichiesta(e);
+  }
+  const schermata = ultimaRotta && !/^(richieste|invito|admin|dati|oggi)/.test(ultimaRotta) ? ultimaRotta : '';
+  app.innerHTML = `
+    <section class="pagina">
+      <h1>Richieste e assistenza</h1>
+      <p class="lead">Scrivi per chiedere aiuto o informazioni, segnalare un problema o proporre una modifica o un miglioramento. Ti rispondiamo qui.</p>
+      ${errore ? `<p class="esito esito--errore">${esc(errore)}</p>` : ''}
+      <details class="opzioni-doc" ${elenco.length ? '' : 'open'} id="nuova-richiesta-box">
+        <summary>+ Nuova richiesta</summary>
+        <form id="nuova-richiesta">
+          <label>Di cosa si tratta?<select class="campo" name="tipo" required>${Object.entries(TIPI_RICHIESTA).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select></label>
+          <label>Oggetto<input class="campo" name="oggetto" maxlength="140" required placeholder="es. Come compilo il POS per un cantiere stradale?"></label>
+          <label>Descrivi la richiesta<textarea class="campo" name="testo" rows="6" maxlength="4000" required></textarea></label>
+          ${schermata ? `<label class="spunta-semplice"><input type="checkbox" name="schermata" value="${esc(schermata)}" checked> Riguarda la pagina che stavi guardando (${esc(schermata)})</label>` : ''}
+          <p class="nota">Non scrivere dati personali dei lavoratori (salute, idoneità, infortuni): servono solo le informazioni sulla tua domanda.</p>
+          <p class="esito esito--errore" id="errori-richiesta" hidden></p>
+          <button class="btn btn--primario" type="submit">Invia la richiesta</button>
+        </form>
+      </details>
+      <h2>Le tue richieste <span class="conta">${elenco.length}</span></h2>
+      ${
+        elenco.length
+          ? `<div class="lista">${elenco
+              .map(
+                (r) => `<a class="voce voce--doc" href="#/richieste/${esc(r.id)}">
+                  <span class="voce__segno" aria-hidden="true">${r.letta === false ? '●' : '✉'}</span>
+                  <span class="voce__testo"><span class="voce__titolo">n. ${r.numero} · ${esc(r.oggetto)}</span>
+                  <span class="voce__stato">${cardStatoRichiesta(r.stato)} ${esc(TIPI_RICHIESTA[r.tipo] || r.tipo)} · ${esc(dataOra(r.aggiornata_il))}${r.letta === false ? ' · <strong>nuova risposta</strong>' : ''}</span></span>
+                  <span class="voce__freccia" aria-hidden="true">›</span>
+                </a>`
+              )
+              .join('')}</div>`
+          : '<p class="nota">Nessuna richiesta inviata.</p>'
+      }
+    </section>`;
+  const form = app.querySelector('#nuova-richiesta');
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const d = datiRichiesta(Object.fromEntries(new FormData(form)));
+    const box = app.querySelector('#errori-richiesta');
+    const errori = erroriRichiesta(d);
+    if (errori.length) {
+      box.hidden = false;
+      box.textContent = errori.join(' ');
+      return;
+    }
+    const b = form.querySelector('button[type=submit]');
+    b.disabled = true;
+    try {
+      const r = await rpc('safetydoc_richiesta_nuova', { dispositivo: account.dispositivo, chiave: account.chiave, dati: { ...d, versione: VERSIONE_APP } });
+      registraUso('schermata', 'richiesta-inviata');
+      avviso(`Richiesta n. ${r.numero} inviata: riceverai la risposta qui.`);
+      location.hash = `#/richieste/${r.id}`;
+    } catch (e) {
+      box.hidden = false;
+      box.textContent = erroreRichiesta(e);
+      b.disabled = false;
+    }
+  });
+}
+
+function conversazione(messaggi, chiSono) {
+  return `<div class="conversazione">${(messaggi || [])
+    .map(
+      (m) => `<div class="messaggio messaggio--${m.autore === chiSono ? 'mio' : 'altro'}">
+        <p class="messaggio__chi">${m.autore === 'admin' ? 'Assistenza safetyDoc' : 'Impresa'} · ${esc(dataOra(m.ts))}</p>
+        <p class="messaggio__testo">${esc(m.testo).replace(/\n/g, '<br>')}</p>
+      </div>`
+    )
+    .join('')}</div>`;
+}
+
+async function schermataRichiesta(id) {
+  if (!account?.chiave) return senzaAccountRichieste();
+  let r = null;
+  try {
+    r = (await caricaRichieste()).find((x) => x.id === id);
+  } catch (e) {
+    app.innerHTML = `<section class="pagina"><a class="indietro" href="#/richieste">‹ Richieste</a><p class="esito esito--errore">${esc(erroreRichiesta(e))}</p></section>`;
+    return;
+  }
+  if (!r) return (location.hash = '#/richieste');
+  if (r.letta === false) {
+    rpc('safetydoc_richiesta_letta', { dispositivo: account.dispositivo, chiave: account.chiave, richiesta: id }).catch(() => {});
+    if (account.risposte) await salvaAccount({ ...account, risposte: Math.max(0, account.risposte - 1) });
+  }
+  app.innerHTML = `
+    <section class="pagina">
+      <a class="indietro" href="#/richieste">‹ Richieste</a>
+      <p class="sopratitolo">Richiesta n. ${r.numero} · ${esc(TIPI_RICHIESTA[r.tipo] || r.tipo)}</p>
+      <h1>${esc(r.oggetto)}</h1>
+      <p>${cardStatoRichiesta(r.stato)} · aperta il ${esc(dataOra(r.creata_il))}</p>
+      ${conversazione(r.messaggi, 'impresa')}
+      <form id="scrivi-richiesta">
+        <label>${r.stato === 'chiusa' ? 'Scrivi per riaprire la richiesta' : 'Aggiungi un messaggio'}<textarea class="campo" name="testo" rows="4" maxlength="4000" required></textarea></label>
+        <button class="btn btn--primario" type="submit">Invia</button>
+      </form>
+      ${r.stato !== 'chiusa' ? '<button class="btn btn--secondario" type="button" id="chiudi-richiesta">Ho risolto: chiudi la richiesta</button>' : ''}
+    </section>`;
+  const invia_ = async (corpo, msg) => {
+    try {
+      await rpc('safetydoc_richiesta_scrivi', { dispositivo: account.dispositivo, chiave: account.chiave, richiesta: id, ...corpo });
+      avviso(msg);
+      schermataRichiesta(id);
+    } catch (e) {
+      avviso(erroreRichiesta(e));
+    }
+  };
+  app.querySelector('#scrivi-richiesta').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const testo = String(new FormData(ev.target).get('testo')).trim();
+    if (testo) invia_({ testo, chiudi: false }, 'Messaggio inviato.');
+  });
+  app.querySelector('#chiudi-richiesta')?.addEventListener('click', () => invia_({ testo: null, chiudi: true }, 'Richiesta chiusa. Grazie!'));
+}
+
+function bloccoRisposteOggi() {
+  if (!account?.risposte) return '';
+  return `<a class="banner banner--scadenze" href="#/richieste"><strong>${account.risposte === 1 ? 'Hai una nuova risposta' : `Hai ${account.risposte} nuove risposte`} alle tue richieste</strong><span>Tocca qui per leggerle</span></a>`;
+}
+
+// ---------- richieste nella sezione Amministratore ----------
+
+let richiesteAdmin = [];
+
+function bloccoRichiesteAdmin() {
+  const nuove = richiesteAdmin.filter((r) => r.letta === false);
+  const aperte = richiesteAdmin.filter((r) => r.stato !== 'chiusa');
+  return `<h2>Richieste delle imprese <span class="conta">${aperte.length} aperte${nuove.length ? ` · ${nuove.length} da leggere` : ''}</span></h2>
+    ${
+      aperte.length
+        ? `<div class="lista">${aperte
+            .slice(0, 30)
+            .map(
+              (r) => `<a class="voce voce--doc" href="#/admin/richiesta/${esc(r.id)}">
+                <span class="voce__segno" aria-hidden="true">${r.letta === false ? '●' : '✉'}</span>
+                <span class="voce__testo"><span class="voce__titolo">n. ${r.numero} · ${esc(r.oggetto)}</span>
+                <span class="voce__stato">${cardStatoRichiesta(r.stato)} ${esc(r.impresa.ragione_sociale)} · ${esc(TIPI_RICHIESTA[r.tipo] || r.tipo)} · ${esc(dataOra(r.aggiornata_il))}</span></span>
+                <span class="voce__freccia" aria-hidden="true">›</span>
+              </a>`
+            )
+            .join('')}</div>`
+        : '<p class="nota">Nessuna richiesta aperta.</p>'
+    }
+    ${richiesteAdmin.length > aperte.length ? `<details><summary>Richieste chiuse (${richiesteAdmin.length - aperte.length})</summary><div class="lista">${richiesteAdmin
+      .filter((r) => r.stato === 'chiusa')
+      .map((r) => `<a class="voce voce--doc" href="#/admin/richiesta/${esc(r.id)}"><span class="voce__testo"><span class="voce__titolo">n. ${r.numero} · ${esc(r.oggetto)}</span><span class="voce__stato">${esc(r.impresa.ragione_sociale)} · ${esc(dataOra(r.aggiornata_il))}</span></span></a>`)
+      .join('')}</div></details>` : ''}`;
+}
+
+async function schermataAdminRichiesta(id) {
+  if (!sessioneAdmin?.refreshToken) return schermataLoginAdmin();
+  try {
+    richiesteAdmin = await chiamaAdmin('safetydoc_admin_richieste');
+  } catch (e) {
+    app.innerHTML = `<section class="pagina"><a class="indietro" href="#/admin">‹ Amministratore</a><p class="esito esito--errore">${esc(erroreRichiesta(e))}</p></section>`;
+    return;
+  }
+  const r = richiesteAdmin.find((x) => x.id === id);
+  if (!r) return (location.hash = '#/admin');
+  if (r.letta === false) chiamaAdmin('safetydoc_admin_richiesta', { richiesta: id, testo: null, stato: null }).catch(() => {});
+  app.innerHTML = `
+    <section class="pagina admin">
+      <a class="indietro" href="#/admin">‹ Amministratore</a>
+      <p class="sopratitolo">Richiesta n. ${r.numero} · ${esc(TIPI_RICHIESTA[r.tipo] || r.tipo)}</p>
+      <h1>${esc(r.oggetto)}</h1>
+      <p>${cardStatoRichiesta(r.stato)} · <strong>${esc(r.impresa.ragione_sociale)}</strong>${r.impresa.referente ? ` · ${esc(r.impresa.referente)}` : ''}${r.impresa.telefono ? ` · ${esc(r.impresa.telefono)}` : ''}${r.impresa.email ? ` · ${esc(r.impresa.email)}` : ''}</p>
+      <p class="nota">Aperta il ${esc(dataOra(r.creata_il))}${r.schermata ? ` · dalla pagina «${esc(r.schermata)}»` : ''}${r.versione ? ` · versione ${esc(r.versione)}` : ''}</p>
+      ${conversazione(r.messaggi, 'admin')}
+      <form id="risposta-admin">
+        <label>Risposta<textarea class="campo" name="testo" rows="6" maxlength="4000"></textarea></label>
+        <label>Stato dopo l'invio<select class="campo" name="stato">${Object.entries(STATI_RICHIESTA).map(([k, [, et]]) => `<option value="${k}" ${k === 'risposta' ? 'selected' : ''}>${esc(et)}</option>`).join('')}</select></label>
+        <button class="btn btn--primario" type="submit">Invia la risposta</button>
+      </form>
+      <div class="azioni">
+        ${r.stato !== 'in_lavorazione' ? '<button class="btn btn--secondario" type="button" data-stato-richiesta="in_lavorazione">Segna «in lavorazione»</button>' : ''}
+        ${r.stato !== 'chiusa' ? '<button class="btn btn--secondario" type="button" data-stato-richiesta="chiusa">Chiudi la richiesta</button>' : '<button class="btn btn--secondario" type="button" data-stato-richiesta="aperta">Riapri</button>'}
+        ${r.impresa.telefono ? `<a class="btn btn--secondario" target="_blank" rel="noopener" href="${esc(urlWhatsApp(r.impresa.telefono, avvisoRisposta(r)))}">Avvisa su WhatsApp</a>` : ''}
+      </div>
+    </section>`;
+  app.querySelector('#risposta-admin').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const testo = String(f.get('testo')).trim();
+    if (!testo) return avviso('Scrivi la risposta.');
+    try {
+      await chiamaAdmin('safetydoc_admin_richiesta', { richiesta: id, testo, stato: f.get('stato') });
+      avviso('Risposta inviata: l\'impresa la vedrà alla prossima apertura dell\'app.');
+      schermataAdminRichiesta(id);
+    } catch (e) {
+      avviso(`Risposta non inviata: ${e.message}`);
+    }
+  });
+  for (const b of app.querySelectorAll('[data-stato-richiesta]'))
+    b.addEventListener('click', async () => {
+      try {
+        await chiamaAdmin('safetydoc_admin_richiesta', { richiesta: id, testo: null, stato: b.dataset.statoRichiesta });
+        schermataAdminRichiesta(id);
+      } catch (e) {
+        avviso(`Operazione non riuscita: ${e.message}`);
+      }
+    });
 }
 
 // ---------- dati di utilizzo anonimi (con consenso) ----------
@@ -3796,9 +4038,11 @@ async function instrada() {
   window.scrollTo(0, 0);
   if (rotta === 'invito') return schermataInvito(param || '');
   if (rotta === 'termini') return schermataTermini();
-  if (rotta === 'admin') return schermataAdmin();
+  if (rotta === 'admin') return param === 'richiesta' && extra ? schermataAdminRichiesta(extra) : schermataAdmin();
   const accesso = await controllaAccesso();
   if (accesso !== 'ok') return schermataAccessoNegato(accesso);
+  if (rotta === 'richieste') return param ? schermataRichiesta(param) : schermataRichieste();
+  ultimaRotta = [rotta || 'oggi', rotta === 'documento' || rotta === 'scheda' || rotta === 'sapere' ? param : ''].filter(Boolean).join(':');
   if (rotta === 'documento' && param) registraUso('documento', param);
   else if (rotta === 'cerca') registraUso('ricerca');
   else registraUso('schermata', nomeRotta(rotta, param));

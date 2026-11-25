@@ -35,6 +35,7 @@ export function applicaVerifica(account, esito, adesso = Date.now()) {
     stato: esito.stato,
     motivo: esito.motivo || '',
     impresa: esito.impresa || account.impresa,
+    risposte: Number(esito.risposte_da_leggere) || 0,
     controllatoIl: adesso,
     verificatoIl: esito.stato === 'attivo' ? adesso : account.verificatoIl
   };

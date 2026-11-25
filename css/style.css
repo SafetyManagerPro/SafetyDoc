@@ -415,3 +415,12 @@ dialog.firma h2 { margin-top: 0; }
 .tabella-admin th, .tabella-admin td { border-bottom: 1px solid var(--bordo); padding: 6px; text-align: left; vertical-align: top; }
 .note-impresa { margin-top: 10px; }
 .testo-legale h2 { font-size: 1.05rem; margin-top: 20px; }
+
+/* ---------- richieste e assistenza ---------- */
+.pill--grigio { background: var(--bordo); color: var(--testo-2); }
+.conversazione { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+.messaggio { border-radius: var(--raggio); padding: 10px 12px; max-width: 92%; border: 1px solid var(--bordo); }
+.messaggio--mio { align-self: flex-end; background: var(--info-sfondo); }
+.messaggio--altro { align-self: flex-start; background: var(--superficie); }
+.messaggio__chi { margin: 0 0 4px; font-size: 0.8rem; color: var(--testo-2); }
+.messaggio__testo { margin: 0; overflow-wrap: anywhere; }
