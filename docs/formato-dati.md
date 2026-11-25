@@ -154,3 +154,12 @@ I controlli di coerenza sono calcolati al momento e non vengono salvati.
 `admin:sessione` (`{ accessToken, refreshToken, scade, email, verificatoIl }`). Un backup caricato su un altro
 dispositivo richiede una nuova attivazione. Dalla 0.20 `uso:consenso` ha `versione: 2` (dati di utilizzo collegati
 all'account): il consenso dato prima viene richiesto di nuovo.
+
+## Aiuti sullo schermo (`data/guida.json`)
+
+Ogni voce: `{ id, rotta, sel, testo?, pos?, titolo, cosa, perche, dopo, link? }`. `rotta` è la prima parte
+dell'indirizzo (`oggi`, `dati`, `lavoratore-modifica`…, oppure `documento:<id>` / `documento:*`); `sel` è un selettore
+CSS e `testo` l'inizio del testo dell'elemento da cercare; `pos` = `dentro` (predefinito), `dopo` o `primo`.
+I «?» si inseriscono da soli dopo ogni schermata; il test e2e controlla che ognuno trovi il suo posto.
+`meta.guida:nascosta` (solo sul dispositivo) nasconde gli aiuti. Gli aiuti aperti si contano come eventi di utilizzo
+`schermata` con nome `guida:<id>` o `sigla:<sigla>`.

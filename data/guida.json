@@ -1,0 +1,615 @@
+{
+  "versione": "0.1.0",
+  "nota": "Aiuti contestuali («?»): rotta (prima parte dell'indirizzo, 'documento:<id>' o 'documento:*'), sel (selettore CSS), testo (inizio del testo dell'elemento), pos ('dentro' predefinito, 'dopo', 'primo'). Testi da validare.",
+  "voci": [
+    {
+      "id": "oggi-cosa-fare",
+      "rotta": "oggi",
+      "sel": "h1",
+      "titolo": "Cosa fare adesso",
+      "cosa": "Le cose più urgenti per la tua impresa, prese dal piano sicurezza: prima le scadute, poi quelle in scadenza.",
+      "perche": "Così non devi ricordarti tu ogni scadenza: safetyDoc la calcola dalle tue risposte e da quello che registri.",
+      "dopo": "Tocca una voce per vedere cosa fare, come e chi può farlo. Quando l'hai fatta, segnala come fatta.",
+      "link": {
+        "testo": "Vedi il piano completo",
+        "href": "#/piano"
+      }
+    },
+    {
+      "id": "oggi-ricerca",
+      "rotta": "oggi",
+      "sel": "label",
+      "testo": "Cerca rischi",
+      "titolo": "Cerca",
+      "cosa": "Cerca tra rischi, adempimenti, documenti, macchine, corsi e norme, anche con parole di tutti i giorni (muletto, frullino, eternit).",
+      "perche": "Trovi subito cosa dice la norma e cosa devi fare, anche senza connessione.",
+      "dopo": "Scrivi una parola e tocca Cerca: i risultati sono divisi per tipo."
+    },
+    {
+      "id": "oggi-lavoratori",
+      "rotta": "oggi",
+      "sel": "h2",
+      "testo": "I tuoi lavoratori",
+      "titolo": "I tuoi lavoratori",
+      "cosa": "Riepilogo di corsi, visite e documenti dei lavoratori: chi è in regola e chi no.",
+      "perche": "Formazione e sorveglianza sanitaria sono tra i controlli più frequenti degli ispettori.",
+      "dopo": "Apri un lavoratore per registrare un corso o una visita.",
+      "link": {
+        "testo": "Vedi tutti i lavoratori",
+        "href": "#/lavoratori"
+      }
+    },
+    {
+      "id": "oggi-dubbio",
+      "rotta": "oggi",
+      "sel": "h2",
+      "testo": "Hai un dubbio",
+      "titolo": "Hai un dubbio?",
+      "cosa": "Qui trovi chi ti aiuta (consulente, studio, associazione) e le richieste di assistenza.",
+      "perche": "Su sicurezza e privacy è meglio chiedere prima che sbagliare.",
+      "dopo": "Aggiungi il contatto di chi ti segue, oppure scrivi una richiesta.",
+      "link": {
+        "testo": "Richieste e assistenza",
+        "href": "#/richieste"
+      }
+    },
+    {
+      "id": "piano",
+      "rotta": "piano",
+      "sel": "h1",
+      "titolo": "Il tuo piano sicurezza",
+      "cosa": "Tutti gli adempimenti che riguardano la tua impresa, calcolati dalle risposte al questionario.",
+      "perche": "È l'elenco di cosa la legge ti chiede, con le scadenze. Rosso: da fare subito; giallo: in scadenza; verde: in regola.",
+      "dopo": "Tocca una voce rossa e segui i passi. Se una cosa l'hai già fatta, usa il controllo veloce per segnarla.",
+      "link": {
+        "testo": "Controllo veloce",
+        "href": "#/controllo-iniziale/0"
+      }
+    },
+    {
+      "id": "piano-calendario",
+      "rotta": "piano",
+      "sel": "h2",
+      "testo": "Promemoria sul telefono",
+      "titolo": "Promemoria sul telefono",
+      "cosa": "Crea un file calendario con tutte le scadenze e un avviso 30 e 7 giorni prima.",
+      "perche": "Il calendario del telefono ti avvisa anche se non apri safetyDoc.",
+      "dopo": "Tocca il pulsante, apri il file scaricato e conferma l'aggiunta al calendario."
+    },
+    {
+      "id": "piano-cambia",
+      "rotta": "piano",
+      "sel": "a.btn",
+      "testo": "Cambia le risposte",
+      "titolo": "Cambia le risposte",
+      "cosa": "Le risposte al questionario decidono quali adempimenti ti riguardano.",
+      "perche": "Se cambia qualcosa (nuovi lavoratori, nuove macchine, prodotti chimici, cantieri) cambia anche il piano.",
+      "dopo": "Tocca «Cambia le risposte» e aggiorna solo quelle cambiate.",
+      "pos": "dopo"
+    },
+    {
+      "id": "scadenzario",
+      "rotta": "scadenzario",
+      "sel": "h1",
+      "titolo": "Scadenzario",
+      "cosa": "Tutte le scadenze in un solo elenco: adempimenti, corsi e visite, controlli delle macchine, certificati, revisioni dei documenti, denunce INAIL.",
+      "perche": "Ogni data è calcolata dalla norma indicata accanto, così sai perché scade e cosa rischi.",
+      "dopo": "Guarda prima le scadute e quelle entro 30 giorni. Tocca una voce per registrare il rinnovo."
+    },
+    {
+      "id": "scadenzario-promemoria",
+      "rotta": "scadenzario",
+      "sel": "h2",
+      "testo": "Promemoria al responsabile",
+      "titolo": "Promemoria al responsabile",
+      "cosa": "Prepara un messaggio con le scadenze da mandare a chi segue la sicurezza (RSPP, consulente o tu stesso).",
+      "perche": "Chi deve agire riceve l'elenco completo, con le date e le norme.",
+      "dopo": "Scegli email o WhatsApp; il calendario .ics gli dà anche gli avvisi automatici sul telefono.",
+      "link": {
+        "testo": "Imposta il responsabile",
+        "href": "#/dati/responsabile"
+      }
+    },
+    {
+      "id": "scadenzario-nomi",
+      "rotta": "scadenzario",
+      "sel": "label",
+      "testo": "Includi i nomi",
+      "titolo": "Nomi dei lavoratori",
+      "cosa": "Se la spunti, nel promemoria compaiono i nomi dei lavoratori (es. «Mario Rossi: visita medica»).",
+      "perche": "I nomi sono dati personali: mandali solo a chi deve conoscerli, come RSPP, medico o consulente.",
+      "dopo": "Lasciala vuota se mandi il messaggio a qualcun altro."
+    },
+    {
+      "id": "scadenzario-notifiche",
+      "rotta": "scadenzario",
+      "sel": "h3",
+      "testo": "Notifiche",
+      "titolo": "Notifiche sul dispositivo",
+      "cosa": "Il telefono ti avvisa 30 giorni prima, 7 giorni prima e il giorno della scadenza.",
+      "perche": "Non devi ricordarti di aprire l'app per sapere cosa scade.",
+      "dopo": "Tocca «Attiva le notifiche» e consenti le notifiche quando il telefono lo chiede."
+    },
+    {
+      "id": "lavoratori",
+      "rotta": "lavoratori",
+      "sel": "h1",
+      "titolo": "I tuoi lavoratori",
+      "cosa": "L'elenco delle persone che lavorano per te, con lo stato di corsi, visite e documenti.",
+      "perche": "Per ogni lavoratore la legge chiede formazione, informazione, DPI e, se esposto a rischi, la sorveglianza sanitaria.",
+      "dopo": "Aggiungi tutti i lavoratori e indica per ognuno mansione e ruoli particolari."
+    },
+    {
+      "id": "lavoratore-cosa-serve",
+      "rotta": "lavoratore",
+      "sel": "h2",
+      "testo": "Cosa serve",
+      "titolo": "Cosa serve",
+      "cosa": "I corsi, le visite e i documenti richiesti a questo lavoratore in base alla mansione e ai ruoli.",
+      "perche": "Ogni voce rossa è una cosa mancante o scaduta.",
+      "dopo": "Tocca una voce e registra la data del corso o della visita: la prossima scadenza si calcola da sola."
+    },
+    {
+      "id": "lavoratore-mansione",
+      "rotta": "lavoratore-modifica",
+      "sel": "label:has([name=mansione])",
+      "titolo": "Mansione",
+      "cosa": "Il lavoro che fa davvero (es. muratore, magazziniere, impiegata).",
+      "perche": "Dalla mansione dipendono rischi, formazione specifica, visite mediche e DPI nel DVR.",
+      "dopo": "Scrivila con parole semplici e uguali per chi fa lo stesso lavoro."
+    },
+    {
+      "id": "lavoratore-ruoli",
+      "rotta": "lavoratore-modifica",
+      "sel": "h2",
+      "testo": "Ruoli",
+      "titolo": "Ruoli e lavori particolari",
+      "cosa": "Compiti che richiedono corsi in più: preposto, primo soccorso, antincendio, RLS, macchine con patentino, lavori in quota…",
+      "perche": "Ogni ruolo aggiunge un corso obbligatorio con le sue scadenze.",
+      "dopo": "Spunta solo i ruoli che la persona ha davvero: safetyDoc aggiunge i corsi giusti."
+    },
+    {
+      "id": "lavoratore-lingua",
+      "rotta": "lavoratore-modifica",
+      "sel": "label:has([name=lingua])",
+      "titolo": "Lingua",
+      "cosa": "La lingua in cui stampare le regole di sicurezza per questo lavoratore.",
+      "perche": "L'informazione deve essere comprensibile per chi la riceve (art. 36 c. 4).",
+      "dopo": "Scegli la lingua che il lavoratore capisce meglio."
+    },
+    {
+      "id": "lavoratore-fine",
+      "rotta": "lavoratore-modifica",
+      "sel": "label",
+      "testo": "Data di fine rapporto",
+      "titolo": "Data di fine rapporto",
+      "cosa": "Il giorno in cui il lavoratore ha smesso di lavorare per te.",
+      "perche": "Dopo questa data non compare più nelle scadenze, ma i suoi documenti restano conservati.",
+      "dopo": "Usala invece di eliminare il lavoratore."
+    },
+    {
+      "id": "registro-data",
+      "rotta": "registro",
+      "sel": "label",
+      "testo": "Data",
+      "pos": "primo",
+      "titolo": "Data",
+      "cosa": "Il giorno in cui è stato fatto il corso, la visita o la consegna.",
+      "perche": "Dalla data safetyDoc calcola la prossima scadenza secondo la norma.",
+      "dopo": "Inserisci la data scritta sull'attestato o sul giudizio del medico, poi allega la foto o il PDF."
+    },
+    {
+      "id": "registro-prossima",
+      "rotta": "registro",
+      "sel": "label",
+      "testo": "Prossima scadenza",
+      "titolo": "Prossima scadenza",
+      "cosa": "La data del prossimo rinnovo, se è diversa da quella calcolata.",
+      "perche": "Il medico competente, ad esempio, può fissare una visita prima del solito.",
+      "dopo": "Lasciala vuota per usare quella calcolata dalla norma."
+    },
+    {
+      "id": "registro-esito",
+      "rotta": "registro",
+      "sel": "label:has([name=esito])",
+      "titolo": "Giudizio del medico",
+      "cosa": "L'esito della visita: idoneo, idoneo con prescrizioni o limitazioni, non idoneo.",
+      "perche": "Con limitazioni o non idoneità devi adattare la mansione.",
+      "dopo": "Scrivi le prescrizioni nelle note e tienine conto nell'organizzazione del lavoro."
+    },
+    {
+      "id": "attrezzature",
+      "rotta": "attrezzature",
+      "sel": "h1",
+      "titolo": "Macchine e attrezzature",
+      "cosa": "Le macchine e le attrezzature che usi, con controlli, verifiche, libretti e pericoli.",
+      "perche": "Devono essere a norma, controllate e usate da persone formate (art. 71).",
+      "dopo": "Aggiungile partendo da quelle tipiche del tuo lavoro, poi carica il libretto di ognuna."
+    },
+    {
+      "id": "attrezzatura-controlli",
+      "rotta": "attrezzatura",
+      "sel": "h2",
+      "testo": "Controlli",
+      "titolo": "Controlli",
+      "cosa": "I controlli e le verifiche periodiche previsti per questo tipo di macchina.",
+      "perche": "Alcune macchine (gru, PLE, carrelli…) hanno verifiche obbligatorie dell'Allegato VII.",
+      "dopo": "Tocca un controllo e registra la data: safetyDoc calcola il prossimo."
+    },
+    {
+      "id": "attrezzatura-pericoli",
+      "rotta": "attrezzatura",
+      "sel": "h2",
+      "testo": "Pericoli e protezioni",
+      "titolo": "Pericoli e protezioni",
+      "cosa": "I pericoli della macchina e i DPI da usare: finiscono nel DVR, nel POS e nei verbali di addestramento.",
+      "perche": "Ti proponiamo quelli tipici: controllali con il capitolo sulla sicurezza del libretto.",
+      "dopo": "Togli o aggiungi le spunte e tocca «Salva pericoli e protezioni»."
+    },
+    {
+      "id": "attrezzatura-libretto",
+      "rotta": "attrezzatura",
+      "sel": "h2",
+      "testo": "Libretto",
+      "titolo": "Libretto e documenti",
+      "cosa": "Il libretto d'uso e manutenzione, la dichiarazione CE e le foto della macchina.",
+      "perche": "Il libretto va tenuto a disposizione e le sue pagine sui pericoli si allegano ai documenti.",
+      "dopo": "Allega il PDF o le foto e indica le pagine sulla sicurezza da stampare."
+    },
+    {
+      "id": "attrezzatura-pagine",
+      "rotta": "attrezzatura",
+      "sel": "label:has([name=pagine])",
+      "titolo": "Pagine da stampare",
+      "cosa": "Le pagine del PDF da inserire in DVR, POS e verbali (es. 1-4, 12).",
+      "perche": "Così non stampi tutto il libretto ma solo la parte sulla sicurezza.",
+      "dopo": "Lascia vuoto per stamparle tutte (massimo 30)."
+    },
+    {
+      "id": "attrezzatura-tipo",
+      "rotta": "attrezzatura-modifica",
+      "sel": "label:has([name=tipo])",
+      "titolo": "Che cos'è?",
+      "cosa": "Il tipo di macchina o attrezzatura.",
+      "perche": "Dal tipo dipendono i controlli obbligatori, i pericoli tipici e se serve il patentino.",
+      "dopo": "Scegli il tipo più vicino; se non c'è, scegli «Altro»."
+    },
+    {
+      "id": "attrezzatura-ce",
+      "rotta": "attrezzatura-modifica",
+      "sel": "label:has([name=marcaturaCE])",
+      "titolo": "Marcatura CE",
+      "cosa": "Il marchio CE sulla targhetta della macchina.",
+      "perche": "Le macchine messe in commercio dal 1996 in poi devono averlo; quelle più vecchie vanno adeguate all'Allegato V del D.Lgs. 81/2008.",
+      "dopo": "Controlla la targhetta; se manca chiedi a un tecnico."
+    },
+    {
+      "id": "prodotti",
+      "rotta": "prodotti",
+      "sel": "h1",
+      "titolo": "Prodotti chimici",
+      "cosa": "Vernici, colle, solventi, detergenti e altri prodotti con pittogrammi di pericolo.",
+      "perche": "Servono per la valutazione del rischio chimico e le schede di sicurezza vanno tenute a disposizione.",
+      "dopo": "Aggiungi i prodotti e carica la scheda di sicurezza di ognuno."
+    },
+    {
+      "id": "prodotto-frasih",
+      "rotta": "prodotto",
+      "sel": "label:has([name=frasiH])",
+      "titolo": "Frasi H",
+      "cosa": "Le indicazioni di pericolo nella sezione 2 della scheda di sicurezza (es. H225, H350).",
+      "perche": "Le H340, H350 e H360 indicano prodotti cancerogeni o tossici per la riproduzione: richiedono misure speciali.",
+      "dopo": "Copiale dalla scheda separate da uno spazio."
+    },
+    {
+      "id": "prodotto-pittogrammi",
+      "rotta": "prodotto",
+      "sel": "legend",
+      "testo": "Pittogrammi",
+      "titolo": "Pittogrammi",
+      "cosa": "I simboli a rombo rosso sull'etichetta.",
+      "perche": "Dicono subito che tipo di pericolo c'è (infiammabile, corrosivo, tossico…).",
+      "dopo": "Spunta quelli che vedi sull'etichetta."
+    },
+    {
+      "id": "prodotto-sds",
+      "rotta": "prodotto",
+      "sel": "label",
+      "testo": "Data della scheda",
+      "titolo": "Data della scheda di sicurezza",
+      "cosa": "La data di revisione scritta sulla scheda di sicurezza.",
+      "perche": "Le schede vanno aggiornate: il fornitore deve darti l'ultima versione gratis.",
+      "dopo": "Inserisci la data e allega il PDF della scheda."
+    },
+    {
+      "id": "eventi",
+      "rotta": "eventi",
+      "sel": "h1",
+      "titolo": "Infortuni e quasi incidenti",
+      "cosa": "Il registro degli infortuni, delle piccole medicazioni e dei quasi incidenti.",
+      "perche": "Gli infortuni oltre 3 giorni vanno denunciati all'INAIL; i quasi incidenti aiutano a prevenire quelli veri.",
+      "dopo": "Registra ogni evento, anche senza feriti, e scrivi cosa fai perché non si ripeta."
+    },
+    {
+      "id": "evento-prognosi",
+      "rotta": "evento",
+      "sel": "label:has([name=giorniPrognosi])",
+      "titolo": "Giorni di prognosi",
+      "cosa": "I giorni di assenza scritti sul certificato medico.",
+      "perche": "Oltre 3 giorni di prognosi l'infortunio va denunciato all'INAIL entro 2 giorni dal ricevimento del certificato.",
+      "dopo": "Scrivi i giorni e la data del certificato: safetyDoc ti dice la scadenza della denuncia."
+    },
+    {
+      "id": "evento-misure",
+      "rotta": "evento",
+      "sel": "label:has([name=misure])",
+      "titolo": "Cosa fai perché non si ripeta",
+      "cosa": "La misura per evitare che l'evento si ripeta.",
+      "perche": "Dopo un infortunio significativo il DVR va rielaborato entro 30 giorni (art. 29 c. 3).",
+      "dopo": "Scrivi una misura concreta e spunta «fatta» quando l'hai realizzata."
+    },
+    {
+      "id": "documenti",
+      "rotta": "documenti",
+      "sel": "h1",
+      "titolo": "Documenti pronti",
+      "cosa": "Modelli già compilati con i tuoi dati: DVR, POS, DUVRI, nomine, verbali, informative, valutazioni.",
+      "perche": "Ti risparmiano la parte ripetitiva: restano da controllare, completare e firmare.",
+      "dopo": "Apri un documento, completa «Dati di questo documento», stampa o salva in PDF e fallo firmare."
+    },
+    {
+      "id": "documento-aiuto",
+      "rotta": "documento:*",
+      "sel": "summary",
+      "testo": "Aiuto e verifiche",
+      "titolo": "Aiuto e verifiche",
+      "cosa": "Consigli per compilare questo documento e i controlli di coerenza che lo riguardano.",
+      "perche": "Ti segnala cosa manca o non torna prima della firma (es. prodotti cancerogeni non valutati).",
+      "dopo": "Sistema le voci «Importante» prima di firmare."
+    },
+    {
+      "id": "documento-revisione",
+      "rotta": "documento:*",
+      "sel": "summary",
+      "testo": "Data e prossima revisione",
+      "titolo": "Data e prossima revisione",
+      "cosa": "La data in cui il documento è stato firmato e quando va rivisto.",
+      "perche": "La revisione segue la norma indicata; la scadenza entra nello scadenzario.",
+      "dopo": "Dopo la firma salva la data (se firmi sul telefono si salva da sola)."
+    },
+    {
+      "id": "documento-dati",
+      "rotta": "documento:*",
+      "sel": "summary",
+      "testo": "Dati di questo documento",
+      "titolo": "Dati di questo documento",
+      "cosa": "I campi in più di questo documento: si salvano sul dispositivo e finiscono nel testo.",
+      "perche": "Senza questi dati il documento resta generico.",
+      "dopo": "Compila i campi; il documento si aggiorna mentre scrivi."
+    },
+    {
+      "id": "documento-allegati",
+      "rotta": "documento:*",
+      "sel": "summary",
+      "testo": "Allegati di questo documento",
+      "titolo": "Allegati del documento",
+      "cosa": "Foto, planimetrie e PDF da stampare in appendice al documento.",
+      "perche": "Libretti delle macchine e planimetrie si aggiungono da soli; qui puoi aggiungerne altri.",
+      "dopo": "Allega il file e indica le pagine da stampare."
+    },
+    {
+      "id": "documento-stampa",
+      "rotta": "documento:*",
+      "sel": "#stampa",
+      "pos": "dopo",
+      "titolo": "Stampa o salva in PDF",
+      "cosa": "Stampa il documento o salvalo come PDF dal menu di stampa.",
+      "perche": "Il documento firmato è quello che vale: tienilo in azienda.",
+      "dopo": "Scegli «Salva come PDF» come stampante per avere il file."
+    },
+    {
+      "id": "dvr-valutazioni",
+      "rotta": "documento:dvr-bozza",
+      "sel": "legend",
+      "testo": "Valutazione personalizzata",
+      "titolo": "Valutazione personalizzata",
+      "cosa": "Qui confermi o cambi probabilità (P) e danno (D) di ogni rischio e programmi le misure di miglioramento.",
+      "perche": "I valori proposti sono tipici: il DVR deve riflettere la tua situazione reale (art. 28).",
+      "dopo": "Dopo il sopralluogo cambia P e D dove serve; scrivi le misure con incaricato e scadenza."
+    },
+    {
+      "id": "dvr-ciclo",
+      "rotta": "documento:dvr-bozza",
+      "sel": "label:has([name=ciclo])",
+      "titolo": "Ciclo lavorativo",
+      "cosa": "La descrizione di come lavori, dall'arrivo dei materiali alla consegna.",
+      "perche": "Aiuta a collegare rischi e misure alle fasi reali del lavoro.",
+      "dopo": "Descrivi le fasi in poche righe, come le spiegheresti a un nuovo assunto."
+    },
+    {
+      "id": "pos-fasi",
+      "rotta": "documento:pos-bozza",
+      "sel": "legend",
+      "testo": "Lavorazioni che farai",
+      "titolo": "Lavorazioni del cantiere",
+      "cosa": "Le lavorazioni che farai in questo cantiere.",
+      "perche": "Per ognuna il POS riporta rischi, misure, attrezzature e DPI (Allegato XV).",
+      "dopo": "Spunta solo quelle che farai davvero in quel cantiere."
+    },
+    {
+      "id": "pos-cse",
+      "rotta": "documento:pos-bozza",
+      "sel": "label:has([name=cse])",
+      "titolo": "Coordinatore per l'esecuzione (CSE)",
+      "cosa": "Il tecnico nominato dal committente per coordinare la sicurezza quando ci sono più imprese.",
+      "perche": "Il POS va consegnato all'impresa affidataria e al CSE prima di iniziare.",
+      "dopo": "Scrivi nome e contatto del CSE indicati nel PSC."
+    },
+    {
+      "id": "pos-subappalti",
+      "rotta": "documento:pos-bozza",
+      "sel": "label:has([name=subappalti])",
+      "titolo": "Subappalti",
+      "cosa": "Le lavorazioni affidate ad altre imprese o lavoratori autonomi.",
+      "perche": "Ogni subappaltatore deve avere il suo POS e la sua idoneità verificata.",
+      "dopo": "Indica chi fa cosa; chiedi loro POS, DURC e patente a crediti."
+    },
+    {
+      "id": "archivio",
+      "rotta": "archivio",
+      "sel": "h1",
+      "titolo": "Archivio documenti e certificati",
+      "cosa": "Certificati, verifiche, autorizzazioni, polizze e attestati con le loro scadenze.",
+      "perche": "Le versioni vecchie restano nello storico: in caso di controllo hai tutto in ordine.",
+      "dopo": "Aggiungi un documento, allega il file e controlla la scadenza."
+    },
+    {
+      "id": "archivio-tipo",
+      "rotta": "archivio-voce",
+      "sel": "label:has([name=tipo])",
+      "titolo": "Tipo di documento",
+      "cosa": "Il tipo di certificato o documento (messa a terra, CPI, manutenzione antincendio, DURC…).",
+      "perche": "Dal tipo safetyDoc sa quanto dura e calcola la scadenza secondo la norma.",
+      "dopo": "Scegli il tipo, poi inserisci la data di rilascio."
+    },
+    {
+      "id": "archivio-rilascio",
+      "rotta": "archivio-voce",
+      "sel": "label",
+      "testo": "Data di rilascio",
+      "titolo": "Data di rilascio",
+      "cosa": "Il giorno in cui il documento è stato rilasciato o la verifica è stata fatta.",
+      "perche": "Da qui si calcola la scadenza secondo la norma (es. messa a terra ogni 5 o 2 anni).",
+      "dopo": "Inserisci la data scritta sul documento."
+    },
+    {
+      "id": "archivio-scadenza",
+      "rotta": "archivio-voce",
+      "sel": "label",
+      "testo": "Scadenza",
+      "titolo": "Scadenza",
+      "cosa": "La data in cui il documento scade o va rinnovato.",
+      "perche": "Te la ricordiamo nello scadenzario e nei promemoria.",
+      "dopo": "Controlla quella calcolata; se sul documento c'è una data diversa, scrivi quella."
+    },
+    {
+      "id": "dati-copia",
+      "rotta": "dati",
+      "sel": "h2",
+      "testo": "Salva una copia",
+      "titolo": "Salva una copia",
+      "cosa": "Crea un file con tutti i tuoi dati: lavoratori, scadenze, macchine, archivio e dati dei documenti.",
+      "perche": "I dati sono solo su questo dispositivo: se lo perdi o si rompe, la copia è l'unico modo per recuperarli.",
+      "dopo": "Salva una copia almeno una volta al mese e conservala su un altro dispositivo o in cloud."
+    },
+    {
+      "id": "dati-password",
+      "rotta": "dati",
+      "sel": "label",
+      "testo": "Password",
+      "titolo": "Password del file",
+      "cosa": "Una password per proteggere la copia.",
+      "perche": "Nella copia ci sono dati personali dei lavoratori: con la password nessun altro può leggerla.",
+      "dopo": "Usa una password che ricordi: senza, la copia non si può aprire."
+    },
+    {
+      "id": "dati-carica",
+      "rotta": "dati",
+      "sel": "h2",
+      "testo": "Carica una copia",
+      "titolo": "Carica una copia",
+      "cosa": "Apre una copia salvata prima o su un altro dispositivo.",
+      "perche": "I dati vengono uniti: per ogni voce resta la modifica più recente, niente viene perso.",
+      "dopo": "Scegli il file della copia; se ha la password ti verrà chiesta."
+    },
+    {
+      "id": "dati-impresa",
+      "rotta": "dati",
+      "sel": "h2",
+      "testo": "Dati dell'impresa",
+      "titolo": "Dati dell'impresa",
+      "cosa": "Nome, titolare, sede, RSPP, medico competente e RLS.",
+      "perche": "Questi dati compaiono in tutti i documenti.",
+      "dopo": "Compilali una volta: i documenti si aggiornano da soli."
+    },
+    {
+      "id": "dati-consulente",
+      "rotta": "dati",
+      "sel": "h2",
+      "testo": "Chi ti aiuta",
+      "titolo": "Chi ti aiuta",
+      "cosa": "Il contatto del tuo consulente, studio o associazione.",
+      "perche": "Dai documenti e dalle schede puoi chiamarlo o scrivergli con un tocco.",
+      "dopo": "Inserisci telefono, WhatsApp o email."
+    },
+    {
+      "id": "dati-richieste",
+      "rotta": "dati",
+      "sel": "h2",
+      "testo": "Richieste e assistenza",
+      "titolo": "Richieste e assistenza",
+      "cosa": "Qui scrivi richieste di aiuto, informazioni, segnalazioni di errori, modifiche e migliorie.",
+      "perche": "Ti rispondiamo dentro l'app: la risposta compare in Oggi.",
+      "dopo": "Descrivi cosa ti serve senza dati personali dei lavoratori."
+    },
+    {
+      "id": "dati-responsabile",
+      "rotta": "dati",
+      "sel": "h2",
+      "testo": "Responsabile delle scadenze",
+      "titolo": "Responsabile delle scadenze",
+      "cosa": "Chi riceve i promemoria dello scadenzario: RSPP, consulente o tu stesso.",
+      "perche": "Le scadenze arrivano a chi deve occuparsene, con le date e le norme.",
+      "dopo": "Inserisci nome, email e cellulare e scegli ogni quanto ricordarti di mandarli."
+    },
+    {
+      "id": "dati-installa",
+      "rotta": "dati",
+      "sel": "h2",
+      "testo": "Installa l'app",
+      "titolo": "Installa l'app",
+      "cosa": "safetyDoc si può installare sul telefono o sul computer come un'app.",
+      "perche": "Si apre con un tocco dalla schermata principale e funziona anche senza connessione.",
+      "dopo": "Segui le istruzioni per il tuo telefono."
+    },
+    {
+      "id": "verifiche",
+      "rotta": "verifiche",
+      "sel": "h1",
+      "titolo": "Controlli di coerenza",
+      "cosa": "safetyDoc confronta risposte, lavoratori, macchine, prodotti e documenti e segnala ciò che non torna.",
+      "perche": "Sono gli errori che un ispettore nota subito (es. muletto senza operatori abilitati).",
+      "dopo": "Parti da quelli «Importante» e usa il pulsante di ogni controllo per sistemarlo."
+    },
+    {
+      "id": "richieste-nuova",
+      "rotta": "richieste",
+      "sel": "summary",
+      "testo": "+ Nuova richiesta",
+      "titolo": "Nuova richiesta",
+      "cosa": "Scrivi una domanda, una segnalazione o una proposta.",
+      "perche": "Ti rispondiamo qui; quando c'è una risposta la vedi in Oggi.",
+      "dopo": "Scegli il tipo, scrivi un oggetto chiaro e descrivi la richiesta."
+    },
+    {
+      "id": "admin-imprese",
+      "rotta": "admin",
+      "sel": "h2",
+      "testo": "Imprese",
+      "titolo": "Imprese",
+      "cosa": "Le imprese registrate con stato, dispositivi, ultimo accesso e utilizzo.",
+      "perche": "Da qui controlli chi usa safetyDoc e intervieni in caso di uso non conforme.",
+      "dopo": "Apri un'impresa per mandare il link, sospenderla o bloccare un dispositivo."
+    },
+    {
+      "id": "admin-nuova",
+      "rotta": "admin",
+      "sel": "summary",
+      "testo": "+ Nuova impresa",
+      "titolo": "Nuova impresa e link",
+      "cosa": "Crea l'impresa e prepara il link di attivazione da mandare su WhatsApp.",
+      "perche": "Senza il link l'impresa non può usare safetyDoc.",
+      "dopo": "Scrivi nome e cellulare: si apre WhatsApp con il messaggio pronto."
+    }
+  ]
+}

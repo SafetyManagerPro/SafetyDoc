@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.21.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.22.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -65,6 +65,10 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
 20. **Richieste e assistenza** – le imprese inviano richieste di aiuto, informazioni, segnalazioni di errori, modifiche e
    migliorie (Dati → Richieste e assistenza); l'amministratore risponde da #/admin e può avvisare su WhatsApp;
    l'impresa vede le risposte in Oggi. Dettagli in `docs/supabase.md`.
+21. **Aiuti sullo schermo** – «?» accanto a campi, pulsanti e sezioni (61 punti, testi in `data/guida.json`): un tocco apre
+   un post-it con cos'è, perché serve e cosa fare dopo, il link alla pagina giusta, «Chiedi a noi» (apre una richiesta
+   già compilata) e la lettura ad alta voce. Le sigle (DVR, RSPP, DUVRI…) si toccano per la spiegazione. Si possono
+   nascondere in Dati. L'amministratore vede quali aiuti vengono aperti di più (solo con il consenso ai dati di utilizzo).
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta. Quando si aggiungono
 schede si alza `versione` e si aggiunge una voce in `novita`: l'impresa vede le schede nuove che la riguardano.
@@ -81,6 +85,7 @@ css/style.css         grafica: telefono prima di tutto, testo grande, tema scuro
 js/app.js             schermate e navigazione
 js/engine.js          regole, piano, semaforo (modulo puro, testato)
 js/supabase.js        collegamento a Supabase (rpc, accesso amministratore)
+js/guida.js           aiuti contestuali «?» e sigle cliccabili (modulo puro, testato)
 js/richieste.js       richieste delle imprese: tipi, stati, controlli (modulo puro, testato)
 js/account.js         attivazione, verifica giornaliera, blocco, link e CSV (modulo puro, testato)
 js/utilizzo.js        dati di utilizzo anonimi con consenso (Supabase)
