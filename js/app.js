@@ -42,10 +42,11 @@ import {
 import { linkAiuto } from './aiuto.js';
 import { accoda, pacchetto, invia, cancellaDati, piattaforma } from './utilizzo.js';
 import { rpc, accedi, rinnova } from './supabase.js';
+import { rottaDa, vociPer, testoCorrisponde, sigleCliccabili, regexSigle, eventoGuida } from './guida.js';
 import { TIPI_RICHIESTA, STATI_RICHIESTA, datiRichiesta, erroriRichiesta, erroreRichiesta, avvisoRisposta } from './richieste.js';
 import { GRAZIA_MS, RIVERIFICA_MS, ROTTE_LIBERE, decidiAccesso, daRiverificare, applicaVerifica, erroreAttivazione, datiAttivazione, erroriAttivazione, linkInvito, numeroWhatsApp, messaggioInvito, urlWhatsApp, csvImprese, sessioneValida } from './account.js';
 import { raccogliScadenze, raggruppaScadenze, conteggiScadenze, testoPromemoria, daNotificare, testoNotifica, perServiceWorker, revisioneDocumento, statoScadenza, chiaveDocumento, scadenzaArchivio, durataArchivio, giorniTra, AREE } from './scadenzario.js';
-import { costruisciIndice, cerca, raggruppa, collegati, voce, perDocumento, verifiche, normalizza as normalizzaTesto, TIPI_VOCE } from './conoscenza.js';
+import { costruisciIndice, cerca, raggruppa, collegati, voce, perDocumento, verifiche, normalizza as normalizzaTesto, TIPI_VOCE, idSigla } from './conoscenza.js';
 import { oggiLocale, formattaData, interpretaData, mascheraData, erroreData, MESI } from './date.js';
 import { immaginiPerStampa } from './allegati.js';
 import { LINGUE } from './lingue.js';
@@ -56,7 +57,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, liv
 import { generaIcs } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.21.0';
+export const VERSIONE_APP = '0.22.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -110,7 +111,7 @@ const CAMPI_ANAGRAFICA = [
   ['rls', 'RLS o RLST', 'off']
 ];
 
-const stato = { legale: null, conoscenza: null, settori: null, lavorazioni: null, defArchivio: null, archivio: [], questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
+const stato = { guida: null, legale: null, conoscenza: null, settori: null, lavorazioni: null, defArchivio: null, archivio: [], questionario: null, catalogo: null, defLav: null, dvr: null, ateco: null, defAttr: null, profilo: null, adempimenti: [], lavoratori: [], registri: [], attrezzature: [], controlli: [], prodotti: [], eventi: [], allegati: [] };
 const app = document.getElementById('app');
 
 // ---------- utilità ----------
@@ -2587,6 +2588,9 @@ async function schermataDati(sezione) {
         <button class="btn btn--primario" type="submit">Salva il responsabile</button>
       </form>
 
+      <h2 id="aiuti">Aiuti sullo schermo</h2>
+      <label class="spunta-semplice"><input type="checkbox" id="mostra-guida" ${guidaNascosta ? '' : 'checked'}> Mostra i «?» di aiuto e le sigle da toccare per la spiegazione</label>
+
       <h2 id="installa-app">Installa l'app</h2>
       ${bloccoInstallazione()}
 
@@ -2627,6 +2631,10 @@ async function schermataDati(sezione) {
   });
   attivaInstallazione();
   attivaUsoDati(() => schermataDati(sezione));
+  app.querySelector('#mostra-guida')?.addEventListener('change', async (e) => {
+    await impostaGuidaNascosta(!e.target.checked);
+    avviso(e.target.checked ? 'Aiuti visibili.' : 'Aiuti nascosti: puoi riattivarli qui.');
+  });
   const ancora = { consulente: 'consulente', installa: 'installa-app', responsabile: 'responsabile', utilizzo: 'dati-utilizzo' }[sezione];
   if (ancora) app.querySelector(`#${ancora}`)?.scrollIntoView();
   app.querySelector('#esporta').addEventListener('click', esporta);
@@ -2992,6 +3000,14 @@ async function schermataAdmin(filtro = '', { usaCache = false } = {}) {
 
       <h2>Funzioni più usate (30 giorni, chi ha dato il consenso)</h2>
       ${(datiAdmin.funzioni || []).length ? `<table class="tabella-admin"><thead><tr><th>Funzione</th><th>Volte</th><th>Dispositivi</th></tr></thead><tbody>${datiAdmin.funzioni.map((f) => `<tr><td>${esc(f.tipo)}${f.nome ? ` · ${esc(f.nome)}` : ''}</td><td>${f.volte}</td><td>${f.dispositivi}</td></tr>`).join('')}</tbody></table>` : '<p class="nota">Ancora nessun dato.</p>'}
+      <h2>Aiuti più aperti (30 giorni)</h2>
+      ${(() => {
+        const titoli = Object.fromEntries((stato.guida?.voci || []).map((v) => [`guida:${v.id}`, v.titolo]));
+        const aiuti = (datiAdmin.funzioni || []).filter((f) => /^(guida|sigla):/.test(f.nome || ''));
+        return aiuti.length
+          ? `<p class="nota">Dicono quali parti dell'app sono meno chiare.</p><table class="tabella-admin"><thead><tr><th>Aiuto</th><th>Volte</th><th>Dispositivi</th></tr></thead><tbody>${aiuti.map((f) => `<tr><td>${esc(titoli[f.nome] || f.nome.replace('sigla:', 'Sigla '))}</td><td>${f.volte}</td><td>${f.dispositivi}</td></tr>`).join('')}</tbody></table>`
+          : '<p class="nota">Ancora nessun aiuto aperto (contano solo i dispositivi con il consenso ai dati di utilizzo).</p>';
+      })()}
       <h2>Versioni in uso</h2>
       ${(datiAdmin.versioni || []).length ? `<table class="tabella-admin"><thead><tr><th>Versione</th><th>Dispositivo</th><th>Quanti</th><th>Ultimo uso</th></tr></thead><tbody>${datiAdmin.versioni.map((v) => `<tr><td>${esc(v.versione || '?')}</td><td>${esc(v.piattaforma || '?')}</td><td>${v.dispositivi}</td><td>${esc(dataOra(v.ultimo_uso))}</td></tr>`).join('')}</tbody></table>` : '<p class="nota">Ancora nessun dato.</p>'}
       <p class="nota">Non vengono registrati indirizzi IP. I dati di utilizzo arrivano solo da chi ha dato il consenso.</p>
@@ -3135,6 +3151,173 @@ async function schermataAdminFiltra(filtro, pos) {
   if (c && pos !== undefined) c.setSelectionRange(pos, pos);
 }
 
+// ---------- aiuti contestuali: «?» e post-it, sigle cliccabili ----------
+
+let guidaNascosta = false;
+let regexSigleCache = null;
+let mappaSigle = null;
+let postitAperto = null;
+
+function inizializzaGuida() {
+  const sigle = sigleCliccabili(stato.conoscenza?.glossario);
+  regexSigleCache = regexSigle(sigle);
+  mappaSigle = new Map(sigle.map((g) => [g.sigla, g]));
+  document.body.classList.toggle('senza-guida', guidaNascosta);
+  let attesa;
+  new MutationObserver(() => {
+    clearTimeout(attesa);
+    attesa = setTimeout(applicaGuida, 60);
+  }).observe(app, { childList: true, subtree: true });
+  document.addEventListener('click', (ev) => {
+    const b = ev.target.closest?.('[data-guida], abbr.sigla');
+    if (b) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (postitAperto?.origine === b) return chiudiPostit();
+      return b.dataset.guida ? apriPostitGuida(b) : apriPostitSigla(b);
+    }
+    if (postitAperto && !ev.target.closest?.('.postit')) chiudiPostit();
+  }, true);
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && postitAperto) chiudiPostit(true);
+    if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('abbr.sigla')) {
+      ev.preventDefault();
+      apriPostitSigla(ev.target);
+    }
+  });
+  addEventListener('hashchange', () => chiudiPostit());
+}
+
+/** Aggiunge i «?» della schermata corrente e rende cliccabili le sigle (una volta per schermata). */
+function applicaGuida() {
+  if (guidaNascosta) return;
+  const rotta = rottaDa(location.hash);
+  for (const v of vociPer(stato.guida?.voci, rotta)) {
+    if (app.querySelector(`[data-guida="${v.id}"]`)) continue;
+    const el = [...app.querySelectorAll(v.sel)].find((e) => !e.closest('.doc, .postit') && testoCorrisponde(v, e.textContent));
+    if (!el) continue;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'guida-btn';
+    b.dataset.guida = v.id;
+    b.setAttribute('aria-label', `Aiuto: ${v.titolo}`);
+    b.setAttribute('aria-expanded', 'false');
+    b.textContent = '?';
+    if (v.pos === 'dopo') el.insertAdjacentElement('afterend', b);
+    else if (el.tagName === 'LABEL' || v.pos === 'primo') {
+      // subito dopo il testo dell'etichetta, prima del campo
+      const testo = [...el.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      if (testo) testo.after(b);
+      else el.prepend(b);
+    } else el.append(b);
+  }
+  sigleNellaPagina();
+}
+
+function sigleNellaPagina() {
+  if (!regexSigleCache) return;
+  const principale = app.querySelector('.pagina');
+  if (!principale || principale.dataset.sigle === location.hash) return;
+  principale.dataset.sigle = location.hash;
+  const viste = new Set([...principale.querySelectorAll('abbr.sigla')].map((a) => a.textContent));
+  const walker = document.createTreeWalker(principale, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) => (n.parentElement.closest('.doc, a, button, label, summary, input, textarea, select, option, abbr, .postit, h1, code, .messaggio, .nota') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT)
+  });
+  const nodi = [];
+  while (walker.nextNode()) nodi.push(walker.currentNode);
+  for (const n of nodi) {
+    const m = n.textContent.match(regexSigleCache);
+    if (!m || viste.has(m[2])) continue;
+    viste.add(m[2]);
+    const inizio = m.index + m[1].length;
+    const resto = n.splitText(inizio);
+    resto.splitText(m[2].length);
+    const abbr = document.createElement('abbr');
+    abbr.className = 'sigla';
+    abbr.tabIndex = 0;
+    abbr.title = 'Tocca per la spiegazione';
+    abbr.textContent = m[2];
+    resto.replaceWith(abbr);
+  }
+}
+
+function chiudiPostit(rimettiFocus = false) {
+  if (!postitAperto) return;
+  postitAperto.el.remove();
+  postitAperto.origine.setAttribute?.('aria-expanded', 'false');
+  if (rimettiFocus) postitAperto.origine.focus?.();
+  postitAperto = null;
+}
+
+function mostraPostit(origine, html) {
+  chiudiPostit();
+  const el = document.createElement('div');
+  el.className = 'postit';
+  el.setAttribute('role', 'dialog');
+  el.tabIndex = -1;
+  el.innerHTML = `<button class="postit__chiudi" type="button" aria-label="Chiudi">×</button>${html}`;
+  document.body.append(el);
+  const r = origine.getBoundingClientRect();
+  const larghezza = Math.min(320, innerWidth - 24);
+  el.style.width = `${larghezza}px`;
+  el.style.left = `${Math.max(12, Math.min(r.left + r.width / 2 - larghezza / 2, innerWidth - larghezza - 12)) + scrollX}px`;
+  const sotto = r.bottom + 8 + el.offsetHeight < innerHeight || r.top < el.offsetHeight + 8;
+  el.style.top = `${(sotto ? r.bottom + 8 : r.top - el.offsetHeight - 8) + scrollY}px`;
+  origine.setAttribute?.('aria-expanded', 'true');
+  postitAperto = { el, origine };
+  el.querySelector('.postit__chiudi').addEventListener('click', () => chiudiPostit(true));
+  el.querySelector('[data-chiedi]')?.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    try {
+      sessionStorage.setItem('richiesta:bozza', JSON.stringify({ oggetto: ev.currentTarget.dataset.chiedi, schermata: rottaDa(location.hash) }));
+    } catch {
+      /* senza sessionStorage si apre solo la pagina */
+    }
+    chiudiPostit();
+    location.hash = '#/richieste';
+  });
+  el.querySelector('[data-leggi]')?.addEventListener('click', () => {
+    if (!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(el.innerText.replace(/[×🔊]/g, ''));
+    u.lang = 'it-IT';
+    speechSynthesis.speak(u);
+  });
+  for (const a of el.querySelectorAll('a[href^="#/"]')) a.addEventListener('click', () => chiudiPostit());
+  el.focus({ preventScroll: true });
+}
+
+const chiediANoi = (titolo) => (account?.chiave ? `<a href="#/richieste" data-chiedi="${esc(`Dubbio: ${titolo}`.slice(0, 140))}">Non è chiaro? Chiedi a noi</a>` : '');
+const leggi = () => ('speechSynthesis' in window ? '<button class="link" type="button" data-leggi>🔊 Leggi ad alta voce</button>' : '');
+
+function apriPostitGuida(b) {
+  const v = stato.guida?.voci?.find((x) => x.id === b.dataset.guida);
+  if (!v) return;
+  registraUso('schermata', eventoGuida('guida', v.id));
+  mostraPostit(
+    b,
+    `<p class="postit__titolo">${esc(v.titolo)}</p>
+     <p><strong>Cos'è:</strong> ${esc(v.cosa)}</p>
+     <p><strong>Perché:</strong> ${esc(v.perche)}</p>
+     <p><strong>Cosa fare:</strong> ${esc(v.dopo)}</p>
+     <p class="postit__link">${v.link ? `<a href="${esc(v.link.href)}">${esc(v.link.testo)} ›</a>` : ''}${chiediANoi(v.titolo)}${leggi()}</p>`
+  );
+}
+
+function apriPostitSigla(a) {
+  const g = mappaSigle?.get(a.textContent);
+  if (!g) return;
+  registraUso('schermata', eventoGuida('sigla', idSigla(g.sigla)));
+  mostraPostit(a, `<p class="postit__titolo">${esc(g.sigla)}</p><p>${esc(g.testo)}</p><p class="postit__link"><a href="#/sapere/sigla/${esc(idSigla(g.sigla))}">Approfondisci ›</a>${leggi()}</p>`);
+}
+
+async function impostaGuidaNascosta(nascosta) {
+  guidaNascosta = nascosta;
+  await store.scriviMeta('guida:nascosta', nascosta);
+  document.body.classList.toggle('senza-guida', nascosta);
+  if (!nascosta) applicaGuida();
+}
+
 // ---------- richieste e assistenza (ticket) ----------
 
 let ultimaRotta = '';
@@ -3165,17 +3348,24 @@ async function schermataRichieste() {
   } catch (e) {
     errore = erroreRichiesta(e);
   }
-  const schermata = ultimaRotta && !/^(richieste|invito|admin|dati|oggi)/.test(ultimaRotta) ? ultimaRotta : '';
+  let bozza = null;
+  try {
+    bozza = JSON.parse(sessionStorage.getItem('richiesta:bozza') || 'null');
+    sessionStorage.removeItem('richiesta:bozza');
+  } catch {
+    bozza = null;
+  }
+  const schermata = bozza?.schermata || (ultimaRotta && !/^(richieste|invito|admin|dati|oggi)/.test(ultimaRotta) ? ultimaRotta : '');
   app.innerHTML = `
     <section class="pagina">
       <h1>Richieste e assistenza</h1>
       <p class="lead">Scrivi per chiedere aiuto o informazioni, segnalare un problema o proporre una modifica o un miglioramento. Ti rispondiamo qui.</p>
       ${errore ? `<p class="esito esito--errore">${esc(errore)}</p>` : ''}
-      <details class="opzioni-doc" ${elenco.length ? '' : 'open'} id="nuova-richiesta-box">
+      <details class="opzioni-doc" ${elenco.length && !bozza ? '' : 'open'} id="nuova-richiesta-box">
         <summary>+ Nuova richiesta</summary>
         <form id="nuova-richiesta">
-          <label>Di cosa si tratta?<select class="campo" name="tipo" required>${Object.entries(TIPI_RICHIESTA).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select></label>
-          <label>Oggetto<input class="campo" name="oggetto" maxlength="140" required placeholder="es. Come compilo il POS per un cantiere stradale?"></label>
+          <label>Di cosa si tratta?<select class="campo" name="tipo" required>${Object.entries(TIPI_RICHIESTA).map(([k, v]) => `<option value="${k}" ${bozza && k === 'aiuto' ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
+          <label>Oggetto<input class="campo" name="oggetto" maxlength="140" required placeholder="es. Come compilo il POS per un cantiere stradale?" value="${esc(bozza?.oggetto || '')}"></label>
           <label>Descrivi la richiesta<textarea class="campo" name="testo" rows="6" maxlength="4000" required></textarea></label>
           ${schermata ? `<label class="spunta-semplice"><input type="checkbox" name="schermata" value="${esc(schermata)}" checked> Riguarda la pagina che stavi guardando (${esc(schermata)})</label>` : ''}
           <p class="nota">Non scrivere dati personali dei lavoratori (salute, idoneità, infortuni): servono solo le informazioni sulla tua domanda.</p>
@@ -4079,14 +4269,15 @@ async function instrada() {
 
 async function avvia() {
   try {
-    const [q, c, l, d, a, t, se, lv, ar, kn, lg] = await Promise.all(
-      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json', 'data/archivio.json', 'data/conoscenza.json', 'data/legale.json'].map((u) =>
+    const [q, c, l, d, a, t, se, lv, ar, kn, lg, gd] = await Promise.all(
+      ['data/questionario.json', 'data/catalogo.json', 'data/lavoratori.json', 'data/dvr.json', 'data/ateco.json', 'data/attrezzature.json', 'data/settori.json', 'data/lavorazioni.json', 'data/archivio.json', 'data/conoscenza.json', 'data/legale.json', 'data/guida.json'].map((u) =>
         fetch(u).then((r) => r.json())
       )
     );
     stato.settori = se;
     stato.conoscenza = kn;
     stato.legale = lg;
+    stato.guida = gd;
     stato.lavorazioni = lv;
     stato.defArchivio = ar;
     stato.defAttr = t;
@@ -4097,6 +4288,8 @@ async function avvia() {
     stato.defLav = l;
     await ricarica();
     await caricaAccount();
+    guidaNascosta = Boolean(await store.leggiMeta('guida:nascosta'));
+    inizializzaGuida();
     store.chiediMemoriaPersistente();
     addEventListener('hashchange', instrada);
     app.addEventListener('submit', (ev) => {
