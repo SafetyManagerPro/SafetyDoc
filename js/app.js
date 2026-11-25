@@ -40,6 +40,7 @@ import {
   statoCorrente
 } from './engine.js';
 import { linkAiuto } from './aiuto.js';
+import { accoda, pacchetto, invia, cancellaDati } from './utilizzo.js';
 import { raccogliScadenze, raggruppaScadenze, conteggiScadenze, testoPromemoria, daNotificare, testoNotifica, perServiceWorker, revisioneDocumento, statoScadenza, chiaveDocumento, scadenzaArchivio, durataArchivio, giorniTra, AREE } from './scadenzario.js';
 import { costruisciIndice, cerca, raggruppa, collegati, voce, perDocumento, verifiche, normalizza as normalizzaTesto, TIPI_VOCE } from './conoscenza.js';
 import { oggiLocale, formattaData, interpretaData, mascheraData, erroreData, MESI } from './date.js';
@@ -52,7 +53,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, liv
 import { generaIcs } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.18.1';
+export const VERSIONE_APP = '0.19.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -510,6 +511,7 @@ async function schermataOggi() {
   app.innerHTML = `
     <section class="pagina">
       ${await bannerBackup()}
+      ${await bloccoConsensoOggi()}
       ${await bannerNovita(p)}
       <p class="sopratitolo">${esc(nome || 'La tua impresa')}</p>
       <h1>${urgenti.length ? 'Cosa fare adesso' : 'Sei in regola'}</h1>
@@ -543,6 +545,7 @@ async function schermataOggi() {
       ${richiestaInstallazione && !installata() ? `<p class="nota"><a href="#/dati/installa">Installa safetyDoc sul telefono</a> per aprirlo con un tocco.</p>` : ''}
     </section>`;
   attivaNovita();
+  attivaConsenso(schermataOggi);
 }
 
 function bloccoVerificheOggi(lista) {
@@ -1354,6 +1357,7 @@ function attivaFirme({ modello, lavoratore, requisito, registro }) {
     await ricarica();
     // La firma di un documento dell'impresa con revisione periodica ne fissa la data (la precedente va nello storico).
     const datato = !lavoratore && (await registraDataDocumento(modello.id, oggiIso()));
+    registraUso('firma', modello.id);
     avviso(requisito && lavoratore ? `Documento firmato salvato: «${requisito.titolo}» è registrato a oggi.` : datato ? 'Documento firmato salvato con la data di oggi: la prossima revisione è nello scadenzario.' : 'Documento firmato salvato.');
     instrada();
   });
@@ -2564,6 +2568,8 @@ async function schermataDati(sezione) {
         <button class="btn btn--primario" type="submit">Salva il contatto</button>
       </form>
 
+      ${await bloccoUsoDati()}
+
       <h2 id="responsabile">Responsabile delle scadenze</h2>
       <p>Chi riceve i promemoria dello scadenzario: l'RSPP, il consulente o tu stesso.</p>
       <form id="form-responsabile">
@@ -2612,7 +2618,8 @@ async function schermataDati(sezione) {
     avviso('Responsabile salvato.');
   });
   attivaInstallazione();
-  const ancora = { consulente: 'consulente', installa: 'installa-app', responsabile: 'responsabile' }[sezione];
+  attivaUsoDati(() => schermataDati(sezione));
+  const ancora = { consulente: 'consulente', installa: 'installa-app', responsabile: 'responsabile', utilizzo: 'dati-utilizzo' }[sezione];
   if (ancora) app.querySelector(`#${ancora}`)?.scrollIntoView();
   app.querySelector('#esporta').addEventListener('click', esporta);
   app.querySelector('#importa').addEventListener('change', (e) => importa(e.target.files[0]));
@@ -2644,6 +2651,7 @@ async function esporta() {
     scarica(blob, nome);
   }
   await store.scriviMeta('ultimoExport', new Date().toISOString());
+  registraUso('backup', 'esporta');
   avviso('Copia salvata.');
   schermataDati();
 }
@@ -2697,6 +2705,138 @@ async function importa(file) {
 }
 
 // ---------- avvio ----------
+
+// ---------- dati di utilizzo anonimi (con consenso) ----------
+
+let codaUso = null;
+
+async function consensoUso() {
+  return (await store.leggiMeta('uso:consenso'))?.scelta || null; // 'si' | 'no' | null (non ancora chiesto)
+}
+
+async function idUso() {
+  let id = await store.leggiMeta('uso:id');
+  if (!id) {
+    id = crypto.randomUUID ? crypto.randomUUID() : store.nuovoId();
+    await store.scriviMeta('uso:id', id);
+  }
+  return id;
+}
+
+/** Annota un evento di utilizzo (solo con il consenso; mai nomi o contenuti). */
+async function registraUso(tipo, nome = '') {
+  try {
+    if ((await consensoUso()) !== 'si') return;
+    if (!codaUso) codaUso = (await store.leggiMeta('uso:coda')) || [];
+    codaUso = accoda(codaUso, tipo, nome);
+    await store.scriviMeta('uso:coda', codaUso);
+  } catch {
+    /* i dati di utilizzo non devono mai disturbare l'app */
+  }
+}
+
+let invioInCorso = false;
+async function inviaUso() {
+  if (invioInCorso || !navigator.onLine) return;
+  invioInCorso = true;
+  try {
+    if ((await consensoUso()) !== 'si') return;
+    codaUso = (await store.leggiMeta('uso:coda')) || [];
+    const ultimo = await store.leggiMeta('uso:ultimoInvio');
+    if (!codaUso.length && ultimo && ultimo.slice(0, 10) === oggiIso()) return;
+    const p = pacchetto({
+      id: await idUso(),
+      versione: VERSIONE_APP,
+      ua: navigator.userAgent,
+      installata: matchMedia('(display-mode: standalone)').matches || navigator.standalone === true,
+      ateco: risposte().ateco,
+      numeroLavoratori: haDipendenti() ? risposte().numero_lavoratori : 0,
+      coda: codaUso
+    });
+    await invia(p);
+    const inviati = p.eventi.length;
+    codaUso = ((await store.leggiMeta('uso:coda')) || []).slice(inviati);
+    await store.scriviMeta('uso:coda', codaUso);
+    await store.scriviMeta('uso:ultimoInvio', new Date().toISOString());
+  } catch {
+    /* riproveremo alla prossima apertura */
+  } finally {
+    invioInCorso = false;
+  }
+}
+
+async function impostaConsensoUso(scelta) {
+  await store.scriviMeta('uso:consenso', { scelta, data: new Date().toISOString() });
+  if (scelta === 'si') {
+    await registraUso('apertura', 'consenso');
+    inviaUso();
+  } else {
+    codaUso = [];
+    await store.scriviMeta('uso:coda', []);
+  }
+}
+
+const INFORMATIVA_USO = `Se accetti, safetyDoc invia ogni giorno, quando c'è connessione, alcuni dati anonimi: un codice casuale creato solo per questo
+  (non collegato al tuo nome né ai tuoi backup), la versione dell'app, il tipo di dispositivo, se l'app è installata, le prime due cifre del codice
+  ATECO, la fascia di lavoratori (es. 1-5) e quali schermate, documenti e funzioni usi (mai cosa scrivi). Non inviamo nomi, dati dell'impresa,
+  dei lavoratori, documenti o allegati. Servono solo a capire quante imprese usano safetyDoc e cosa migliorare. I dati sono conservati
+  su server nell'Unione europea (Supabase, Irlanda) per 12 mesi; durante l'invio il server vede, come ogni sito, l'indirizzo internet
+  del dispositivo. Puoi cambiare idea quando vuoi in Dati, e cancellare i dati già inviati.`;
+
+async function bloccoConsensoOggi() {
+  if ((await consensoUso()) !== null) return '';
+  return `<section class="riquadro consenso-uso" aria-labelledby="titolo-consenso">
+      <h2 id="titolo-consenso">Ci aiuti a migliorare safetyDoc?</h2>
+      <p>Possiamo ricevere dati <strong>anonimi</strong> su come usi l'app: quali schermate e documenti, versione e tipo di dispositivo. Nessun nome, nessun dato dell'impresa o dei lavoratori.</p>
+      <details><summary>Cosa inviamo esattamente</summary><p class="nota">${INFORMATIVA_USO}</p></details>
+      <div class="azioni">
+        <button class="btn btn--primario" type="button" data-consenso="si">Sì, invia dati anonimi</button>
+        <button class="btn btn--secondario" type="button" data-consenso="no">No, grazie</button>
+      </div>
+    </section>`;
+}
+
+function attivaConsenso(ridisegna) {
+  for (const b of app.querySelectorAll('[data-consenso]'))
+    b.addEventListener('click', async () => {
+      await impostaConsensoUso(b.dataset.consenso);
+      avviso(b.dataset.consenso === 'si' ? 'Grazie! Puoi cambiare idea quando vuoi in Dati.' : 'Va bene: non inviamo nulla. Puoi cambiare idea in Dati.');
+      ridisegna();
+    });
+}
+
+async function bloccoUsoDati() {
+  const c = await consensoUso();
+  const ultimo = await store.leggiMeta('uso:ultimoInvio');
+  return `<h2 id="dati-utilizzo">Dati di utilizzo anonimi</h2>
+      <p>${c === 'si' ? `<strong>Attivo.</strong>${ultimo ? ` Ultimo invio: ${esc(new Date(ultimo).toLocaleString('it-IT'))}.` : ' Nessun invio ancora.'}` : c === 'no' ? '<strong>Non attivo:</strong> non inviamo nulla.' : 'Non hai ancora scelto: per ora non inviamo nulla.'}</p>
+      <details><summary>Cosa inviamo e perché</summary><p class="nota">${INFORMATIVA_USO}</p></details>
+      <div class="azioni">
+        ${c === 'si' ? '<button class="btn btn--secondario" type="button" data-consenso="no">Non inviare più</button><button class="btn btn--secondario" type="button" id="cancella-uso">Cancella i dati già inviati</button>' : '<button class="btn btn--secondario" type="button" data-consenso="si">Invia dati anonimi</button>'}
+      </div>`;
+}
+
+function attivaUsoDati(ridisegna) {
+  attivaConsenso(ridisegna);
+  app.querySelector('#cancella-uso')?.addEventListener('click', async () => {
+    if (!confirm('Cancellare tutti i dati di utilizzo inviati da questo dispositivo? Non si possono recuperare.')) return;
+    try {
+      await cancellaDati(await idUso());
+      await store.scriviMeta('uso:id', null);
+      await impostaConsensoUso('no');
+      avviso('Dati cancellati. Non inviamo più nulla da questo dispositivo.');
+    } catch {
+      avviso('Non è stato possibile cancellare ora: riprova quando c\'è connessione.');
+    }
+    ridisegna();
+  });
+}
+
+/** Nome da annotare per una rotta: mai identificativi di persone, macchine o documenti dell'archivio. */
+function nomeRotta(rotta, param) {
+  if (rotta === 'sapere') return `sapere:${param || ''}`;
+  return rotta || 'oggi';
+}
 
 // ---------- scadenzario e promemoria al responsabile ----------
 
@@ -2764,6 +2904,7 @@ async function registroPromemoria() {
 async function annotaPromemoria(canale, numero) {
   const elenco = await registroPromemoria();
   elenco.unshift({ data: new Date().toISOString(), canale, numero, a: responsabile().nome || '' });
+  registraUso('promemoria', canale === 'WhatsApp' ? 'whatsapp' : canale);
   await store.scriviMeta('promemoria:inviati', elenco.slice(0, 50));
 }
 
@@ -3240,6 +3381,9 @@ async function instrada() {
   const [, rotta, param, extra, quarto] = (location.hash || '#/').split('/').map((x) => (x ? decodeURIComponent(x) : x));
   aggiornaNav(rotta || '');
   window.scrollTo(0, 0);
+  if (rotta === 'documento' && param) registraUso('documento', param);
+  else if (rotta === 'cerca') registraUso('ricerca');
+  else registraUso('schermata', nomeRotta(rotta, param));
   if (rotta === 'domanda') return schermataDomanda(param);
   if (rotta === 'piano') return schermataPiano();
   if (rotta === 'scheda') return schermataScheda(param || '');
@@ -3302,8 +3446,10 @@ async function avvia() {
     });
     await instrada();
     controllaNotifiche().catch(() => {});
+    registraUso('apertura').then(inviaUso);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') controllaNotifiche().catch(() => {});
+      else inviaUso();
     });
   } catch (e) {
     console.error(e);

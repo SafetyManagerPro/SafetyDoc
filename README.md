@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.18.1. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.19.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -54,6 +54,10 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
    Il responsabile (RSPP, consulente o titolare) riceve il promemoria via email, WhatsApp o condivisione e il calendario
    .ics con gli avvisi; ogni invio resta registrato e l'app ricorda quando rimandarlo. Notifiche sul dispositivo a 30 e
    7 giorni e alla scadenza, anche ad app chiusa dove il browser lo permette (Chrome su Android con l'app installata).
+18. **Dati di utilizzo anonimi (con consenso)** – se l'utente accetta, safetyDoc invia ogni giorno dati anonimi
+   (codice casuale del dispositivo, versione, tipo di dispositivo, divisione ATECO, fascia di lavoratori, schermate e
+   documenti usati) allo schema separato `safetydoc` del progetto Supabase SafetyManagerPro. Mai nomi o dati dell'impresa.
+   Si può revocare e cancellare tutto da Dati. Dettagli, cruscotto e script in `docs/supabase.md` e `supabase/migrations/`.
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta. Quando si aggiungono
 schede si alza `versione` e si aggiunge una voce in `novita`: l'impresa vede le schede nuove che la riguardano.
@@ -69,6 +73,7 @@ icons/, screenshots/  icone (anche per iPhone) e schermate mostrate al momento d
 css/style.css         grafica: telefono prima di tutto, testo grande, tema scuro
 js/app.js             schermate e navigazione
 js/engine.js          regole, piano, semaforo (modulo puro, testato)
+js/utilizzo.js        dati di utilizzo anonimi con consenso (Supabase)
 js/scadenzario.js     scadenze calcolate, promemoria e notifiche (modulo puro, testato)
 js/conoscenza.js      indice, ricerca con sinonimi, collegamenti e controlli di coerenza (modulo puro, testato)
 js/merge.js           formato di scambio e unione tra postazioni (modulo puro, testato)

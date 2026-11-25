@@ -142,3 +142,8 @@ I controlli di coerenza sono calcolati al momento e non vengono salvati.
   backup nell'elenco `documenti` (dalla 0.18.1) e si uniscono con la data `updatedAt`; restano solo sul dispositivo
   `postazione`, `scadenzario:prossime`
   (scadenze senza nomi per il service worker), `scadenzario:notificate` (chiavi `id|soglia|data` già notificate).
+
+## Dati di utilizzo (solo sul dispositivo)
+
+`meta`: `uso:consenso` (`{ scelta: "si" | "no", data }`), `uso:id` (codice casuale per i dati di utilizzo),
+`uso:coda` (eventi non ancora inviati, al massimo 300), `uso:ultimoInvio`. Non entrano nel backup. Vedi `docs/supabase.md`.
