@@ -58,3 +58,23 @@ test('i backup della versione 1 si leggono ancora', () => {
   assert.deepEqual(dati.collezioni.lavoratori, []);
   assert.deepEqual(dati.collezioni.registri, []);
 });
+
+test('backup: i dati compilati nei documenti viaggiano con la copia e si uniscono', async () => {
+  const { creaExport, validaExport, unisciDocumenti } = await import('../js/merge.js');
+  const doc = { id: 'opzioni:dvr-bozza', valore: { valutazioni: [{ rischio: 'rumore', p: '3' }] }, updatedAt: '2026-11-20T10:00:00Z' };
+  const e = creaExport({ collezioni: {}, deviceId: 'x', versioneApp: '0.18.1', documenti: [doc, { id: 'postazione', valore: 'segreto' }] });
+  const v = validaExport(JSON.parse(JSON.stringify(e)));
+  assert.deepEqual(v.documenti.map((d) => d.id), ['opzioni:dvr-bozza'], 'solo i dati dei documenti, non l\'identificativo della postazione');
+  assert.deepEqual(validaExport({ ...e, documenti: undefined }).documenti, [], 'backup vecchi senza documenti');
+  assert.throws(() => validaExport({ ...e, documenti: 'x' }), /danneggiato/);
+  // vince la modifica più recente
+  assert.deepEqual(unisciDocumenti([], [doc]).map((d) => d.id), ['opzioni:dvr-bozza']);
+  assert.deepEqual(unisciDocumenti([{ ...doc, updatedAt: '2026-11-21T00:00:00Z' }], [doc]), []);
+  assert.equal(unisciDocumenti([{ ...doc, updatedAt: undefined }], [doc]).length, 1, 'locale senza data: vince il backup');
+  // i registri dei promemoria si fondono
+  const loc = { id: 'promemoria:inviati', valore: [{ data: '2026-11-01T08:00:00Z', canale: 'email', numero: 3 }] };
+  const imp = { id: 'promemoria:inviati', valore: [{ data: '2026-11-10T08:00:00Z', canale: 'WhatsApp', numero: 4 }, loc.valore[0]] };
+  const u = unisciDocumenti([loc], [imp]);
+  assert.deepEqual(u[0].valore.map((x) => x.canale), ['WhatsApp', 'email']);
+  assert.deepEqual(unisciDocumenti([u[0]], [imp]), [], 'nessun cambiamento se già uniti');
+});

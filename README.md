@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.18.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.18.1. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 

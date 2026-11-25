@@ -368,13 +368,13 @@ dialog.firma h2 { margin-top: 0; }
 .esempi .pill { text-decoration: none; margin-right: 2px; }
 .conta { font-size: 0.85rem; font-weight: 600; color: var(--testo-2); }
 .collegati { margin-top: 32px; border-top: 1px solid var(--bordo); padding-top: 16px; }
-.verifica { border: 1px solid var(--bordo); border-left: 6px solid var(--info); border-radius: var(--raggio); padding: 12px 14px; margin: 12px 0; background: var(--superficie); }
-.verifica--rosso { border-left-color: var(--rosso); }
-.verifica--giallo { border-left-color: var(--giallo); }
-.verifica h3 { margin: 6px 0; font-size: 1.05rem; }
-.verifica p { margin: 6px 0; }
-.verifica .btn { margin-top: 6px; }
-.verifica__livello { margin: 0; }
+.controllo { border: 1px solid var(--bordo); border-left: 6px solid var(--info); border-radius: var(--raggio); padding: 12px 14px; margin: 12px 0; background: var(--superficie); }
+.controllo--rosso { border-left-color: var(--rosso); }
+.controllo--giallo { border-left-color: var(--giallo); }
+.controllo h3 { margin: 6px 0; font-size: 1.05rem; }
+.controllo p { margin: 6px 0; }
+.controllo .btn { margin-top: 6px; }
+.controllo__livello { margin: 0; }
 .banner--rosso { border-left: 6px solid var(--rosso); }
 .riquadro--ok { background: var(--verde-sfondo); color: var(--verde); }
 .aiuto-doc summary .pill { margin-left: 6px; font-size: 0.8rem; padding: 2px 8px; }
@@ -396,3 +396,9 @@ dialog.firma h2 { margin-top: 0; }
 .gruppo-apribile summary::-webkit-details-marker { display: none; }
 .gruppo-apribile summary h2::after { content: ' ▸'; }
 .gruppo-apribile[open] summary h2::after { content: ' ▾'; }
+
+/* Tabelle dei documenti sul telefono: le parole lunghe vanno a capo e, se serve, si scorre dentro il documento */
+@media screen {
+  .doc__tabella th, .doc__tabella td { overflow-wrap: anywhere; hyphens: auto; }
+  .doc { overflow-x: auto; }
+}

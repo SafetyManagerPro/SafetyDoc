@@ -204,3 +204,8 @@ test('valutazioni specifiche, incarico RSPP, richiesta visite e lavoro a caldo',
   const caldo = g('permesso-lavoro-caldo', { opzioni: { ditta: 'Idro srl', lavoro: ['Brasatura con cannello'] } });
   assert.ok(caldo.includes('Idro srl') && caldo.includes('60 minuti'));
 });
+
+test('catalogo: «daVerificare», quando c\'è, è sempre un elenco', () => {
+  const c = JSON.parse(readFileSync(new URL('../data/catalogo.json', import.meta.url)));
+  for (const s of c.schede) if ('daVerificare' in s) assert.ok(Array.isArray(s.daVerificare), s.id);
+});

@@ -138,5 +138,7 @@ I controlli di coerenza sono calcolati al momento e non vengono salvati.
   entra nel backup e conserva lo `storico` delle date precedenti.
 - `profilo.responsabile`: `{ nome, ruolo, email, telefono, giorni, frequenza }` – chi riceve i promemoria, quante scadenze
   includere (entro 30/60/90 giorni) e ogni quanti giorni ricordare l'invio.
-- `meta` (solo sul dispositivo, non nel backup): `promemoria:inviati` (registro degli invii), `scadenzario:prossime`
+- `meta`: le voci `opzioni:*` (dati compilati nei documenti) e `promemoria:inviati` (registro degli invii) entrano nel
+  backup nell'elenco `documenti` (dalla 0.18.1) e si uniscono con la data `updatedAt`; restano solo sul dispositivo
+  `postazione`, `scadenzario:prossime`
   (scadenze senza nomi per il service worker), `scadenzario:notificate` (chiavi `id|soglia|data` già notificate).

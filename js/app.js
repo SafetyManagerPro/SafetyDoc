@@ -46,13 +46,13 @@ import { oggiLocale, formattaData, interpretaData, mascheraData, erroreData, MES
 import { immaginiPerStampa } from './allegati.js';
 import { LINGUE } from './lingue.js';
 import { preparaFile, dimensioneLeggibile, allegatoPerExport, allegatoDaImport } from './allegati.js';
-import { unisciCollezione, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
+import { unisciCollezione, unisciDocumenti, creaExport, validaExport, FORMATO_CIFRATO, COLLEZIONI } from './merge.js';
 import { cifra, decifra } from './cifratura.js';
 import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, livelloRischio } from './modelli.js';
 import { generaIcs } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.18.0';
+export const VERSIONE_APP = '0.18.1';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -842,7 +842,7 @@ async function schermataScheda(id) {
         ${scheda.notaScadenza ? `<div><dt>Nota</dt><dd>${esc(scheda.notaScadenza)}</dd></div>` : ''}
       </dl>
       <p class="riferimento">Riferimento: ${esc(scheda.riferimento)}</p>
-      ${scheda.daVerificare?.length ? `<p class="verifica">In verifica: ${esc(scheda.daVerificare.join(' '))}</p>` : ''}
+      ${[].concat(scheda.daVerificare || []).length ? `<p class="verifica">In verifica: ${esc([].concat(scheda.daVerificare).join(' '))}</p>` : ''}
       ${id === 'formazione-lavoratori' || id === 'formazione-datore' ? notaClasseRischio() : ''}
       ${collegamentiScheda(id)}
 
@@ -2625,7 +2625,7 @@ async function esporta() {
   for (const c of COLLEZIONI) collezioni[c] = await store.tutti(c);
   const conAllegati = document.getElementById('conAllegati')?.checked !== false;
   collezioni.allegati = conAllegati ? await Promise.all(collezioni.allegati.map(allegatoPerExport)) : [];
-  let contenuto = creaExport({ collezioni, deviceId: await store.idPostazione(), versioneApp: VERSIONE_APP });
+  let contenuto = creaExport({ collezioni, deviceId: await store.idPostazione(), versioneApp: VERSIONE_APP, documenti: await store.metaPerBackup() });
   const pwd = document.getElementById('pwdExport').value;
   if (pwd) contenuto = await cifra(contenuto, pwd);
 
@@ -2684,6 +2684,9 @@ async function importa(file) {
         righe.push(`Lavoratori: ${n(riepilogo.aggiunti, 'nuovo', 'nuovi')}, ${n(riepilogo.aggiornati, 'aggiornato', 'aggiornati')}.`);
       }
     }
+    const docs = unisciDocumenti(await store.metaPerBackup(), dati.documenti);
+    await store.scriviMolti('meta', docs);
+    if (docs.length) righe.push(`Dati dei documenti: ${docs.length} ${docs.length === 1 ? 'aggiornato' : 'aggiornati'}.`);
     await ricarica();
     esito.innerHTML = `<p class="esito esito--ok">Copia caricata. ${esc(righe.join(' '))}${
       conflitti ? ` ${conflitti} voci erano state modificate su entrambi i dispositivi: abbiamo tenuto la versione più recente.` : ''
@@ -3026,8 +3029,8 @@ const ETICHETTA_LIVELLO = { alto: 'Importante', medio: 'Da sistemare', basso: 'D
 
 function cardVerifica(x, { conDocumenti = true } = {}) {
   const docs = conDocumenti ? x.documenti.map((id) => MODELLI.find((m) => m.id === id)).filter(Boolean) : [];
-  return `<article class="verifica verifica--${COLORE_LIVELLO[x.livello]}">
-      <p class="verifica__livello"><span class="pill pill--${COLORE_LIVELLO[x.livello]}">${ETICHETTA_LIVELLO[x.livello]}</span></p>
+  return `<article class="controllo controllo--${COLORE_LIVELLO[x.livello]}">
+      <p class="controllo__livello"><span class="pill pill--${COLORE_LIVELLO[x.livello]}">${ETICHETTA_LIVELLO[x.livello]}</span></p>
       <h3>${esc(x.titolo)}</h3>
       <p>${esc(x.spiegazione)}</p>
       ${x.norma ? `<p class="nota">Riferimento: ${esc(x.norma)}</p>` : ''}

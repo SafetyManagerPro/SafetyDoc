@@ -40,7 +40,7 @@
       "perche": "Senza queste iscrizioni non puoi lavorare in regola.",
       "riferimento": "DPR 633/1972; art. 2188 c.c.; L. 580/1993",
       "come": [
-        "Chiedi la visura camerale aggiornata (anche online o tramite CNA).",
+        "Chiedi la visura camerale aggiornata (anche online o tramite la tua associazione di categoria).",
         "Controlla che attività e codice ATECO corrispondano a quello che fai davvero.",
         "Se qualcosa non corrisponde, fai la variazione con il tuo consulente."
       ],
@@ -284,7 +284,7 @@
       "perche": "Lo prevede il nuovo Accordo Stato-Regioni del 2025.",
       "riferimento": "Accordo Stato-Regioni n. 59/2025",
       "come": [
-        "Iscriviti a un corso di almeno 16 ore presso un ente formatore (per esempio CNA).",
+        "Iscriviti a un corso di almeno 16 ore presso un ente formatore accreditato.",
         "Se la tua impresa lavora in cantiere come affidataria, aggiungi il modulo cantieri di 6 ore.",
         "Conserva l'attestato e caricalo qui."
       ],
@@ -558,7 +558,7 @@
       "come": [
         "Annota cosa tieni in deposito e in che quantità (legno, carta, vernici, gasolio, GPL).",
         "Annota la superficie del locale e la potenza di caldaie e generatori.",
-        "Chiedi a un tecnico antincendio o a CNA di verificarlo.",
+        "Chiedi a un tecnico antincendio di verificarlo.",
         "Poi torna nel questionario e aggiorna la risposta."
       ],
       "chi": "Un tecnico antincendio.",
@@ -814,7 +814,9 @@
       "attivaSe": {
         "fatto": "haDipendenti"
       },
-      "daVerificare": "Elenco dei lavori vietati e periodi di applicazione (gravidanza, fino a 7 mesi dopo il parto) da confermare con il medico competente per le singole mansioni."
+      "daVerificare": [
+        "Elenco dei lavori vietati e periodi di applicazione (gravidanza, fino a 7 mesi dopo il parto) da confermare con il medico competente per le singole mansioni."
+      ]
     },
     {
       "id": "lavoratori-minori",
@@ -839,7 +841,9 @@
         "q": "minori",
         "eq": true
       },
-      "daVerificare": "Durata minima della pausa e regime delle visite mediche per i minori da confermare sulla norma vigente."
+      "daVerificare": [
+        "Durata minima della pausa e regime delle visite mediche per i minori da confermare sulla norma vigente."
+      ]
     },
     {
       "id": "patente-crediti",
@@ -1643,7 +1647,9 @@
         "q": "alimenti",
         "eq": true
       },
-      "daVerificare": "Durata del corso e periodicità del rinnovo secondo la delibera vigente della Regione Campania."
+      "daVerificare": [
+        "Durata del corso e periodicità del rinnovo secondo la delibera vigente della Regione Campania."
+      ]
     },
     {
       "id": "allergeni",

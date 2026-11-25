@@ -128,7 +128,15 @@ export async function leggiMeta(chiave) {
 }
 
 export async function scriviMeta(chiave, valore) {
-  await scrivi('meta', { id: chiave, valore });
+  // la data serve per unire i dati dei documenti tra dispositivi (vince la modifica più recente)
+  await scrivi('meta', { id: chiave, valore, updatedAt: new Date().toISOString() });
+}
+
+/** Dati compilati nei documenti e registro dei promemoria: entrano nel backup. */
+export const META_NEL_BACKUP = /^(opzioni:|promemoria:inviati$)/;
+
+export async function metaPerBackup() {
+  return (await tutti('meta')).filter((m) => META_NEL_BACKUP.test(m.id));
 }
 
 /** Chiede al browser di non cancellare i dati quando lo spazio scarseggia. */
