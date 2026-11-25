@@ -42,10 +42,36 @@ Ogni modifica al database è in `supabase/migrations/` ed è stata applicata dal
 | File | Applicato il | Contenuto |
 |---|---|---|
 | `20261125160000_safetydoc_utilizzo.sql` | 25/11/2026 | schema `safetydoc`, tabelle `installazioni` ed `eventi_uso`, funzioni `safetydoc_registra` e `safetydoc_cancella`, viste `cruscotto_*` |
+| `20261125180000_safetydoc_account.sql` | 25/11/2026 | fase B: `amministratori`, `imprese`, `inviti`, `dispositivi`, `accessi`, funzioni di attivazione, verifica e amministrazione. Provato con un'impresa di prova poi eliminata |
 
-## Fase B (da fare)
+## Fase B – account delle imprese e amministrazione (dalla 0.20.0)
 
-Login, abilitazione degli utenti da parte dell'amministratore, ultimo accesso, ticket di assistenza: tabelle
-`safetydoc.utenti`, `safetydoc.imprese`, `safetydoc.accessi`, `safetydoc.ticket`. Prima di aprire le registrazioni
-vanno aggiunti gli indirizzi di safetyDoc nelle impostazioni di autenticazione e adattati i testi delle email,
-che sono in comune con SafetyManagerPro.
+- **Registrazione obbligatoria**: senza un dispositivo attivato l'app mostra solo la schermata «Attiva safetyDoc».
+- **Attivazione con link**: l'amministratore crea l'impresa in **#/admin** e manda il link `#/invito/<token>` su
+  WhatsApp. L'impresa conferma i dati (ragione sociale, P.IVA, CF, ATECO, comune, provincia, email, cellulare,
+  referente) e accetta termini e informativa (**#/termini**). Il dispositivo riceve una chiave segreta; nel database ne
+  resta solo l'impronta (sha256). «Crea un nuovo link» rende inutilizzabile il precedente; i dispositivi già attivi restano.
+- **Verifica**: a ogni apertura (al massimo ogni 10 minuti) l'app chiama `safetydoc_verifica`. Se impresa o dispositivo
+  sono sospesi compare «Accesso sospeso» con il motivo. Senza connessione l'app resta usabile per **24 ore**
+  dall'ultima verifica riuscita, poi chiede di collegarsi. I dati dell'impresa restano sempre sul dispositivo.
+- **Indirizzi IP: non vengono registrati.** MAC: nessun browser lo rende disponibile.
+- **Amministratore**: accesso con email e password dell'account Supabase (tabella `safetydoc.amministratori`,
+  oggi albertocentrella.av@gmail.com). La password non viene salvata, solo la sessione sul dispositivo («Esci» la chiude).
+  Nella sezione: imprese con dati, stato, dispositivi, ultimo accesso, accessi a 30 giorni, funzioni usate (se c'è il
+  consenso); nuova impresa e link WhatsApp, nuovo link, sospendi/riattiva impresa, blocca/sblocca dispositivo,
+  note interne, elimina impresa dal server, esportazione CSV. L'amministratore collegato può usare l'app anche senza attivazione.
+
+| Tabella | Contenuto |
+|---|---|
+| `amministratori` | utenti Supabase autorizzati alla sezione Amministratore |
+| `imprese` | dati dell'impresa, stato (invitata/attiva/sospesa), motivo, termini accettati, dispositivi ammessi |
+| `inviti` | link di attivazione (uno valido per impresa) |
+| `dispositivi` | dispositivo attivato, impronta della chiave, versione, tipo, ultimo accesso, stato |
+| `accessi` | data e ora delle verifiche (al massimo una all'ora per dispositivo), conservati 12 mesi |
+
+Funzioni per l'app (chiave pubblica): `safetydoc_invito_info`, `safetydoc_attiva`, `safetydoc_verifica`.
+Funzioni per l'amministratore (solo utenti autenticati in `amministratori`): `safetydoc_admin_elenco`,
+`safetydoc_admin_salva_impresa`, `safetydoc_admin_nuovo_invito`, `safetydoc_admin_stato_impresa`,
+`safetydoc_admin_stato_dispositivo`, `safetydoc_admin_elimina_impresa`.
+
+Da completare: titolare del trattamento in `data/legale.json` (compare in termini e informativa).

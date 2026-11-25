@@ -1,7 +1,7 @@
 // Service worker: rende safetyDoc un'app installabile che funziona anche senza connessione.
 // Cambiare VERSIONE a ogni rilascio: i file vengono scaricati di nuovo e la vecchia cache eliminata.
 // Il test test/pwa.test.js controlla che qui ci siano tutti i file usati dall'app.
-const VERSIONE = 'safetydoc-v0.19.0';
+const VERSIONE = 'safetydoc-v0.20.0';
 
 const FILE = [
   './',
@@ -23,6 +23,8 @@ const FILE = [
   'js/conoscenza.js',
   'js/scadenzario.js',
   'js/utilizzo.js',
+  'js/supabase.js',
+  'js/account.js',
   'js/vendor/pdfjs/pdf.min.mjs',
   'js/vendor/pdfjs/pdf.worker.min.mjs',
   'data/questionario.json',
@@ -35,6 +37,7 @@ const FILE = [
   'data/lavorazioni.json',
   'data/archivio.json',
   'data/conoscenza.json',
+  'data/legale.json',
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',

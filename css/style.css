@@ -402,3 +402,16 @@ dialog.firma h2 { margin-top: 0; }
   .doc__tabella th, .doc__tabella td { overflow-wrap: anywhere; hyphens: auto; }
   .doc { overflow-x: auto; }
 }
+
+/* ---------- account e amministrazione ---------- */
+.link { background: none; border: 0; padding: 0; color: var(--primario, var(--info)); text-decoration: underline; cursor: pointer; font: inherit; }
+.link--pericolo { color: var(--rosso); }
+.impresa-admin { border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 10px 12px; margin: 10px 0; background: var(--superficie); }
+.impresa-admin > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.impresa-admin__nome { font-weight: 700; }
+.impresa-admin__dati { flex-basis: 100%; font-size: 0.85rem; color: var(--testo-2); }
+.impresa-admin h3 { font-size: 1rem; margin: 14px 0 6px; }
+.tabella-admin { width: 100%; border-collapse: collapse; font-size: 0.85rem; display: block; overflow-x: auto; }
+.tabella-admin th, .tabella-admin td { border-bottom: 1px solid var(--bordo); padding: 6px; text-align: left; vertical-align: top; }
+.note-impresa { margin-top: 10px; }
+.testo-legale h2 { font-size: 1.05rem; margin-top: 20px; }

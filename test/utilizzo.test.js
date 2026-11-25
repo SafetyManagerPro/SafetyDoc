@@ -46,14 +46,14 @@ test('il pacchetto contiene solo dati anonimi e al massimo 100 eventi', () => {
 
 test('invio e cancellazione chiamano solo le due funzioni del database con la chiave pubblica', async () => {
   const chiamate = [];
-  const finto = async (url, opz) => (chiamate.push({ url, opz }), { ok: true, status: 204 });
+  const finto = async (url, opz) => (chiamate.push({ url, opz }), { ok: true, status: 204, text: async () => '' });
   await invia({ id: 'abc', eventi: [] }, finto);
   await cancellaDati('abc', finto);
   assert.match(chiamate[0].url, /\/rest\/v1\/rpc\/safetydoc_registra$/);
   assert.match(chiamate[1].url, /\/rest\/v1\/rpc\/safetydoc_cancella$/);
   assert.deepEqual(JSON.parse(chiamate[1].opz.body), { id: 'abc' });
   assert.equal(chiamate[0].opz.headers.apikey, SUPABASE_CHIAVE_PUBBLICA);
-  await assert.rejects(invia({}, async () => ({ ok: false, status: 400 })), /400/);
+  await assert.rejects(invia({}, async () => ({ ok: false, status: 400, text: async () => '' })), /400/);
   const ruolo = JSON.parse(Buffer.from(SUPABASE_CHIAVE_PUBBLICA.split('.')[1], 'base64url')).role;
   assert.equal(ruolo, 'anon', 'nell\'app solo la chiave pubblica, mai quella di servizio');
 });

@@ -147,3 +147,10 @@ I controlli di coerenza sono calcolati al momento e non vengono salvati.
 
 `meta`: `uso:consenso` (`{ scelta: "si" | "no", data }`), `uso:id` (codice casuale per i dati di utilizzo),
 `uso:coda` (eventi non ancora inviati, al massimo 300), `uso:ultimoInvio`. Non entrano nel backup. Vedi `docs/supabase.md`.
+
+## Account (solo sul dispositivo, non nel backup)
+
+`meta`: `account` (`{ dispositivo, chiave, impresa, stato, motivo, verificatoIl, controllatoIl }`) e
+`admin:sessione` (`{ accessToken, refreshToken, scade, email, verificatoIl }`). Un backup caricato su un altro
+dispositivo richiede una nuova attivazione. Dalla 0.20 `uso:consenso` ha `versione: 2` (dati di utilizzo collegati
+all'account): il consenso dato prima viene richiesto di nuovo.
