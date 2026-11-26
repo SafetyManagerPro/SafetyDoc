@@ -93,3 +93,27 @@ test('script del database: niente IP, funzioni admin solo per utenti autenticati
   assert.equal((sql.match(/if not safetydoc\.e_admin\(\)/g) || []).length, 6, 'ogni funzione admin controlla l\'amministratore');
   for (const t of ['amministratori', 'imprese', 'inviti', 'dispositivi', 'accessi']) assert.match(sql, new RegExp(`alter table safetydoc\\.${t} enable row level security`));
 });
+
+test('amministratore: l\'app si apre su Admin e la barra Home | Admin ricorda l\'ultima scelta', async () => {
+  const { vistaDaRotta, rottaIniziale } = await import('../js/account.js');
+  assert.equal(rottaIniziale({ hash: '', adminCollegato: true }), '#/admin', 'indirizzo vuoto: si apre Admin');
+  assert.equal(rottaIniziale({ hash: '#/', adminCollegato: true, vista: 'admin' }), '#/admin');
+  assert.equal(rottaIniziale({ hash: '#/', adminCollegato: true, vista: 'app' }), null, 'ultima scelta Home: resta su Home');
+  assert.equal(rottaIniziale({ hash: '#/piano', adminCollegato: true }), null, 'una pagina precisa (link, scorciatoia) si rispetta');
+  assert.equal(rottaIniziale({ hash: '#/invito/abc', adminCollegato: true }), null);
+  assert.equal(rottaIniziale({ hash: '', adminCollegato: false }), null, 'le imprese non vedono mai Admin');
+  assert.equal(vistaDaRotta('admin', 'app'), 'admin');
+  assert.equal(vistaDaRotta('', 'admin'), 'app');
+  assert.equal(vistaDaRotta('piano', 'admin'), 'app');
+  assert.equal(vistaDaRotta('termini', 'admin'), 'admin', 'i termini non cambiano la scelta');
+});
+
+test('barra Home | Admin presente nella pagina e nascosta in stampa', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../css/style.css', import.meta.url), 'utf8');
+  assert.match(html, /class="barra-admin"[^>]*hidden/);
+  assert.match(html, /href="#\/" data-vista="app"/);
+  assert.match(html, /href="#\/admin" data-vista="admin"/);
+  assert.match(css, /\.nav, \.barra-admin,/);
+  assert.match(css, /safe-area-inset-top/);
+});

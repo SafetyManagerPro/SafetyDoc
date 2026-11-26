@@ -44,7 +44,7 @@ import { accoda, pacchetto, invia, cancellaDati, piattaforma } from './utilizzo.
 import { rpc, accedi, rinnova } from './supabase.js';
 import { rottaDa, vociPer, testoCorrisponde, sigleCliccabili, regexSigle, eventoGuida } from './guida.js';
 import { TIPI_RICHIESTA, STATI_RICHIESTA, datiRichiesta, erroriRichiesta, erroreRichiesta, avvisoRisposta } from './richieste.js';
-import { GRAZIA_MS, RIVERIFICA_MS, ROTTE_LIBERE, decidiAccesso, daRiverificare, applicaVerifica, erroreAttivazione, datiAttivazione, erroriAttivazione, linkInvito, numeroWhatsApp, messaggioInvito, urlWhatsApp, csvImprese, sessioneValida } from './account.js';
+import { GRAZIA_MS, RIVERIFICA_MS, ROTTE_LIBERE, decidiAccesso, daRiverificare, applicaVerifica, erroreAttivazione, datiAttivazione, erroriAttivazione, linkInvito, numeroWhatsApp, messaggioInvito, urlWhatsApp, csvImprese, sessioneValida, vistaDaRotta, rottaIniziale } from './account.js';
 import { raccogliScadenze, raggruppaScadenze, conteggiScadenze, testoPromemoria, daNotificare, testoNotifica, perServiceWorker, revisioneDocumento, statoScadenza, chiaveDocumento, scadenzaArchivio, durataArchivio, giorniTra, AREE } from './scadenzario.js';
 import { costruisciIndice, cerca, raggruppa, collegati, voce, perDocumento, verifiche, normalizza as normalizzaTesto, TIPI_VOCE, idSigla } from './conoscenza.js';
 import { oggiLocale, formattaData, interpretaData, mascheraData, erroreData, MESI } from './date.js';
@@ -57,7 +57,7 @@ import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, liv
 import { generaIcs } from './calendario.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.22.0';
+export const VERSIONE_APP = '0.23.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -458,9 +458,22 @@ function aggiornaNav(rotta) {
   for (const a of document.querySelectorAll('.nav a')) {
     a.setAttribute('aria-current', a.dataset.rotta === sezione ? 'page' : 'false');
   }
-  document.querySelector('.nav').hidden = !questionarioCompletato();
+  document.querySelector('.nav').hidden = rotta === 'admin' || !questionarioCompletato();
+  aggiornaBarraAdmin(rotta);
   const linkLav = document.querySelector('.nav a[data-rotta="lavoratori"]');
   if (linkLav) linkLav.hidden = !haDipendenti();
+}
+
+/** Barra in alto «Home | Admin»: c'è solo quando l'amministratore è collegato su questo dispositivo. */
+function aggiornaBarraAdmin(rotta = (location.hash.split('/')[1] || '')) {
+  const barra = document.querySelector('.barra-admin');
+  if (!barra) return;
+  const collegato = Boolean(sessioneAdmin?.refreshToken);
+  barra.hidden = !collegato;
+  document.body.classList.toggle('con-barra-admin', collegato);
+  if (!collegato) return;
+  const vista = rotta === 'admin' ? 'admin' : 'app';
+  for (const a of barra.querySelectorAll('a[data-vista]')) a.setAttribute('aria-current', a.dataset.vista === vista ? 'page' : 'false');
 }
 
 // ---------- schermate ----------
@@ -2672,6 +2685,57 @@ async function esporta() {
   schermataDati();
 }
 
+/** Su telefono e tablet (soprattutto iPhone/iPad con l'app installata) il file si condivide; sul computer si scarica. */
+async function salvaFile(blob, nome) {
+  const file = new File([blob], nome, { type: blob.type });
+  if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
+    try {
+      return await navigator.share({ files: [file], title: nome });
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+  scarica(blob, nome);
+}
+
+/** Finestra vuota aperta subito al tocco, da riempire dopo una chiamata al server. */
+function finestraVuota() {
+  const w = window.open('', '_blank');
+  if (w) w.opener = null;
+  return w;
+}
+
+/** Apre un indirizzo esterno (WhatsApp, email); se il browser blocca le finestre, lo apre nella stessa scheda. */
+function apriFuori(url, finestra = null) {
+  if (finestra && !finestra.closed) {
+    finestra.location.href = url;
+    return;
+  }
+  const w = window.open(url, '_blank');
+  if (w) w.opener = null;
+  else location.assign(url); // finestre bloccate: si apre qui e si torna indietro con il tasto del browser
+}
+
+/** Copia negli appunti, anche dove navigator.clipboard non c'è (pagine non sicure, browser vecchi). */
+async function copiaTesto(testo) {
+  try {
+    await navigator.clipboard.writeText(testo);
+    return true;
+  } catch {
+    const t = Object.assign(document.createElement('textarea'), { value: testo, readOnly: true });
+    t.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
+    document.body.append(t);
+    t.select();
+    t.setSelectionRange(0, testo.length);
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch {}
+    t.remove();
+    return ok;
+  }
+}
+
 function scarica(blob, nome) {
   const url = URL.createObjectURL(blob);
   const a = Object.assign(document.createElement('a'), { href: url, download: nome });
@@ -2891,6 +2955,8 @@ function schermataTermini() {
 async function salvaSessioneAdmin(s) {
   sessioneAdmin = s;
   await store.scriviMeta('admin:sessione', s);
+  if (!s) await store.scriviMeta('admin:vista', null);
+  aggiornaBarraAdmin();
 }
 
 async function rinnovaAdmin() {
@@ -2925,6 +2991,8 @@ function schermataLoginAdmin(messaggio = '') {
         <button class="btn btn--primario" type="submit">Accedi</button>
       </form>
       <p class="nota">È l'account del progetto Supabase. La password non viene salvata: resta solo una sessione su questo dispositivo, che puoi chiudere con «Esci».</p>
+      <p class="nota">Dopo l'accesso, la barra in alto ti fa passare quando vuoi da <strong>Admin</strong> a <strong>Home</strong> (l'app come la vedono le imprese) e ritorno. All'apertura safetyDoc parte da Admin, oppure da Home se è l'ultima che hai scelto.</p>
+      <a class="indietro" href="#/">← Torna all'app</a>
     </section>`;
   app.querySelector('#login-admin').addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -3063,9 +3131,9 @@ function attivaAdmin(filtro) {
       return null;
     }
   };
-  const inviaWhatsApp = (m, token) => {
+  const inviaWhatsApp = (m, token, finestra = null) => {
     const link = linkInvito(token, location.href);
-    window.open(urlWhatsApp(m.telefono, messaggioInvito(m, link)), '_blank', 'noopener');
+    apriFuori(urlWhatsApp(m.telefono, messaggioInvito(m, link)), finestra);
   };
   app.querySelector('#esci-admin').addEventListener('click', async () => {
     await salvaSessioneAdmin(null);
@@ -3081,7 +3149,7 @@ function attivaAdmin(filtro) {
       schermataAdminFiltra(e.target.value, pos);
     }, 300);
   });
-  app.querySelector('#csv-imprese').addEventListener('click', () => scarica(new Blob([csvImprese(datiAdmin.imprese)], { type: 'text/csv' }), `safetydoc-imprese-${oggiIso()}.csv`));
+  app.querySelector('#csv-imprese').addEventListener('click', () => salvaFile(new Blob([csvImprese(datiAdmin.imprese)], { type: 'text/csv' }), `safetydoc-imprese-${oggiIso()}.csv`));
   app.querySelector('#nuova-impresa').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const d = Object.fromEntries(new FormData(ev.target));
@@ -3101,18 +3169,23 @@ function attivaAdmin(filtro) {
   for (const b of app.querySelectorAll('[data-whatsapp]')) b.addEventListener('click', () => inviaWhatsApp(impresa(b.dataset.whatsapp), impresa(b.dataset.whatsapp).invito));
   for (const b of app.querySelectorAll('[data-copia]'))
     b.addEventListener('click', async () => {
-      await navigator.clipboard?.writeText(linkInvito(impresa(b.dataset.copia).invito, location.href)).catch(() => {});
-      avviso('Link copiato.');
+      const link = linkInvito(impresa(b.dataset.copia).invito, location.href);
+      const ok = await copiaTesto(link);
+      if (ok) avviso('Link copiato.');
+      else prompt('Copia il link:', link);
     });
   for (const b of app.querySelectorAll('[data-nuovo-link]'))
     b.addEventListener('click', async () => {
       const m = impresa(b.dataset.nuovoLink);
       if (m.invito && !confirm('Il link precedente smetterà di funzionare (i dispositivi già attivi restano attivi). Continuare?')) return;
+      // la finestra va aperta subito al tocco: dopo l'attesa del server Safari (iPhone, iPad, Mac) la bloccherebbe
+      const finestra = m.telefono ? finestraVuota() : null;
       try {
         const token = await chiamaAdmin('safetydoc_admin_nuovo_invito', { impresa: m.id });
-        if (m.telefono) inviaWhatsApp(m, token);
+        if (m.telefono) inviaWhatsApp(m, token, finestra);
         ricarica_('Nuovo link creato.');
       } catch (e) {
+        finestra?.close();
         avviso(`Link non creato: ${e.message}`);
       }
     });
@@ -4222,10 +4295,19 @@ function pannelloAiutoDocumento(modelloId, lista) {
     </details>`;
 }
 
+let vistaAdmin = 'admin'; // ultima scelta dell'amministratore nella barra in alto
+
 async function instrada() {
   const [, rotta, param, extra, quarto] = (location.hash || '#/').split('/').map((x) => (x ? decodeURIComponent(x) : x));
   aggiornaNav(rotta || '');
   window.scrollTo(0, 0);
+  if (sessioneAdmin?.refreshToken) {
+    const vista = vistaDaRotta(rotta || '', vistaAdmin);
+    if (vista !== vistaAdmin) {
+      vistaAdmin = vista;
+      store.scriviMeta('admin:vista', vista).catch(() => {});
+    }
+  }
   if (rotta === 'invito') return schermataInvito(param || '');
   if (rotta === 'termini') return schermataTermini();
   if (rotta === 'admin') return param === 'richiesta' && extra ? schermataAdminRichiesta(extra) : schermataAdmin();
@@ -4288,6 +4370,9 @@ async function avvia() {
     stato.defLav = l;
     await ricarica();
     await caricaAccount();
+    vistaAdmin = (await store.leggiMeta('admin:vista')) || 'admin';
+    const inizio = rottaIniziale({ hash: location.hash, adminCollegato: Boolean(sessioneAdmin?.refreshToken), vista: vistaAdmin });
+    if (inizio) history.replaceState(null, '', inizio);
     guidaNascosta = Boolean(await store.leggiMeta('guida:nascosta'));
     inizializzaGuida();
     store.chiediMemoriaPersistente();
