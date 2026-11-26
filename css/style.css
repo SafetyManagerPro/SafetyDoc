@@ -58,7 +58,11 @@ main { outline: none; }
 .salta { position: absolute; left: -999px; }
 .salta:focus { left: 16px; top: 16px; background: var(--superficie); padding: 8px; z-index: 10; }
 
-.pagina { max-width: 640px; margin: 0 auto; padding: 24px 16px 32px; }
+.pagina {
+  max-width: 640px; margin: 0 auto; padding: 24px 16px 32px;
+  /* telefoni in orizzontale con notch o isola: il testo non finisce sotto */
+  padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right));
+}
 
 h1 { font-size: 1.6rem; line-height: 1.25; margin: 4px 0 12px; }
 h2 { font-size: 1.15rem; margin: 28px 0 8px; }
@@ -188,9 +192,37 @@ label small { font-weight: 400; color: var(--testo-2); }
 .nav a { flex: 1; display: grid; place-items: center; min-height: 60px; padding: 0 2px; font-size: 0.74rem; font-weight: 600; text-decoration: none; color: var(--testo-2); }
 .nav a[hidden] { display: none; }
 .nav a[aria-current="page"] { color: var(--primario); box-shadow: inset 0 3px 0 var(--primario); }
+.nav { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); z-index: 20; }
+/* computer e tablet in orizzontale: le voci non si allargano su tutto lo schermo */
+@media (min-width: 900px) {
+  .nav { justify-content: center; }
+  .nav a { flex: 0 1 140px; font-size: 0.85rem; }
+}
+
+/* Barra dell'amministratore: Home (l'app delle imprese) | Admin */
+.barra-admin {
+  position: sticky; top: 0; z-index: 25;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+  padding: calc(6px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left));
+  background: var(--primario); color: var(--primario-testo);
+}
+.barra-admin[hidden] { display: none; }
+.barra-admin__etichetta { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.barra-admin__scelte { display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: rgb(0 0 0 / 0.18); }
+.barra-admin__scelte a {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; min-width: 96px; justify-content: center;
+  padding: 0 16px; border-radius: 999px; color: inherit; text-decoration: none; font-weight: 700; font-size: 0.95rem;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.barra-admin__scelte a[aria-current="page"] { background: var(--superficie); color: var(--primario); }
+.barra-admin__scelte a:focus-visible { outline: 3px solid var(--primario-testo); outline-offset: 2px; }
+@media (max-width: 360px) { .barra-admin__etichetta { display: none; } .barra-admin { justify-content: center; } }
+
+/* La sezione Amministratore sul computer usa più spazio (tabelle con molte colonne) */
+@media (min-width: 900px) { .pagina.admin { max-width: 1000px; } }
 
 .avviso {
-  position: fixed; left: 16px; right: 16px; bottom: calc(80px + env(safe-area-inset-bottom));
+  position: fixed; left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); z-index: 40; bottom: calc(80px + env(safe-area-inset-bottom));
   max-width: 600px; margin: 0 auto; padding: 14px 16px; border-radius: var(--raggio);
   background: var(--testo); color: var(--sfondo); font-weight: 600; text-align: center;
 }
@@ -315,7 +347,7 @@ dialog.firma h2 { margin-top: 0; }
 @media print {
   @page { size: A4; margin: 18mm; }
   body { background: #fff !important; padding: 0 !important; }
-  .nav, .solo-schermo, .avviso, .salta, .banner { display: none !important; }
+  .nav, .barra-admin, .solo-schermo, .avviso, .salta, .banner { display: none !important; }
   .pagina { max-width: none; padding: 0; }
   .doc { box-shadow: none; padding: 0; margin: 0; font-size: 11pt; }
   .doc__tabella tr { page-break-inside: avoid; }

@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.22.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.23.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -61,7 +61,9 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
 19. **Account delle imprese e sezione Amministratore** – registrazione obbligatoria con link di attivazione mandato
    su WhatsApp, verifica dell'account a ogni apertura (24 ore di tolleranza senza rete), blocco di imprese o dispositivi
    per uso non conforme, sezione #/admin per l'amministratore (imprese, dispositivi, accessi, utilizzo, CSV). Nessun IP
-   registrato. Dettagli in `docs/supabase.md`.
+   registrato. Con l'amministratore collegato l'app si apre su Admin e una barra in alto «Home | Admin» fa passare
+   in ogni momento all'app come la vedono le imprese e ritorno; l'ultima scelta resta anche dopo la riapertura.
+   Dettagli in `docs/supabase.md`.
 20. **Richieste e assistenza** – le imprese inviano richieste di aiuto, informazioni, segnalazioni di errori, modifiche e
    migliorie (Dati → Richieste e assistenza); l'amministratore risponde da #/admin e può avvisare su WhatsApp;
    l'impresa vede le risposte in Oggi. Dettagli in `docs/supabase.md`.

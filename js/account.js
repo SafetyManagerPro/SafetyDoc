@@ -10,6 +10,26 @@ export const RIVERIFICA_MS = 10 * 60 * 1000;
 export const ROTTE_LIBERE = new Set(['invito', 'admin', 'termini']);
 
 /**
+ * Vista dell'amministratore collegato: 'admin' (sezione Amministratore) o 'app' (l'app come la vedono le imprese).
+ * Si ricorda l'ultima scelta fatta con la barra in alto; all'apertura vale 'admin'.
+ */
+export function vistaDaRotta(rotta, vistaAttuale = 'admin') {
+  if (rotta === 'admin') return 'admin';
+  if (rotta === 'invito' || rotta === 'termini') return vistaAttuale; // pagine di passaggio: non cambiano la scelta
+  return 'app';
+}
+
+/**
+ * Dove aprire l'app all'avvio. Con l'amministratore collegato e nessuna pagina precisa chiesta
+ * (indirizzo vuoto o «Oggi»), si apre la sezione Amministratore, a meno che l'ultima scelta sia stata «Home».
+ * Restituisce il nuovo hash oppure null (resta dov'è).
+ */
+export function rottaIniziale({ hash = '', adminCollegato = false, vista = 'admin' }) {
+  if (!adminCollegato || vista === 'app') return null;
+  return hash === '' || hash === '#' || hash === '#/' ? '#/admin' : null;
+}
+
+/**
  * Decide se l'app è usabile.
  * account: { dispositivo, chiave, verificatoIl (ms), stato: 'attivo'|'sospeso'|'bloccato', motivo }
  * adminValido: sessione dell'amministratore valida su questo dispositivo
