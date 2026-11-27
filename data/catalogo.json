@@ -1,6 +1,6 @@
 {
-  "versione": "0.6.0",
-  "aggiornato": "2026-11-24",
+  "versione": "0.7.0",
+  "aggiornato": "2026-11-27",
   "avvertenza": "Bozza da validare da un esperto prima dell'uso reale. Le voci con 'daVerificare' richiedono un controllo sulla norma vigente.",
   "categorie": {
     "impresa": "La tua impresa",
@@ -11,6 +11,17 @@
     "alimenti": "Alimenti e HACCP"
   },
   "novita": [
+    {
+      "versione": "0.7.0",
+      "data": "2026-11-27",
+      "testo": "Autocontrollo alimentare più completo: infestanti, acqua e materiali a contatto con gli alimenti, con i nuovi modelli di piano e registri.",
+      "schede": [
+        "haccp-autocontrollo",
+        "infestanti-alimenti",
+        "acqua-alimenti",
+        "moca"
+      ]
+    },
     {
       "versione": "0.6.0",
       "data": "2026-11-24",
@@ -1609,13 +1620,14 @@
       "priorita": 1,
       "cosaE": "Il manuale che descrive come tieni sotto controllo l'igiene: pulizie, temperature, fornitori, infestanti, acqua, conservazione e gestione dei prodotti non conformi.",
       "perche": "È obbligatorio per tutte le imprese alimentari, anche piccole (con procedure semplificate).",
-      "riferimento": "Reg. CE 852/2004 art. 5 e Allegato II; Reg. CE 1935/2004 (materiali a contatto con alimenti)",
+      "riferimento": "Reg. CE 852/2004 art. 5 e Allegato II; Reg. UE 2021/382; Reg. CE 2073/2005 (criteri microbiologici)",
       "come": [
-        "Fai preparare o aggiorna il manuale adatto alla tua attività.",
-        "Tieni le registrazioni previste: temperature di frigoriferi e congelatori, pulizie, controllo merci in arrivo (modello «Registro delle temperature»).",
-        "Affida il controllo di topi e insetti a una ditta o fallo come previsto dal manuale.",
+        "Fai preparare o aggiorna il piano adatto alla tua attività (modello «Piano di autocontrollo HACCP semplificato»: fasi, punti critici, limiti e azioni correttive si compilano da soli).",
+        "Tieni le registrazioni previste: temperature di frigoriferi e congelatori, merci in arrivo, cotture e abbattimento, pulizie, infestanti, non conformità (i modelli controllano subito i valori contro i limiti).",
+        "Affida il controllo di topi e insetti a una ditta o fallo come previsto dal piano.",
         "Usa solo contenitori, pellicole e attrezzi adatti al contatto con alimenti.",
-        "Rivedi il manuale quando cambiano prodotti, locali o attrezzature."
+        "Coinvolgi il personale: il Reg. UE 2021/382 chiede una «cultura della sicurezza alimentare» (impegno del titolare, ruoli chiari, segnalazione dei problemi).",
+        "Rivedi il piano quando cambiano prodotti, locali o attrezzature."
       ],
       "notaScadenza": "La revisione annuale è buona prassi: la legge chiede di aggiornare il piano quando cambia qualcosa.",
       "chi": "Tu, con il consulente HACCP.",
@@ -1687,6 +1699,74 @@
       ],
       "chi": "Tu.",
       "quando": "Sempre.",
+      "tipoScadenza": "una_tantum",
+      "attivaSe": {
+        "q": "alimenti",
+        "eq": true
+      }
+    },
+    {
+      "id": "infestanti-alimenti",
+      "categoria": "alimenti",
+      "titolo": "Controllo di topi, insetti e altri infestanti",
+      "priorita": 2,
+      "cosaE": "Nei locali dove si lavorano o conservano alimenti servono misure per tenere lontani gli infestanti e un controllo periodico con trappole.",
+      "perche": "Topi, scarafaggi e mosche contaminano gli alimenti; le tracce di infestanti sono tra le non conformità più gravi nei controlli.",
+      "riferimento": "Reg. CE 852/2004 Allegato II cap. I p. 2 e cap. IX p. 4",
+      "come": [
+        "Metti reti alle finestre, chiudi le fessure e tieni chiuse le porte verso l'esterno.",
+        "Posiziona trappole numerate e segnale sulla planimetria (modello «Registro del controllo degli infestanti»).",
+        "Controlla le trappole con la frequenza del piano, o affidati a una ditta specializzata e conserva i rapporti.",
+        "Non usare esche topicide nelle zone di lavorazione degli alimenti."
+      ],
+      "chi": "Tu o una ditta di disinfestazione.",
+      "quando": "Con la frequenza scritta nel piano (di solito ogni mese).",
+      "tipoScadenza": "periodica",
+      "periodicitaMesi": 1,
+      "attivaSe": {
+        "q": "alimenti",
+        "eq": true
+      }
+    },
+    {
+      "id": "acqua-alimenti",
+      "categoria": "alimenti",
+      "titolo": "Acqua usata per gli alimenti",
+      "priorita": 2,
+      "cosaE": "L'acqua usata per preparare alimenti, bevande, ghiaccio e per lavare le superfici deve essere potabile. Se l'impresa usa un pozzo o una fonte propria deve controllarla con analisi; anche con l'acquedotto deve mantenere l'impianto interno, i filtri e gli addolcitori.",
+      "perche": "L'acqua contaminata (per esempio da Legionella o da batteri fecali) si trasmette a tutti gli alimenti preparati.",
+      "riferimento": "Reg. CE 852/2004 Allegato II cap. VII; D.Lgs. 18/2023",
+      "come": [
+        "Se usi l'acquedotto: tieni la manutenzione dei filtri, degli addolcitori e delle macchine del ghiaccio e del caffè, secondo i libretti.",
+        "Se usi un pozzo o una cisterna: fai le analisi previste dal piano con un laboratorio accreditato e conserva i referti.",
+        "Allega i referti delle analisi e i rapporti di manutenzione."
+      ],
+      "chi": "Tu, con un laboratorio accreditato e il manutentore.",
+      "quando": "Con la frequenza del piano di autocontrollo e dei libretti.",
+      "tipoScadenza": "manuale",
+      "attivaSe": {
+        "q": "alimenti",
+        "eq": true
+      },
+      "daVerificare": [
+        "Frequenza delle analisi per le imprese con approvvigionamento autonomo secondo il D.Lgs. 18/2023 e le indicazioni dell'ASL."
+      ]
+    },
+    {
+      "id": "moca",
+      "categoria": "alimenti",
+      "titolo": "Materiali e oggetti a contatto con gli alimenti",
+      "priorita": 3,
+      "cosaE": "Contenitori, pellicole, vaschette, taglieri, utensili e macchine che toccano gli alimenti devono essere adatti all'uso alimentare.",
+      "perche": "Materiali non idonei possono cedere sostanze agli alimenti; i controlli chiedono le dichiarazioni di conformità dei fornitori.",
+      "riferimento": "Reg. CE 1935/2004; Reg. CE 2023/2006",
+      "come": [
+        "Compra materiali con il simbolo del bicchiere e della forchetta o la dicitura «per alimenti».",
+        "Chiedi e conserva le dichiarazioni di conformità dei fornitori di imballaggi e contenitori.",
+        "Rispetta le istruzioni d'uso (temperature, alimenti grassi o acidi, forno o microonde)."
+      ],
+      "chi": "Tu.",
+      "quando": "A ogni nuovo fornitore o materiale.",
       "tipoScadenza": "una_tantum",
       "attivaSe": {
         "q": "alimenti",

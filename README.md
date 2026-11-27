@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.23.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.24.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -25,7 +25,7 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
    fondo a DVR, POS e altri documenti con il rimando «All. A1»; le pagine dei PDF sono preparate con pdf.js
    (`js/vendor/pdfjs`, licenza Apache 2.0)
    (`js/allegati.js`).
-9. **Documenti** – DVR, POS e DUVRI completi con campi da compilare nell'app (`data/lavorazioni.json`: fasi di cantiere e tipi di appalto), piano di emergenza, valutazione incendio (DM 3/9/2021), valutazioni di rumore, vibrazioni, movimentazione carichi (NIOSH) e rischio chimico con calcolo automatico (`js/calcoli.js`), incarico RSPP, richiesta visite al medico, permesso di lavoro a caldo, informazione art. 36, addestramento, elezione RLS, nomine, designazioni, informative (privacy, gravidanza, minori), stress, allergeni, verbali e registri compilati con i dati e stampabili in PDF (`js/modelli.js`).
+9. **Documenti** – DVR, POS e DUVRI completi con campi da compilare nell'app (`data/lavorazioni.json`: fasi di cantiere e tipi di appalto), piano di emergenza, valutazione incendio (DM 3/9/2021), valutazioni con calcolo automatico (`js/calcoli.js`): rumore (LEX,8h, picco, ore massime, DPI con metodo SNR UNI 9432), vibrazioni (A(8) con incertezza K e fattore di correzione, assi del corpo intero, ore massime), movimentazione carichi (NIOSH e indice composito), rischio chimico (stima semplificata e algoritmo MoVaRisCh), rischio biologico (R = P × gruppo e obblighi del Titolo X), microclima (PMV/PPD UNI EN ISO 7730, WBGT UNI EN ISO 7243), illuminazione (UNI EN 12464-1), stress lavoro-correlato (lista di controllo INAIL 2017); i dati di rumore e vibrazioni dei libretti si inseriscono nella scheda di ogni attrezzatura e compilano da soli le valutazioni; autocontrollo alimentare (`js/haccp.js`): piano HACCP semplificato per fasi, registri di temperature, ricevimento merci, cotture e abbattimento, pulizie, infestanti e non conformità con esito automatico, incarico RSPP, richiesta visite al medico, permesso di lavoro a caldo, informazione art. 36, addestramento, elezione RLS, nomine, designazioni, informative (privacy, gravidanza, minori), stress, allergeni, verbali e registri compilati con i dati e stampabili in PDF (`js/modelli.js`).
 10. **Aiuto a fare** – firma sul telefono o sul tablet dei documenti (la copia firmata resta allegata e registra la
    voce del lavoratore) ed esempi tipici di attrezzature, prodotti e mansioni per settore (`data/settori.json`); regole di sicurezza ed
    emergenza in 5 lingue straniere accanto all'italiano (`js/lingue.js`).
@@ -99,7 +99,8 @@ js/cifratura.js       cifratura dei backup (AES-GCM, PBKDF2)
 js/modelli.js         modelli di documenti stampabili, compresa la bozza di DVR (modulo puro, testato)
 js/allegati.js        foto e PDF allegati: riduzione e conversione per il backup
 js/date.js            date in formato gg/mm/aaaa e data di oggi in ora locale (modulo puro, testato)
-js/calcoli.js         rumore, vibrazioni, NIOSH, rischio chimico, basso rischio incendio (modulo puro, testato)
+js/calcoli.js         rumore, vibrazioni, NIOSH, MoVaRisCh, biologico, microclima, illuminazione, stress, incendio (modulo puro, testato)
+js/haccp.js           fasi HACCP, limiti di temperatura e controlli di processo (modulo puro, testato)
 js/aiuto.js           link per chiedere aiuto al consulente (modulo puro, testato)
 js/calendario.js      scadenze esportate nel calendario del telefono (.ics) (modulo puro, testato)
 data/                 questionario, catalogo, requisiti dei lavoratori, pericoli del DVR tabella ATECO 2025 e tipi di attrezzature

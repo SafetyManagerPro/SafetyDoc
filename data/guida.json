@@ -257,6 +257,34 @@
       "dopo": "Allega il PDF o le foto e indica le pagine sulla sicurezza da stampare."
     },
     {
+      "id": "attrezzatura-emissioni",
+      "rotta": "attrezzatura",
+      "sel": "h2",
+      "testo": "Dati del libretto",
+      "titolo": "Dati del libretto per rumore e vibrazioni",
+      "cosa": "I valori di rumore (LpA, picco) e di vibrazioni (a_hv o i tre assi) dichiarati dal costruttore nel libretto.",
+      "perche": "Con questi dati le valutazioni di rumore e vibrazioni si compilano da sole e vedi subito dopo quante ore si superano i valori d'azione.",
+      "dopo": "Copia i valori dal capitolo «Dati tecnici» del libretto, con l'incertezza K, e tocca «Salva i dati del libretto»."
+    },
+    {
+      "id": "attrezzatura-lpa",
+      "rotta": "attrezzatura",
+      "sel": "label:has([name=lpa])",
+      "titolo": "Pressione acustica LpA",
+      "cosa": "Il livello di pressione sonora al posto dell'operatore, in dB(A). Non confonderlo con la potenza sonora LwA, che è più alta.",
+      "perche": "È il valore che serve per calcolare l'esposizione del lavoratore (LEX,8h).",
+      "dopo": "Aggiungi l'incertezza K: il calcolo usa LpA + K, a favore della sicurezza."
+    },
+    {
+      "id": "attrezzatura-vib",
+      "rotta": "attrezzatura",
+      "sel": "label:has([name=vib])",
+      "titolo": "Tipo di vibrazioni",
+      "cosa": "Mano-braccio per gli utensili portatili (flessibili, martelli, avvitatori); corpo intero per mezzi, carrelli e piattaforme.",
+      "perche": "I valori d'azione sono diversi: 2,5 m/s² per mano-braccio, 0,5 m/s² per corpo intero.",
+      "dopo": "Per il corpo intero, se il libretto dà i tre assi, scrivili: si usa il più alto tra 1,4·x, 1,4·y e z."
+    },
+    {
       "id": "attrezzatura-pagine",
       "rotta": "attrezzatura",
       "sel": "label:has([name=pagine])",
@@ -610,6 +638,95 @@
       "cosa": "Crea l'impresa e prepara il link di attivazione da mandare su WhatsApp.",
       "perche": "Senza il link l'impresa non può usare safetyDoc.",
       "dopo": "Scrivi nome e cellulare: si apre WhatsApp con il messaggio pronto."
+    },
+    {
+      "id": "doc-ricompila",
+      "rotta": "documento:*",
+      "sel": "[data-ricompila]",
+      "titolo": "Ricompila la tabella",
+      "cosa": "Riprende le righe della tabella dai dati inseriti nell'app: attrezzature con i dati del libretto, prodotti chimici, registri.",
+      "perche": "Se hai aggiunto attrezzature o dati dopo aver compilato il documento, non devi riscriverli.",
+      "dopo": "Tocca e conferma: le righe della tabella vengono sostituite, gli altri campi restano."
+    },
+    {
+      "id": "doc-rumore-dpi",
+      "rotta": "documento:valutazione-rumore",
+      "sel": "label:has([name=dpiTipo])",
+      "titolo": "Verifica dei DPI uditivi",
+      "cosa": "Con tipo di DPI e SNR il documento calcola il livello all'orecchio con il metodo SNR corretto (UNI 9432) e la LEX,8h con i DPI.",
+      "perche": "Il valore limite di 87 dB(A) si verifica tenendo conto dei DPI, e un DPI troppo protettivo isola il lavoratore.",
+      "dopo": "Per un calcolo corretto inserisci anche il LCeq in dB(C) misurato per ogni attività rumorosa."
+    },
+    {
+      "id": "doc-rumore-incertezza",
+      "rotta": "documento:valutazione-rumore",
+      "sel": "label:has([name=incertezza])",
+      "titolo": "Incertezza della misura",
+      "cosa": "L'incertezza estesa U indicata nella relazione del tecnico che ha fatto le misure (UNI EN ISO 9612).",
+      "perche": "Il documento confronta LEX,8h + U con i valori d'azione, a favore della sicurezza.",
+      "dopo": "Lasciala vuota se i livelli vengono dai libretti: in quel caso l'incertezza K è già nel livello."
+    },
+    {
+      "id": "doc-vibrazioni-fattore",
+      "rotta": "documento:valutazione-vibrazioni",
+      "sel": "th",
+      "testo": "Fattore",
+      "pos": "dentro",
+      "titolo": "Fattore di correzione",
+      "cosa": "Moltiplica il valore dichiarato nel libretto per avvicinarlo a quello dell'uso reale (vuoto = 1).",
+      "perche": "I valori dei libretti sono misurati in prova e spesso sono più bassi di quelli reali: il Portale Agenti Fisici e la CEN/TR 15350 indicano i fattori per tipo di utensile.",
+      "dopo": "Per i valori misurati sul posto lascialo vuoto."
+    },
+    {
+      "id": "doc-movarisch-frasih",
+      "rotta": "documento:valutazione-chimico-movarisch",
+      "sel": "th",
+      "testo": "Frasi H",
+      "pos": "dentro",
+      "titolo": "Frasi H e punteggio P",
+      "cosa": "Le frasi H della sezione 2 della scheda di sicurezza: il documento assegna a ognuna il punteggio MoVaRisCh e usa il più alto.",
+      "perche": "Il pericolo intrinseco del prodotto è metà del calcolo del rischio.",
+      "dopo": "Per H314, H317, H334, H300, H310 e H330 scrivi anche la categoria (es. «H314 1B»)."
+    },
+    {
+      "id": "doc-biologico-gruppo",
+      "rotta": "documento:valutazione-biologico",
+      "sel": "th",
+      "testo": "Gruppo",
+      "pos": "dentro",
+      "titolo": "Gruppo dell'agente",
+      "cosa": "Il gruppo di pericolo da 1 a 4 dell'Allegato XLVI del D.Lgs. 81/2008: è il danno D della matrice.",
+      "perche": "Dai gruppi 3 e 4 derivano obblighi in più, come il registro degli esposti.",
+      "dopo": "Scegli l'agente dall'elenco proposto o scrivilo, poi indica la probabilità P."
+    },
+    {
+      "id": "doc-stress-criticita",
+      "rotta": "documento:stress-preliminare",
+      "sel": "label:has([name=crit_ambiente])",
+      "titolo": "Indicatori critici",
+      "cosa": "Per ogni dimensione, quanti indicatori della lista di controllo INAIL risultano critici.",
+      "perche": "Il documento li trasforma in punteggi e somma le tre aree con le soglie della metodologia INAIL.",
+      "dopo": "Compila la lista INAIL con l'RLS o i lavoratori e riporta qui i totali per dimensione."
+    },
+    {
+      "id": "doc-haccp-fasi",
+      "rotta": "documento:piano-haccp",
+      "sel": "fieldset.spunte",
+      "titolo": "Fasi della tua attività",
+      "cosa": "Le fasi di lavorazione degli alimenti: per ognuna il piano scrive pericoli, controlli, limiti, azioni correttive e registrazioni.",
+      "perche": "Il piano deve descrivere quello che fai davvero, non una attività generica.",
+      "dopo": "Togli le fasi che non fai e aggiungi quelle che mancano; poi usa i registri collegati."
+    },
+    {
+      "id": "doc-ricevimento-categoria",
+      "rotta": "documento:registro-ricevimento",
+      "sel": "th",
+      "testo": "Categoria",
+      "pos": "dentro",
+      "titolo": "Categoria del prodotto",
+      "cosa": "Ogni categoria ha la sua temperatura massima al ricevimento (Reg. CE 853/2004, D.Lgs. 110/1992 per i surgelati).",
+      "perche": "L'esito «conforme» o «da respingere» si calcola da solo.",
+      "dopo": "Misura la temperatura e scrivila nella colonna °C."
     }
   ]
 }

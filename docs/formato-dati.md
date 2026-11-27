@@ -52,6 +52,8 @@ Collezioni:
 - `attrezzature`: `tipo` (id definiti in `data/attrezzature.json`), `nome`, `marcaModello`, `matricola`,
   `annoFabbricazione`, `marcaturaCE`, `dismessa`, `pericoli` (id definiti in `data/attrezzature.json`), `dpi`,
   `istruzioni` (istruzioni di sicurezza dal libretto). Se mancano si usano quelli tipici del tipo.
+  `emissioni` (dati del libretto, testi come scritti): `lpa` dB(A), `krumore` dB, `lcpeak` dB(C), `vib` (`HAV`, `WBV` o vuoto),
+  `ahv` m/s², `kvib` m/s², `awx`, `awy`, `awz` m/s² (solo corpo intero).
 - `controlli`: una registrazione per manutenzione, controllo o verifica: `attrezzaturaId`, `controlloId`, `data`,
   `scadenzaManuale`, `esito` (`positivo`, `con_interventi`, `negativo`), `note`. La periodicità delle verifiche
   dipende da tipo, settore (edilizia, estrazione, siderurgia, porti) ed età della macchina (oltre 10 anni).

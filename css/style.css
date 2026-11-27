@@ -481,3 +481,8 @@ abbr.sigla:focus-visible { outline: 2px solid var(--info); }
 body.senza-guida .guida-btn { display: none; }
 body.senza-guida abbr.sigla { text-decoration: none; cursor: auto; }
 @media print { .guida-btn, .postit { display: none !important; } abbr.sigla { text-decoration: none; } }
+.gruppo-campi { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
+.riga-campi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.riga-campi[hidden] { display: none; }
+.riepilogo-emissioni { margin: 4px 0 12px; padding: 10px 12px 10px 28px; border-radius: var(--raggio); background: var(--superficie); }
+.tabella-campi td .campo { min-width: 6.5em; }
