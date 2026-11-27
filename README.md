@@ -6,7 +6,7 @@ safetyDoc è pensato per le piccole imprese di qualsiasi settore che non hanno p
 usano poco il computer. L'utente risponde a poche domande semplici e ottiene il suo piano: ogni voce spiega
 cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un semaforo rosso, giallo e verde.
 
-> Versione di prova 0.24.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
+> Versione di prova 0.25.0. I contenuti del catalogo sono una bozza da validare prima dell'uso reale.
 
 ## Come funziona
 
@@ -71,6 +71,12 @@ cos'è, perché è obbligatoria, come si fa, chi la fa e quando scade, con un se
    un post-it con cos'è, perché serve e cosa fare dopo, il link alla pagina giusta, «Chiedi a noi» (apre una richiesta
    già compilata) e la lettura ad alta voce. Le sigle (DVR, RSPP, DUVRI…) si toccano per la spiegazione. Si possono
    nascondere in Dati. L'amministratore vede quali aiuti vengono aperti di più (solo con il consenso ai dati di utilizzo).
+22. **Ogni schermo e ogni sistema** – l'impaginazione si adatta (`css/style.css`, `js/dispositivo.js`): smartphone con barra in
+   basso a icone; smartphone in orizzontale con barra verticale; tablet e iPad con colonna larga e liste su due colonne;
+   notebook e computer con menu laterale e ricerca (Ctrl+K su Windows e Linux, ⌘K su Mac, oppure «/»); schermi larghi con i
+   documenti a due colonne (campi a sinistra, anteprima A4 a destra). Per iOS/iPadOS, Android, Windows e macOS: caratteri di
+   sistema, campi senza zoom automatico su iPhone, niente «tira per aggiornare» nell'app installata, barre che si nascondono
+   con la tastiera aperta, contrasto elevato di Windows, istruzioni di installazione per sistema e browser.
 
 Per aggiornare la normativa si modifica solo `data/catalogo.json`: l'app non va riscritta. Quando si aggiungono
 schede si alza `versione` e si aggiunge una voce in `novita`: l'impresa vede le schede nuove che la riguardano.
@@ -100,6 +106,7 @@ js/modelli.js         modelli di documenti stampabili, compresa la bozza di DVR 
 js/allegati.js        foto e PDF allegati: riduzione e conversione per il backup
 js/date.js            date in formato gg/mm/aaaa e data di oggi in ora locale (modulo puro, testato)
 js/calcoli.js         rumore, vibrazioni, NIOSH, MoVaRisCh, biologico, microclima, illuminazione, stress, incendio (modulo puro, testato)
+js/dispositivo.js     sistema operativo, apparecchio, formato dello schermo, istruzioni di installazione (modulo puro, testato)
 js/haccp.js           fasi HACCP, limiti di temperatura e controlli di processo (modulo puro, testato)
 js/aiuto.js           link per chiedere aiuto al consulente (modulo puro, testato)
 js/calendario.js      scadenze esportate nel calendario del telefono (.ics) (modulo puro, testato)
