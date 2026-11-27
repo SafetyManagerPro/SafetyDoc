@@ -55,9 +55,10 @@ import { unisciCollezione, unisciDocumenti, creaExport, validaExport, FORMATO_CI
 import { cifra, decifra } from './cifratura.js';
 import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, livelloRischio } from './modelli.js';
 import { generaIcs } from './calendario.js';
+import { riepilogoEmissioni, vibrazioneDaLibretto } from './calcoli.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.23.0';
+export const VERSIONE_APP = '0.24.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -71,7 +72,7 @@ const SCHEDA_MODELLI = {
   'formazione-lavoratori': ['registro-formazione', 'informazione-art36', 'verbale-addestramento'],
   rls: ['verbale-elezione-rls'],
   antincendio: ['designazione-addetti', 'piano-emergenza-doc', 'valutazione-incendio'],
-  dvr: ['dvr-bozza'],
+  dvr: ['dvr-bozza', 'valutazione-microclima', 'valutazione-illuminazione'],
   'stress-lavoro-correlato': ['stress-preliminare', 'dvr-bozza'],
   'privacy-lavoratori': ['informativa-lavoratori', 'autorizzazione-trattamento'],
   privacy: ['informativa-clienti', 'nomina-responsabile-esterno'],
@@ -83,16 +84,20 @@ const SCHEDA_MODELLI = {
   'rumore-vibrazioni': ['valutazione-rumore', 'valutazione-vibrazioni'],
   'movimentazione-carichi': ['valutazione-mmc'],
   cancerogeni: ['valutazione-chimico'],
+  'agenti-biologici': ['valutazione-biologico'],
   duvri: ['info-rischi-ditte', 'duvri-bozza', 'permesso-lavoro-caldo'],
   'appalti-presso-clienti': ['autocertificazione-idoneita'],
   pos: ['pos-bozza', 'autocertificazione-idoneita'],
   'lavoratrici-madri': ['informativa-lavoratrici-madri'],
   'lavoratori-minori': ['informativa-minori'],
   'schede-sicurezza': ['elenco-prodotti-chimici'],
-  'rischio-chimico': ['valutazione-chimico', 'elenco-prodotti-chimici'],
+  'rischio-chimico': ['valutazione-chimico-movarisch', 'valutazione-chimico', 'elenco-prodotti-chimici'],
   'registro-eventi': ['registro-eventi'],
   infortuni: ['registro-eventi'],
-  'haccp-autocontrollo': ['registro-temperature'],
+  'haccp-autocontrollo': ['piano-haccp', 'registro-temperature', 'registro-ricevimento', 'registro-cotture', 'registro-pulizie', 'registro-non-conformita'],
+  rintracciabilita: ['registro-ricevimento', 'registro-non-conformita'],
+  'infestanti-alimenti': ['registro-infestanti'],
+  'registrazione-alimentare': ['piano-haccp'],
   allergeni: ['cartello-allergeni']
 };
 
@@ -2087,6 +2092,32 @@ async function schermataAttrezzatura(id) {
           <textarea class="campo" name="istruzioni" rows="3">${esc(a.istruzioni || '')}</textarea></label>
         <button class="btn btn--secondario" type="submit">Salva pericoli e protezioni</button>
       </form>
+      <h2>Dati del libretto per rumore e vibrazioni</h2>
+      <form id="emissioni-macchina">
+        <p class="nota">Li trovi nel libretto d'uso e manutenzione, di solito nel capitolo «Dati tecnici» o «Rumore e vibrazioni». Servono a compilare da sole le valutazioni del rumore e delle vibrazioni.</p>
+        ${(() => {
+          const e = a.emissioni || {};
+          const c = (nome, etichetta, aiuto = '') => `<label>${etichetta}${aiuto ? ` <small>(${aiuto})</small>` : ''}<input class="campo" name="${nome}" inputmode="decimal" value="${esc(e[nome] ?? '')}"></label>`;
+          const r = riepilogoEmissioni(e);
+          return `<fieldset class="gruppo-campi"><legend>Rumore</legend>
+            ${c('lpa', 'Pressione acustica al posto dell\'operatore LpA, dB(A)', 'non la potenza sonora LwA')}
+            ${c('krumore', 'Incertezza K, dB')}
+            ${c('lcpeak', 'Picco LCpeak, dB(C)', 'se indicato')}
+          </fieldset>
+          <fieldset class="gruppo-campi"><legend>Vibrazioni</legend>
+            <label>Tipo<select class="campo" name="vib">
+              <option value="">Non vibra o non indicato</option>
+              <option value="HAV" ${e.vib === 'HAV' ? 'selected' : ''}>Mano-braccio (utensili portatili)</option>
+              <option value="WBV" ${e.vib === 'WBV' ? 'selected' : ''}>Corpo intero (mezzi, piattaforme)</option>
+            </select></label>
+            ${c('ahv', 'Valore dichiarato, m/s²', 'per il corpo intero, se non ci sono i tre assi')}
+            ${c('kvib', 'Incertezza K, m/s²')}
+            <div class="riga-campi" data-solo-wbv ${e.vib === 'WBV' ? '' : 'hidden'}>${c('awx', 'Asse x, m/s²')}${c('awy', 'Asse y, m/s²')}${c('awz', 'Asse z, m/s²')}</div>
+          </fieldset>
+          ${r.length ? `<ul class="riepilogo-emissioni">${r.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}`;
+        })()}
+        <button class="btn btn--secondario" type="submit">Salva i dati del libretto</button>
+      </form>
       <h2>Libretto e documenti</h2>
       ${elencoAllegatiDettaglio('attrezzatura', a.id) || '<p>Nessun documento allegato. Carica il libretto d\'uso e manutenzione (PDF o foto delle pagine) e la dichiarazione CE.</p>'}
       <form id="documenti-macchina">${campoAllegato('attrezzatura')}<button class="btn btn--secondario" type="submit">Allega</button></form>
@@ -2100,6 +2131,18 @@ async function schermataAttrezzatura(id) {
     await store.salva('attrezzature', { ...a, pericoli: f.getAll('pericoli'), dpi: f.getAll('dpi'), istruzioni: String(f.get('istruzioni') || '').trim() });
     await ricarica();
     avviso('Pericoli e protezioni salvati.');
+  });
+  const formEm = app.querySelector('#emissioni-macchina');
+  formEm.vib.addEventListener('change', () => (formEm.querySelector('[data-solo-wbv]').hidden = formEm.vib.value !== 'WBV'));
+  formEm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const emissioni = Object.fromEntries(['lpa', 'krumore', 'lcpeak', 'vib', 'ahv', 'kvib', 'awx', 'awy', 'awz'].map((k) => [k, String(f.get(k) || '').trim()]));
+    if (emissioni.vib !== 'WBV') Object.assign(emissioni, { awx: '', awy: '', awz: '' });
+    await store.salva('attrezzature', { ...a, emissioni });
+    await ricarica();
+    avviso(vibrazioneDaLibretto(emissioni) !== null || emissioni.lpa ? 'Dati salvati: li trovi già nelle valutazioni di rumore e vibrazioni.' : 'Dati salvati.');
+    schermataAttrezzatura(id);
   });
   app.querySelector('#documenti-macchina').addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -2299,7 +2342,7 @@ function datiDocumento(l, registro, opzioni) {
     dvr: stato.dvr,
     ctx: ctx(),
     lavoratori: attivi(),
-    attrezzature: macchine().map((a) => ({ id: a.id, nome: a.nome, tipo: tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta, pericoli: a.pericoli || tipoAttrezzatura(stato.defAttr, a.tipo)?.pericoli || [], dpi: a.dpi || tipoAttrezzatura(stato.defAttr, a.tipo)?.dpi || [], istruzioni: a.istruzioni || '' })),
+    attrezzature: macchine().map((a) => ({ id: a.id, nome: a.nome, emissioni: a.emissioni || null, tipo: tipoAttrezzatura(stato.defAttr, a.tipo)?.etichetta, pericoli: a.pericoli || tipoAttrezzatura(stato.defAttr, a.tipo)?.pericoli || [], dpi: a.dpi || tipoAttrezzatura(stato.defAttr, a.tipo)?.dpi || [], istruzioni: a.istruzioni || '' })),
     etichettePericoli: Object.fromEntries((stato.defAttr.pericoli || []).map((x) => [x.id, x.etichetta])),
     attivita: opzioneAttivita?.etichetta || '',
     prodotti: prodottiAttivi(stato.prodotti),
@@ -2407,7 +2450,7 @@ function campiOpzioni(defs, valori) {
               return `<td><input class="campo" ${nm} value="${esc(v)}" ${lista} ${k.segnaposto ? `placeholder="${esc(k.segnaposto)}"` : ''} ${k.tipo === 'numero' ? 'inputmode="decimal"' : ''}></td>`;
             })
             .join('')}</tr>`).join('')}
-          </tbody></table></div>${c.colonne
+          </tbody></table></div>${c.iniziali?.length ? `<button class="btn btn--testo" type="button" data-ricompila="${esc(c.id)}">Ricompila dai dati inseriti nell'app</button>` : ''}${c.colonne
             .filter((k) => k.suggerimenti?.length)
             .map((k) => `<datalist id="sugg-${esc(c.id)}-${esc(k.id)}">${k.suggerimenti.map((x) => `<option value="${esc(x)}"></option>`).join('')}</datalist>`)
             .join('')}</fieldset>`;
@@ -2525,6 +2568,14 @@ async function schermataDocumento(id, lavId) {
     };
     form.addEventListener('input', aggiorna);
     form.addEventListener('change', aggiorna);
+    form.addEventListener('click', async (ev) => {
+      const b = ev.target.closest('[data-ricompila]');
+      if (!b) return;
+      const def = defs.find((c) => c.id === b.dataset.ricompila);
+      if (!def || !confirm('Sostituire le righe di questa tabella con i dati di attrezzature, prodotti e registri inseriti nell\'app?')) return;
+      await store.scriviMeta(chiaveOpzioni, { ...leggiOpzioni(form, defs), [def.id]: def.iniziali });
+      schermataDocumento(id, lavId);
+    });
   }
 }
 
@@ -4057,7 +4108,7 @@ function indiceConoscenza() {
 // Gli allegati senza categoria (caricati prima delle categorie) valgono per qualsiasi categoria.
 const allegatiPerCategoria = (tipo, id, categoria) => allegatiDi(tipo, id).filter((a) => !categoria || !a.categoria || a.categoria === categoria).length;
 
-const DOCUMENTI_VERIFICATI = ['pos-bozza', 'valutazione-rumore', 'valutazione-vibrazioni', 'valutazione-mmc', 'valutazione-chimico', 'valutazione-incendio'];
+const DOCUMENTI_VERIFICATI = ['pos-bozza', 'valutazione-rumore', 'valutazione-vibrazioni', 'valutazione-mmc', 'valutazione-chimico', 'valutazione-chimico-movarisch', 'valutazione-biologico', 'valutazione-incendio'];
 
 async function calcolaVerifiche() {
   if (!questionarioCompletato()) return [];

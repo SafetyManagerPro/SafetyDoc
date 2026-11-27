@@ -582,10 +582,11 @@ export function verifiche(dati) {
     { se: r.rumore_vibrazioni === true, doc: 'valutazione-rumore', campo: 'righe', titolo: 'Valutazione del rumore da compilare', rischio: 'il rumore', norma: 'D.Lgs. 81/2008 art. 190' },
     { se: r.rumore_vibrazioni === true, doc: 'valutazione-vibrazioni', campo: 'righe', titolo: 'Valutazione delle vibrazioni da compilare', rischio: 'le vibrazioni', norma: 'D.Lgs. 81/2008 art. 202' },
     { se: r.carichi === true, doc: 'valutazione-mmc', campo: 'compiti', titolo: 'Valutazione della movimentazione dei carichi da compilare', rischio: 'la movimentazione manuale dei carichi', norma: 'D.Lgs. 81/2008 art. 168 e Allegato XXXIII' },
-    { se: r.chimici === true, doc: 'valutazione-chimico', campo: 'righe', titolo: 'Valutazione del rischio chimico da compilare', rischio: 'il rischio chimico', norma: 'D.Lgs. 81/2008 art. 223' }
+    { se: r.chimici === true, doc: 'valutazione-chimico', alt: 'valutazione-chimico-movarisch', campo: 'righe', titolo: 'Valutazione del rischio chimico da compilare', rischio: 'il rischio chimico', norma: 'D.Lgs. 81/2008 art. 223' },
+    { se: r.biologici === true, doc: 'valutazione-biologico', campo: 'agenti', titolo: 'Valutazione del rischio biologico da compilare', rischio: 'il rischio biologico', norma: 'D.Lgs. 81/2008 art. 271' }
   ];
   for (const s of specifiche)
-    if (s.se && f.haDipendenti && !compilata(s.doc, s.campo))
+    if (s.se && f.haDipendenti && !compilata(s.doc, s.campo) && !(s.alt && compilata(s.alt, s.campo)))
       aggiungi({
         id: `valutazione-${s.doc}`,
         livello: 'medio',

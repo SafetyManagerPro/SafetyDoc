@@ -504,6 +504,54 @@
         "D.Lgs. 196/2003"
       ],
       "ambito": "Privacy"
+    },
+    {
+      "id": "reg-2073-2005",
+      "sigla": "Reg. CE 2073/2005",
+      "titolo": "Criteri microbiologici applicabili ai prodotti alimentari",
+      "alias": [
+        "Reg. CE 2073/2005",
+        "Regolamento 2073/2005"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "reg-2021-382",
+      "sigla": "Reg. UE 2021/382",
+      "titolo": "Allergeni, ridistribuzione degli alimenti e cultura della sicurezza alimentare",
+      "alias": [
+        "Reg. UE 2021/382",
+        "Regolamento 2021/382"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "reg-2023-2006",
+      "sigla": "Reg. CE 2023/2006",
+      "titolo": "Buone pratiche di fabbricazione dei materiali a contatto con gli alimenti",
+      "alias": [
+        "Reg. CE 2023/2006"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "dlgs-18-2023",
+      "sigla": "D.Lgs. 18/2023",
+      "titolo": "Qualità delle acque destinate al consumo umano",
+      "alias": [
+        "D.Lgs. 18/2023",
+        "Decreto legislativo 18/2023"
+      ],
+      "ambito": "Alimenti"
+    },
+    {
+      "id": "dlgs-110-1992",
+      "sigla": "D.Lgs. 110/1992",
+      "titolo": "Alimenti surgelati destinati all'alimentazione umana",
+      "alias": [
+        "D.Lgs. 110/1992"
+      ],
+      "ambito": "Alimenti"
     }
   ],
   "glossario": [
@@ -2001,6 +2049,192 @@
         "Stampalo o mandalo al responsabile ogni mese: le scadenze scadute e quelle entro 30 giorni sono in cima.",
         "Le date si aggiornano da sole quando registri un corso, un controllo, un certificato rinnovato o la data di un documento firmato.",
         "«Buona prassi» indica una scadenza consigliata, non un obbligo: decidila con il consulente."
+      ]
+    },
+    "valutazione-chimico-movarisch": {
+      "adempimenti": [
+        "rischio-chimico"
+      ],
+      "rischi": [
+        "chimico"
+      ],
+      "norme": [
+        "dlgs-81-2008",
+        "reg-1272-2008",
+        "reg-1907-2006"
+      ],
+      "consigli": [
+        "Le frasi H si copiano dalla sezione 2 della scheda di sicurezza: per H314, H317, H334, H300, H310 e H330 scrivi anche la categoria, altrimenti il calcolo usa la più severa.",
+        "Un risultato tra 15 e 21 è una zona di incertezza: rivedi i dati con il medico competente prima di dichiarare il rischio irrilevante.",
+        "Il modello non vale per cancerogeni, mutageni e tossici per la riproduzione di categoria 1 (H340, H350, H360).",
+        "Per abbassare il rischio contano soprattutto il tipo di uso, l'aspirazione localizzata, il tempo e la distanza."
+      ],
+      "revisione": {
+        "scheda": "rischio-chimico"
+      }
+    },
+    "valutazione-biologico": {
+      "adempimenti": [
+        "agenti-biologici"
+      ],
+      "rischi": [
+        "biologici"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Il gruppo di ogni agente è nell'Allegato XLVI del D.Lgs. 81/2008: il danno D della matrice è il gruppo.",
+        "Con agenti dei gruppi 3 e 4 serve il registro degli esposti (art. 280).",
+        "Se esiste un vaccino efficace (epatite B, tetano), il medico competente lo propone ai lavoratori esposti.",
+        "Ripeti la valutazione ogni 3 anni o quando cambiano le lavorazioni (art. 271)."
+      ],
+      "revisione": {
+        "mesi": 36,
+        "norma": "D.Lgs. 81/2008 art. 271 c. 3",
+        "obbligo": "Valutazione del rischio biologico da aggiornare ogni 3 anni"
+      }
+    },
+    "valutazione-microclima": {
+      "adempimenti": [
+        "dvr"
+      ],
+      "rischi": [
+        "luoghi"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Per il PMV servono temperatura dell'aria e radiante, umidità e velocità dell'aria misurate con una centralina microclimatica (UNI EN ISO 7726).",
+        "Un PMV tra −0,5 e +0,5 è il riferimento usuale di comfort per i luoghi di lavoro.",
+        "Per i lavori all'aperto d'estate usa il WBGT: i lavoratori non acclimatati hanno un valore di riferimento più basso.",
+        "Ripeti le misure in estate e in inverno."
+      ],
+      "revisione": {
+        "evento": "Ripetila quando cambiano impianti, locali o lavorazioni, e nelle stagioni calde.",
+        "norma": "D.Lgs. 81/2008 Allegato IV"
+      }
+    },
+    "valutazione-illuminazione": {
+      "adempimenti": [
+        "dvr"
+      ],
+      "rischi": [
+        "luoghi",
+        "vdt"
+      ],
+      "norme": [
+        "dlgs-81-2008"
+      ],
+      "consigli": [
+        "Misura con il luxmetro sul piano di lavoro, con le luci accese come di solito.",
+        "I valori della UNI EN 12464-1 sono minimi da mantenere nel tempo: considera l'invecchiamento e lo sporco delle lampade.",
+        "Ai videoterminali evita riflessi e abbagliamenti sugli schermi."
+      ],
+      "revisione": {
+        "evento": "Ripetila quando cambi lampade, disposizione dei posti o lavorazioni.",
+        "norma": "D.Lgs. 81/2008 Allegato IV"
+      }
+    },
+    "piano-haccp": {
+      "adempimenti": [
+        "haccp-autocontrollo",
+        "registrazione-alimentare"
+      ],
+      "rischi": [],
+      "norme": [
+        "reg-852-2004",
+        "reg-178-2002",
+        "reg-2021-382",
+        "reg-2073-2005"
+      ],
+      "consigli": [
+        "Spunta solo le fasi che fai davvero: il piano deve descrivere la tua attività, non una generica.",
+        "Per ogni punto critico (CCP) servono un limite misurabile, chi lo controlla, cosa si fa se è superato e dove si registra.",
+        "Le piccole imprese possono usare procedure semplificate e i manuali di corretta prassi di settore.",
+        "Rivedi il piano ogni anno e ogni volta che cambiano prodotti, locali o attrezzature."
+      ],
+      "revisione": {
+        "scheda": "haccp-autocontrollo"
+      }
+    },
+    "registro-ricevimento": {
+      "adempimenti": [
+        "rintracciabilita",
+        "haccp-autocontrollo"
+      ],
+      "rischi": [],
+      "norme": [
+        "reg-178-2002",
+        "reg-852-2004",
+        "reg-853-2004",
+        "dlgs-110-1992"
+      ],
+      "consigli": [
+        "Controlla ogni consegna prima di firmare il documento di trasporto.",
+        "Annota fornitore e lotto: servono per ritirare un prodotto in caso di allerta.",
+        "Se la temperatura è oltre il limite, respingi o isola la merce e registra la non conformità."
+      ]
+    },
+    "registro-cotture": {
+      "adempimenti": [
+        "haccp-autocontrollo"
+      ],
+      "rischi": [],
+      "norme": [
+        "reg-852-2004"
+      ],
+      "consigli": [
+        "Misura al cuore del pezzo più grande, con il termometro a sonda pulito e tarato.",
+        "Abbatti subito dopo la cottura: il raffreddamento lento fa germinare le spore.",
+        "Sostituisci l'olio di frittura prima del 25% di composti polari."
+      ]
+    },
+    "registro-pulizie": {
+      "adempimenti": [
+        "haccp-autocontrollo"
+      ],
+      "rischi": [
+        "chimico"
+      ],
+      "norme": [
+        "reg-852-2004"
+      ],
+      "consigli": [
+        "Prima si lava (detergente), poi si sanifica (disinfettante), rispettando i tempi di contatto in etichetta.",
+        "Conserva i prodotti per la pulizia lontano dagli alimenti, con le schede di sicurezza.",
+        "Firma il registro ogni giorno: è la prova delle pulizie fatte."
+      ]
+    },
+    "registro-infestanti": {
+      "adempimenti": [
+        "infestanti-alimenti",
+        "haccp-autocontrollo"
+      ],
+      "rischi": [],
+      "norme": [
+        "reg-852-2004"
+      ],
+      "consigli": [
+        "Numera le trappole e segnale sulla planimetria.",
+        "Mai esche topicide dentro le zone dove si lavorano gli alimenti.",
+        "Conserva i rapporti di intervento della ditta."
+      ]
+    },
+    "registro-non-conformita": {
+      "adempimenti": [
+        "rintracciabilita",
+        "haccp-autocontrollo"
+      ],
+      "rischi": [],
+      "norme": [
+        "reg-178-2002",
+        "reg-852-2004"
+      ],
+      "consigli": [
+        "Ogni problema registrato con la sua azione correttiva dimostra che l'autocontrollo funziona.",
+        "Se un prodotto pericoloso è già arrivato ai clienti, informa subito l'ASL (art. 19 Reg. CE 178/2002)."
       ]
     }
   }

@@ -4,7 +4,15 @@
 
 import { valuta, nomeCompleto, ESITI_VISITA } from './engine.js';
 import { LINGUE, TESTI } from './lingue.js';
-import { lex8h, fasciaRumore, a8, fasciaVibrazioni, niosh, fasciaNiosh, costantePeso, pericolositaSalute, esposizioneChimica, esitoChimico, bassoRischioIncendio } from './calcoli.js';
+import {
+  lex8h, fasciaRumore, a8, fasciaVibrazioni, niosh, fasciaNiosh, nioshComposito, costantePeso, pericolositaSalute, esposizioneChimica, esitoChimico, bassoRischioIncendio,
+  SOGLIE_RUMORE, SOGLIE_PICCO, BETA_DPI, oreMassimeRumore, contributiRumore, piccoMassimo, fasciaPicco, livelloConDpi, adeguatezzaDpi, lex8hConDpi,
+  accelerazioneEfficace, oreMassimeVibrazioni, righeRumoreDaLibretti, righeVibrazioniDaLibretti,
+  movarisch, fasciaMovarisch, SCELTE_MOVARISCH, GRUPPI_BIOLOGICI, AGENTI_BIOLOGICI, rischioBiologico, obblighiBiologici,
+  pmvPpd, fasciaPmv, METABOLISMO, ABBIGLIAMENTO, wbgt, wbgtRiferimento, fasciaWbgt, CLASSI_METABOLICHE, ILLUMINAMENTI, esitoIlluminazione,
+  EVENTI_SENTINELLA, DIMENSIONI_STRESS, stressInail, fasciaStress
+} from './calcoli.js';
+import { CATEGORIE_MERCI, esitoTemperatura, LIMITI_PROCESSO, esitoProcesso, FASI_HACCP, PREREQUISITI, fasiPerAttivita } from './haccp.js';
 
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -1159,77 +1167,130 @@ export const MODELLI = [
   {
     id: 'valutazione-rumore',
     titolo: 'Valutazione del rischio rumore',
-    descrizione: 'Calcolo dell\'esposizione giornaliera LEX,8h per ogni mansione dai livelli delle attrezzature e dai tempi d\'uso, con confronto con i valori di 80, 85 e 87 dB(A).',
+    descrizione: 'Calcolo automatico di LEX,8h, picco e tempi massimi per ogni mansione, con i dati dei libretti o delle misure, e verifica dei DPI uditivi con il metodo SNR.',
     ambito: 'impresa',
     attivaSe: { q: 'rumore_vibrazioni', eq: true },
     opzioni: (d) => [
-      { id: 'mansione', etichetta: 'Mansione valutata', tipo: 'testo', valore: d.lavoratori?.[0]?.mansione || '' },
+      { id: 'mansione', etichetta: 'Mansione o gruppo omogeneo valutato', tipo: 'testo', valore: d.lavoratori?.[0]?.mansione || '' },
+      {
+        id: 'metodo',
+        etichetta: 'Da dove vengono i livelli',
+        tipo: 'scelta',
+        valori: [
+          { valore: 'libretti', etichetta: 'Libretti delle macchine e banche dati (stima)' },
+          { valore: 'misure', etichetta: 'Misure con fonometro (UNI EN ISO 9612)' },
+          { valore: 'misto', etichetta: 'In parte misure, in parte libretti' }
+        ],
+        valore: 'libretti'
+      },
       {
         id: 'righe',
         etichetta: 'Attività rumorose della giornata tipo',
         tipo: 'tabella',
-        aiuto: 'Il livello LAeq in dB(A) si trova nel libretto della macchina, nelle banche dati (es. INAIL) o con una misura. Inserisci anche il tempo senza rumore (es. 70 dB(A)).',
+        aiuto: 'LAeq in dB(A): dal libretto (LpA al posto dell\'operatore più l\'incertezza K), da una banca dati (Portale Agenti Fisici) o da una misura. Picco LCpeak in dB(C) e LCeq in dB(C) servono per i rumori impulsivi e per verificare i DPI. Inserisci anche il tempo senza rumore (es. 70 dB(A)). I dati dei libretti si inseriscono nella scheda di ogni attrezzatura.',
         righe: 6,
-        iniziali: (d.attrezzature || []).slice(0, 6).map((x) => ({ attivita: x.nome, livello: '', ore: '' })),
+        iniziali: righeRumoreDaLibretti(d.attrezzature, 6),
         colonne: [
           { id: 'attivita', etichetta: 'Attività o attrezzatura' },
           { id: 'livello', etichetta: 'LAeq dB(A)', tipo: 'numero' },
           { id: 'ore', etichetta: 'Ore al giorno', tipo: 'numero' },
+          { id: 'picco', etichetta: 'LCpeak dB(C)', tipo: 'numero' },
+          { id: 'lceq', etichetta: 'LCeq dB(C)', tipo: 'numero' },
           { id: 'fonte', etichetta: 'Fonte del dato' }
         ]
       },
-      { id: 'picco', etichetta: 'Rumori impulsivi forti (spari, martellate violente, scoppi)', tipo: 'casella' }
+      { id: 'incertezza', etichetta: 'Incertezza estesa U delle misure, in dB (se misurato)', tipo: 'testo', segnaposto: 'es. 1,5' },
+      {
+        id: 'dpiTipo',
+        etichetta: 'DPI uditivo usato nelle attività oltre 80 dB(A)',
+        tipo: 'scelta',
+        valori: Object.entries(BETA_DPI).map(([valore, x]) => ({ valore, etichetta: `${x.etichetta} (β ${String(x.beta).replace('.', ',')})` }))
+      },
+      { id: 'dpiSnr', etichetta: 'SNR del DPI, in dB (sulla confezione o nella nota informativa)', tipo: 'testo', segnaposto: 'es. 28' }
     ],
     genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
       const righe = (o.righe || []).filter((r) => r.attivita || r.livello || r.ore);
       const lex = lex8h(righe);
-      const f = fasciaRumore(lex);
+      const U = Number(String(o.incertezza || '').replace(',', '.')) || 0;
+      const lexU = lex === null ? null : Math.round((lex + U) * 10) / 10;
+      const f = fasciaRumore(lexU);
+      const quote = contributiRumore(righe);
       const ore = righe.reduce((s, r) => s + (Number(String(r.ore).replace(',', '.')) || 0), 0);
+      const picco = piccoMassimo(righe);
+      const fp = fasciaPicco(picco);
+      const dpi = { tipo: o.dpiTipo, snr: o.dpiSnr };
+      const conDpi = lex8hConDpi(righe, dpi);
+      const n = (x) => (x === null || x === undefined ? '—' : String(x).replace('.', ','));
+      const oltre80 = righe.filter((r) => Number(String(r.livello).replace(',', '.')) > 80);
+      const senzaLc = oltre80.some((r) => !String(r.lceq || '').trim());
       return `${intestazione(a)}
         <h1>Valutazione del rischio rumore</h1>
-        <p class="doc__rif">D.Lgs. 81/2008 Titolo VIII, Capo II (artt. 187-198)</p>
-        <p>Mansione: ${v(o.mansione, 24)}</p>
+        <p class="doc__rif">D.Lgs. 81/2008 Titolo VIII, Capo II (artt. 187-198); UNI EN ISO 9612; UNI 9432:2011; UNI EN 458</p>
+        <p>Mansione o gruppo omogeneo: ${v(o.mansione, 24)} · Metodo: <strong>${esc({ libretti: 'stima da libretti e banche dati', misure: 'misure fonometriche', misto: 'misure e libretti' }[o.metodo] || 'stima da libretti e banche dati')}</strong></p>
         <h2>1 · Attività e livelli</h2>
-        <table class="doc__tabella"><thead><tr><th>Attività o attrezzatura</th><th>LAeq dB(A)</th><th>Ore</th><th>Fonte</th></tr></thead><tbody>
-          ${righe.map((r) => `<tr><td>${esc(r.attivita)}</td><td>${esc(r.livello)}</td><td>${esc(r.ore)}</td><td>${esc(r.fonte || '')}</td></tr>`).join('') || '<tr><td style="height:2em"></td><td></td><td></td><td></td></tr>'}
+        <table class="doc__tabella"><thead><tr><th>Attività o attrezzatura</th><th>LAeq dB(A)</th><th>Ore</th><th>Quota della dose</th><th>Ore per arrivare a 85 dB(A)</th><th>LCpeak dB(C)</th><th>Fonte</th></tr></thead><tbody>
+          ${righe.map((r, i) => `<tr><td>${esc(r.attivita)}</td><td>${esc(r.livello)}</td><td>${esc(r.ore)}</td><td>${quote[i] === null ? '' : `${quote[i]}%`}</td><td>${r.livello ? n(oreMassimeRumore(r.livello)) === '—' ? 'oltre 8' : n(oreMassimeRumore(r.livello)) : ''}</td><td>${esc(r.picco || '')}</td><td>${esc(r.fonte || '')}</td></tr>`).join('') || '<tr><td style="height:2em" colspan="7"></td></tr>'}
         </tbody></table>
-        ${ore && Math.abs(ore - 8) > 0.01 ? `<p class="doc__nota">Totale ore inserite: ${ore}. Il calcolo riporta comunque l'esposizione su 8 ore.</p>` : ''}
+        ${ore && Math.abs(ore - 8) > 0.01 ? `<p class="doc__nota">Totale ore inserite: ${n(ore)}. Il calcolo riporta comunque l'esposizione su 8 ore.</p>` : ''}
         <h2>2 · Risultato</h2>
-        <p>LEX,8h = 10 · log<sub>10</sub>[ Σ (T<sub>i</sub>/8) · 10<sup>L<sub>i</sub>/10</sup> ]</p>
-        <p class="doc__esito doc__esito--${f?.colore || 'giallo'}"><strong>LEX,8h = ${lex ?? '—'} dB(A)</strong>${f ? ` · ${esc(f.testo)}` : ''}</p>
-        ${o.picco ? '<p><strong>Rumori impulsivi:</strong> verificare anche il livello di picco (valori di azione 135 e 137 dB(C), limite 140 dB(C)) con una misura.</p>' : ''}
-        <h2>3 · Misure</h2>
+        <p>LEX,8h = 10 · log<sub>10</sub>[ Σ (T<sub>i</sub>/8) · 10<sup>L<sub>i</sub>/10</sup> ]${U ? ` · confronto con i valori d'azione su LEX,8h + U (U = ${n(U)} dB)` : ''}</p>
+        <p class="doc__esito doc__esito--${f?.colore || 'giallo'}"><strong>LEX,8h = ${n(lex)} dB(A)${U && lex !== null ? ` · con incertezza ${n(lexU)} dB(A)` : ''}</strong>${f ? ` · ${esc(f.testo)}` : ''}</p>
+        ${fp ? `<p class="doc__esito doc__esito--${fp.colore}"><strong>Picco massimo ${n(picco)} dB(C)</strong> · ${esc(fp.testo)}</p>` : ''}
+        ${
+          oltre80.length
+            ? `<h2>3 · Verifica dei DPI uditivi (metodo SNR, UNI 9432)</h2>
+        ${
+          conDpi === null
+            ? '<p>Indica tipo di DPI e SNR per calcolare il livello effettivo all\'orecchio.</p>'
+            : `<table class="doc__tabella"><thead><tr><th>Attività</th><th>Livello di partenza</th><th>Livello con il DPI L'A = L − β·SNR</th><th>Protezione</th></tr></thead><tbody>
+          ${oltre80
+            .map((r) => {
+              const lp = livelloConDpi(r, dpi);
+              const ad = adeguatezzaDpi(lp);
+              return `<tr><td>${esc(r.attivita)}</td><td>${r.lceq ? `${esc(r.lceq)} dB(C)` : `${esc(r.livello)} dB(A)*`}</td><td><strong>${n(lp)} dB(A)</strong></td><td class="doc__esito--${ad?.colore || ''}">${esc(ad?.testo || '')}</td></tr>`;
+            })
+            .join('')}
+          </tbody></table>
+          <p class="doc__esito doc__esito--${conDpi > SOGLIE_RUMORE.limite ? 'rosso' : 'verde'}"><strong>LEX,8h con i DPI = ${n(conDpi)} dB(A)</strong> · ${conDpi > SOGLIE_RUMORE.limite ? 'oltre il valore limite di 87 dB(A): ridurre subito l\'esposizione' : 'rispettato il valore limite di 87 dB(A)'}</p>
+          ${senzaLc ? '<p class="doc__nota">* Manca il LCeq: il calcolo usa il LAeq ed è solo indicativo, perché con rumori a bassa frequenza il livello reale con il DPI è più alto. Misura il LCeq per una verifica corretta.</p>' : ''}`
+        }`
+            : ''
+        }
+        <h2>${oltre80.length ? '4' : '3'} · Misure</h2>
         <ul>
-          <li>Scegliere attrezzature meno rumorose e mantenerle efficienti.</li>
+          <li>Scegliere attrezzature meno rumorose e mantenerle efficienti; intervenire prima sulle attività con la quota di dose più alta.</li>
           <li>Ridurre i tempi di esposizione e allontanare chi non lavora dalle sorgenti rumorose.</li>
-          ${lex > 80 ? '<li>Fornire cuffie o tappi adatti e addestrare all\'uso; informazione e formazione specifiche.</li>' : ''}
-          ${lex > 85 ? '<li>Obbligo d\'uso dei DPI uditivi, segnaletica nelle aree rumorose, sorveglianza sanitaria, programma di riduzione.</li>' : ''}
+          ${lexU > 80 ? '<li>Fornire cuffie o tappi adatti e addestrare all\'uso; informazione e formazione specifiche; visita medica su richiesta del lavoratore.</li>' : ''}
+          ${lexU > 85 || (picco ?? 0) > SOGLIE_PICCO.superiore ? '<li>Obbligo d\'uso dei DPI uditivi, segnaletica e delimitazione delle aree rumorose, sorveglianza sanitaria, programma di riduzione (art. 192).</li>' : ''}
         </ul>
-        <p class="doc__nota">Valutazione da ripetere almeno ogni 4 anni o quando cambiano attrezzature e lavorazioni (art. 181). I livelli da banca dati vanno confermati con una misura se il risultato è vicino ai valori di azione.</p>
+        <p class="doc__nota">Valutazione da ripetere almeno ogni 4 anni o quando cambiano attrezzature e lavorazioni (art. 181). I livelli dei libretti sono misurati in prova e possono essere inferiori a quelli reali: se il risultato è vicino ai valori d'azione serve una misura con fonometro.</p>
         ${luogoData(a, oggi)}
-        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp])}`;
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['Il medico competente', a.medico])}`;
     }
   },
   {
     id: 'valutazione-vibrazioni',
     titolo: 'Valutazione del rischio vibrazioni',
-    descrizione: 'Calcolo dell\'esposizione A(8) per mano-braccio e corpo intero dagli utensili e dai mezzi usati, con confronto con i valori di azione e limite.',
+    descrizione: 'Calcolo automatico di A(8) per mano-braccio e corpo intero dai libretti (con incertezza e fattore di correzione) o dalle misure, con il tempo massimo d\'uso di ogni attrezzo.',
     ambito: 'impresa',
     attivaSe: { q: 'rumore_vibrazioni', eq: true },
     opzioni: (d) => [
-      { id: 'mansione', etichetta: 'Mansione valutata', tipo: 'testo', valore: d.lavoratori?.[0]?.mansione || '' },
+      { id: 'mansione', etichetta: 'Mansione o gruppo omogeneo valutato', tipo: 'testo', valore: d.lavoratori?.[0]?.mansione || '' },
       {
         id: 'righe',
         etichetta: 'Utensili e mezzi che vibrano',
         tipo: 'tabella',
-        aiuto: 'L\'accelerazione in m/s² si trova nel libretto dell\'utensile o nella banca dati vibrazioni (Portale Agenti Fisici). Per le macchine portatili scegli «Mano-braccio», per mezzi e piattaforme «Corpo intero». Indica il tempo di vibrazione effettivo, non tutto il turno.',
+        aiuto: 'Accelerazione in m/s²: dal libretto (valore dichiarato), dal Portale Agenti Fisici o da una misura. K è l\'incertezza dichiarata nel libretto. Il fattore di correzione (vuoto = 1) porta il valore dichiarato a quello d\'uso reale, secondo le indicazioni del Portale Agenti Fisici e della CEN/TR 15350. Ore: tempo di vibrazione effettivo, non tutto il turno.',
         righe: 6,
-        iniziali: (d.attrezzature || []).filter((x) => /utensil|macchin|veicol/i.test(x.tipo || '')).slice(0, 6).map((x) => ({ attrezzo: x.nome, sistema: 'HAV', accelerazione: '', ore: '' })),
+        iniziali: righeVibrazioniDaLibretti(d.attrezzature, (x) => /utensil|macchin|veicol|trattor|carrell|escavat/i.test(x.tipo || ''), 6),
         colonne: [
           { id: 'attrezzo', etichetta: 'Utensile o mezzo' },
           { id: 'sistema', etichetta: 'Tipo', tipo: 'scelta', valori: [{ valore: 'HAV', etichetta: 'Mano-braccio' }, { valore: 'WBV', etichetta: 'Corpo intero' }] },
           { id: 'accelerazione', etichetta: 'm/s²', tipo: 'numero' },
-          { id: 'ore', etichetta: 'Ore al giorno', tipo: 'numero' }
+          { id: 'incertezza', etichetta: 'K m/s²', tipo: 'numero' },
+          { id: 'fattore', etichetta: 'Fattore', tipo: 'numero' },
+          { id: 'ore', etichetta: 'Ore al giorno', tipo: 'numero' },
+          { id: 'fonte', etichetta: 'Fonte' }
         ]
       }
     ],
@@ -1239,27 +1300,35 @@ export const MODELLI = [
       const wbv = a8(righe, 'WBV');
       const fh = fasciaVibrazioni(hav, 'HAV');
       const fw = fasciaVibrazioni(wbv, 'WBV');
+      const n = (x) => (x === null || x === undefined ? '—' : String(x).replace('.', ','));
+      const tempo = (r, s) => {
+        const ae = accelerazioneEfficace(r);
+        if (!ae) return '';
+        const t = oreMassimeVibrazioni(ae, r.sistema === 'WBV' ? 'WBV' : 'HAV', s);
+        return t === null ? 'oltre 8' : n(t);
+      };
       return `${intestazione(a)}
         <h1>Valutazione del rischio vibrazioni</h1>
-        <p class="doc__rif">D.Lgs. 81/2008 Titolo VIII, Capo III (artt. 199-205) e Allegato XXXV</p>
-        <p>Mansione: ${v(o.mansione, 24)}</p>
-        <table class="doc__tabella"><thead><tr><th>Utensile o mezzo</th><th>Tipo</th><th>Accelerazione m/s²</th><th>Ore</th></tr></thead><tbody>
-          ${righe.map((r) => `<tr><td>${esc(r.attrezzo)}</td><td>${r.sistema === 'WBV' ? 'Corpo intero' : 'Mano-braccio'}</td><td>${esc(r.accelerazione)}</td><td>${esc(r.ore)}</td></tr>`).join('') || '<tr><td style="height:2em"></td><td></td><td></td><td></td></tr>'}
+        <p class="doc__rif">D.Lgs. 81/2008 Titolo VIII, Capo III (artt. 199-205) e Allegato XXXV; UNI EN ISO 5349; UNI ISO 2631</p>
+        <p>Mansione o gruppo omogeneo: ${v(o.mansione, 24)}</p>
+        <table class="doc__tabella"><thead><tr><th>Utensile o mezzo</th><th>Tipo</th><th>Dichiarato m/s²</th><th>Usato nel calcolo (a+K)·f</th><th>Ore</th><th>Ore massime: azione / limite</th><th>Fonte</th></tr></thead><tbody>
+          ${righe.map((r) => `<tr><td>${esc(r.attrezzo)}</td><td>${r.sistema === 'WBV' ? 'Corpo intero' : 'Mano-braccio'}</td><td>${esc(r.accelerazione)}</td><td><strong>${n(accelerazioneEfficace(r))}</strong></td><td>${esc(r.ore)}</td><td>${tempo(r, 'azione')} / ${tempo(r, 'limite')}</td><td>${esc(r.fonte || '')}</td></tr>`).join('') || '<tr><td style="height:2em" colspan="7"></td></tr>'}
         </tbody></table>
-        <p>A(8) = √[ Σ a<sub>i</sub>² · T<sub>i</sub> / 8 ]</p>
+        <p>A(8) = √[ Σ a<sub>i</sub>² · T<sub>i</sub> / 8 ] · per il corpo intero si usa l'asse con il valore più alto tra 1,4·a<sub>wx</sub>, 1,4·a<sub>wy</sub> e a<sub>wz</sub>.</p>
         <table class="doc__tabella"><thead><tr><th></th><th>A(8)</th><th>Azione / limite</th><th>Esito</th></tr></thead><tbody>
-          <tr><td>Mano-braccio</td><td><strong>${hav ?? '—'}</strong></td><td>2,5 / 5 m/s²</td><td class="doc__esito--${fh?.colore || ''}">${esc(fh?.testo || 'Non presente')}</td></tr>
-          <tr><td>Corpo intero</td><td><strong>${wbv ?? '—'}</strong></td><td>0,5 / 1 m/s²</td><td class="doc__esito--${fw?.colore || ''}">${esc(fw?.testo || 'Non presente')}</td></tr>
+          <tr><td>Mano-braccio</td><td><strong>${n(hav)}</strong></td><td>2,5 / 5 m/s²</td><td class="doc__esito--${fh?.colore || ''}">${esc(fh?.testo || 'Non presente')}</td></tr>
+          <tr><td>Corpo intero</td><td><strong>${n(wbv)}</strong></td><td>0,5 / 1 m/s²</td><td class="doc__esito--${fw?.colore || ''}">${esc(fw?.testo || 'Non presente')}</td></tr>
         </tbody></table>
         <h2>Misure</h2>
         <ul>
-          <li>Preferire utensili e mezzi a basse vibrazioni, mantenuti e con impugnature antivibranti.</li>
-          <li>Alternare le attività e fare pause; tenere le mani calde e asciutte.</li>
-          ${(hav ?? 0) > 2.5 || (wbv ?? 0) > 0.5 ? '<li>Programma di riduzione dell\'esposizione, informazione e formazione specifiche, sorveglianza sanitaria.</li>' : ''}
+          <li>Preferire utensili e mezzi a basse vibrazioni, mantenuti e con impugnature antivibranti; sedili ammortizzati e regolati per i mezzi.</li>
+          <li>Rispettare le ore massime d'uso indicate in tabella, alternare le attività e fare pause; tenere le mani calde e asciutte.</li>
+          ${(hav ?? 0) > 2.5 || (wbv ?? 0) > 0.5 ? '<li>Programma di riduzione dell\'esposizione (art. 203), informazione e formazione specifiche, sorveglianza sanitaria (art. 204).</li>' : ''}
+          ${(hav ?? 0) > 5 || (wbv ?? 0) > 1 ? '<li>Valore limite superato: ridurre subito l\'esposizione e individuare le cause (art. 203 c. 2).</li>' : ''}
         </ul>
-        <p class="doc__nota">Valutazione da ripetere almeno ogni 4 anni o quando cambiano utensili e lavorazioni.</p>
+        <p class="doc__nota">Valutazione da ripetere almeno ogni 4 anni o quando cambiano utensili e lavorazioni. I valori dei libretti sono di prova: correggerli o misurarli se il risultato è vicino ai valori d'azione.</p>
         ${luogoData(a, oggi)}
-        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp])}`;
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['Il medico competente', a.medico])}`;
     }
   },
   {
@@ -1312,6 +1381,14 @@ export const MODELLI = [
           }
         </tbody></table>
         <p><small>A altezza · B spostamento verticale · C distanza orizzontale · D rotazione · E presa · F frequenza. RWL = costante di peso × A × B × C × D × E × F; indice = peso / RWL.</small></p>
+        ${(() => {
+          const cli = nioshComposito(compiti, { genere: o.genere, fascia: o.fascia, unaMano: o.unaMano, dueOperatori: o.dueOperatori });
+          if (!cli) return '';
+          const f = fasciaNiosh(cli.indice);
+          return `<h2>Indice composito (più sollevamenti nello stesso turno)</h2>
+            <p>Gli stessi lavoratori fanno tutti questi sollevamenti: l'indice composito somma il peso di ognuno tenendo conto della frequenza complessiva (${f2(cli.frequenzaTotale)} atti al minuto, durata «${esc(cli.durata)}»). Ordine di gravosità: ${cli.ordine.map(esc).join(' › ')}.</p>
+            <p class="doc__esito doc__esito--${f.colore}"><strong>Indice composito = ${cli.indice === null ? 'non calcolabile (frequenza complessiva oltre i limiti)' : f2(cli.indice)}</strong> · ${esc(f.testo)}</p>`;
+        })()}
         <h2>Misure</h2>
         <ul>
           <li>Usare carrelli, transpallet, sollevatori o altri ausili; ridurre il peso delle confezioni.</li>
@@ -1375,6 +1452,285 @@ export const MODELLI = [
         <p class="doc__nota">Per i prodotti con esito giallo o rosso confermare la valutazione con un modello riconosciuto (per esempio MoVaRisCh) o con misure ambientali. I prodotti cancerogeni, mutageni o tossici per la riproduzione richiedono la valutazione del Capo II.</p>
         ${luogoData(a, oggi)}
         ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['Il medico competente', a.medico])}`;
+    }
+  },
+  {
+    id: 'valutazione-chimico-movarisch',
+    titolo: 'Valutazione del rischio chimico con l\'algoritmo MoVaRisCh',
+    descrizione: 'Calcolo automatico del rischio per inalazione e per contatto con la pelle (MoVaRisCh): il punteggio di pericolo si ricava dalle frasi H delle schede di sicurezza.',
+    allegati: { prodotti: () => true, categorie: ['sds'] },
+    ambito: 'impresa',
+    attivaSe: { q: 'chimici', eq: true },
+    opzioni: (d) => {
+      const s = (k) => SCELTE_MOVARISCH[k].map(([valore, etichetta]) => ({ valore, etichetta }));
+      return [
+        { id: 'mansione', etichetta: 'Mansione o gruppo omogeneo valutato', tipo: 'testo', valore: d.lavoratori?.[0]?.mansione || '' },
+        {
+          id: 'righe',
+          etichetta: 'Prodotti e modo d\'uso',
+          tipo: 'tabella',
+          aiuto: 'Frasi H dalla sezione 2 della scheda di sicurezza; per H314, H317, H334, H300, H310 e H330 scrivi anche la categoria (es. «H314 1B»), altrimenti si usa la più severa. Quantità: usata al giorno. Tempo: esposizione giornaliera. Distanza: tra la sorgente e il lavoratore. Contatto: quante volte al giorno la pelle può toccare il prodotto.',
+          righe: Math.max(4, (d.prodotti || []).length),
+          iniziali: (d.prodotti || []).map((p) => ({ prodotto: p.nome, frasiH: p.frasiH || '', stato: 'liquido_bassa', quantita: 'da_0_1_a_1', uso: 'controllato', controllo: 'ventilazione', tempo: 'da_15m_a_2h', distanza: 'meno_1', contatto: 'accidentale' })),
+          colonne: [
+            { id: 'prodotto', etichetta: 'Prodotto' },
+            { id: 'frasiH', etichetta: 'Frasi H' },
+            { id: 'stato', etichetta: 'Stato fisico', tipo: 'scelta', valori: s('stato') },
+            { id: 'quantita', etichetta: 'Quantità al giorno', tipo: 'scelta', valori: s('quantita') },
+            { id: 'uso', etichetta: 'Tipo di uso', tipo: 'scelta', valori: s('uso') },
+            { id: 'controllo', etichetta: 'Controllo', tipo: 'scelta', valori: s('controllo') },
+            { id: 'tempo', etichetta: 'Tempo al giorno', tipo: 'scelta', valori: s('tempo') },
+            { id: 'distanza', etichetta: 'Distanza', tipo: 'scelta', valori: s('distanza') },
+            { id: 'contatto', etichetta: 'Contatto con la pelle', tipo: 'scelta', valori: s('contatto') }
+          ]
+        }
+      ];
+    },
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const righe = (o.righe || []).filter((r) => r.prodotto);
+      const n = (x) => (x === null || x === undefined ? '—' : String(x).replace('.', ','));
+      const valutate = righe.map((r) => {
+        const m = movarisch(r);
+        return { r, m, f: fasciaMovarisch(m.R, m.cmr) };
+      });
+      const peggiore = valutate.reduce((x, y) => (y.m.cmr || (y.m.R ?? 0) > (x?.m.R ?? -1) ? y : x), null);
+      return `${intestazione(a)}
+        <h1>Valutazione del rischio chimico per la salute</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 Titolo IX, Capo I (artt. 221-232); Reg. CE 1272/2008 (CLP); modello MoVaRisCh (Regioni Emilia-Romagna, Lombardia e Toscana)</p>
+        <p>Mansione o gruppo omogeneo: ${v(o.mansione, 24)}</p>
+        <p>R<sub>inal</sub> = P × I × d · R<sub>cute</sub> = P × E<sub>cute</sub> · R<sub>cum</sub> = √(R<sub>inal</sub>² + R<sub>cute</sub>²). P è il punteggio più alto delle frasi H; I deriva da disponibilità, tipo d'uso, controllo e tempo; d dalla distanza.</p>
+        <table class="doc__tabella"><thead><tr><th>Prodotto</th><th>Frasi H · P</th><th>D · U · C · I · d</th><th>R inal.</th><th>R cute</th><th>R cum.</th><th>Esito</th></tr></thead><tbody>
+          ${
+            valutate
+              .map(
+                ({ r, m, f }) => `<tr><td>${esc(r.prodotto)}</td><td>${esc(r.frasiH)}<br><strong>${m.cmr ? 'CMR' : `P ${n(m.P)}`}</strong>${m.classificato || m.cmr ? '' : ' <small>(nessuna frase H per la salute)</small>'}</td><td><small>${[m.D, m.U, m.C, m.I, m.d].map(n).join(' · ')}</small></td><td>${n(m.Rinal)}</td><td>${n(m.Rcute)}</td><td>${n(m.Rcum)}</td><td class="doc__esito--${f?.colore || ''}">${esc(f?.testo || 'Dati incompleti')}</td></tr>`
+              )
+              .join('') || '<tr><td style="height:2em" colspan="7"></td></tr>'
+          }
+        </tbody></table>
+        ${peggiore ? `<p class="doc__esito doc__esito--${peggiore.f?.colore || 'giallo'}"><strong>Esito complessivo per la mansione:</strong> ${esc(peggiore.f?.testo || '')} (prodotto più gravoso: ${esc(peggiore.r.prodotto)}).</p>` : ''}
+        <h2>Misure</h2>
+        <ul>
+          <li>Misure generali dell'art. 224 per tutti i prodotti: quantità minime, prodotti meno pericolosi, locali aerati, schede di sicurezza a disposizione, informazione e formazione.</li>
+          <li>Per abbassare il punteggio: sistemi chiusi o dosatori, aspirazione localizzata, minor tempo di esposizione e maggiore distanza; guanti e DPI della sezione 8 delle schede.</li>
+          ${valutate.some((x) => (x.m.R ?? 0) >= 21) ? '<li>Per i prodotti oltre l\'irrilevante: misure specifiche di protezione e prevenzione (art. 225), disposizioni per le emergenze (art. 226), informazione e formazione (art. 227), sorveglianza sanitaria (art. 229) e cartelle sanitarie (art. 230); verificare con misure il rispetto dei valori limite (Allegato XXXVIII).</li>' : ''}
+        </ul>
+        <p class="doc__nota">L'esito «irrilevante per la salute» va condiviso con il medico competente. I pericoli per la sicurezza (incendio, esplosione) si valutano a parte (valutazione incendio ed eventuale ATEX). Il modello non si applica a cancerogeni, mutageni e tossici per la riproduzione di categoria 1.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['Il medico competente', a.medico])}`;
+    }
+  },
+  {
+    id: 'valutazione-biologico',
+    titolo: 'Valutazione del rischio biologico',
+    descrizione: 'Agenti biologici a cui si può essere esposti, con gruppo di pericolo (Allegato XLVI), calcolo di R = P × D e obblighi che ne derivano (DPI, formazione, vaccinazioni, registro degli esposti).',
+    ambito: 'impresa',
+    attivaSe: { q: 'biologici', eq: true },
+    opzioni: (d) => {
+      const attivita = d.ctx?.risposte?.attivita;
+      const alimenti = d.ctx?.risposte?.alimenti === true;
+      const proposti = AGENTI_BIOLOGICI.filter((x) => x.attivita.includes(attivita) || (alimenti && /Salmonella|Listeria/.test(x.agente))).slice(0, 8);
+      return [
+        { id: 'mansione', etichetta: 'Mansione o gruppo omogeneo valutato', tipo: 'testo', valore: d.lavoratori?.[0]?.mansione || '' },
+        {
+          id: 'tipo',
+          etichetta: 'Tipo di esposizione',
+          tipo: 'scelta',
+          valori: [
+            { valore: 'potenziale', etichetta: 'Potenziale: gli agenti non si usano, ma ci si può venire a contatto' },
+            { valore: 'deliberato', etichetta: 'Deliberata: gli agenti si usano nel lavoro (laboratori, produzioni)' }
+          ],
+          valore: 'potenziale'
+        },
+        {
+          id: 'agenti',
+          etichetta: 'Agenti biologici e fonti di esposizione',
+          tipo: 'tabella',
+          aiuto: 'Il gruppo (1-4) è nell\'Allegato XLVI del D.Lgs. 81/2008. Probabilità: 1 improbabile, 2 poco probabile, 3 probabile, 4 molto probabile, secondo frequenza dei contatti, misure già presenti e casi noti. Il danno D è il gruppo.',
+          righe: Math.max(4, proposti.length),
+          iniziali: proposti.map((x) => ({ agente: x.agente, fonte: '', gruppo: String(x.gruppo), via: x.via, probabilita: '2', vaccino: /epatite B|tetani|epatite A|influenzali/.test(x.agente) ? 'si' : 'no' })),
+          colonne: [
+            { id: 'agente', etichetta: 'Agente', suggerimenti: AGENTI_BIOLOGICI.map((x) => x.agente) },
+            { id: 'fonte', etichetta: 'Fonte (es. sangue, terra, rifiuti, animali)' },
+            { id: 'gruppo', etichetta: 'Gruppo', tipo: 'scelta', valori: ['1', '2', '3', '4'].map((g) => ({ valore: g, etichetta: g })) },
+            {
+              id: 'via',
+              etichetta: 'Via',
+              tipo: 'scelta',
+              valori: [
+                { valore: 'contatto', etichetta: 'Contatto con pelle e mucose' },
+                { valore: 'sangue', etichetta: 'Sangue (tagli, punture)' },
+                { valore: 'ferite', etichetta: 'Ferite' },
+                { valore: 'inalazione', etichetta: 'Inalazione' },
+                { valore: 'ingestione', etichetta: 'Ingestione' },
+                { valore: 'puntura', etichetta: 'Puntura di insetti o zecche' }
+              ]
+            },
+            { id: 'probabilita', etichetta: 'P', tipo: 'scelta', valori: ['1', '2', '3', '4'].map((g) => ({ valore: g, etichetta: g })) },
+            { id: 'vaccino', etichetta: 'Vaccino disponibile', tipo: 'scelta', valori: [{ valore: 'no', etichetta: 'No' }, { valore: 'si', etichetta: 'Sì' }] }
+          ]
+        }
+      ];
+    },
+    genera: ({ anagrafica: a, oggi, dvr, opzioni: o = {} }) => {
+      const righe = (o.agenti || []).filter((r) => r.agente);
+      const criteri = dvr?.criteri;
+      const VIE = { contatto: 'Contatto', sangue: 'Sangue', ferite: 'Ferite', inalazione: 'Inalazione', ingestione: 'Ingestione', puntura: 'Puntura' };
+      const obblighi = obblighiBiologici(righe, o.tipo === 'deliberato');
+      return `${intestazione(a)}
+        <h1>Valutazione del rischio biologico</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 Titolo X (artt. 266-286) e Allegati XLIV-XLVII</p>
+        <p>Mansione o gruppo omogeneo: ${v(o.mansione, 24)} · Esposizione <strong>${o.tipo === 'deliberato' ? 'deliberata (uso di agenti biologici)' : 'potenziale'}</strong></p>
+        <table class="doc__tabella"><thead><tr><th>Agente</th><th>Fonte · via</th><th>Gruppo (D)</th><th>P</th><th>R = P × D</th><th>Livello</th></tr></thead><tbody>
+          ${
+            righe
+              .map((r) => {
+                const x = rischioBiologico(r);
+                const l = x && criteri ? livelloRischio(criteri, x.R) : null;
+                return `<tr><td>${esc(r.agente)}${r.vaccino === 'si' ? '<br><small>vaccino disponibile</small>' : ''}</td><td>${esc([r.fonte, VIE[r.via]].filter(Boolean).join(' · '))}</td><td>${esc(r.gruppo)}</td><td>${esc(r.probabilita)}</td><td><strong>${x ? x.R : '—'}</strong></td><td>${l ? `<strong>${esc(l.etichetta)}</strong><br><small>${esc(l.azione)}</small>` : ''}</td></tr>`;
+              })
+              .join('') || '<tr><td style="height:2em" colspan="6"></td></tr>'
+          }
+        </tbody></table>
+        <h2>Gruppi di pericolo</h2>
+        <ul>${Object.values(GRUPPI_BIOLOGICI).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+        <h2>Obblighi e misure</h2>
+        <ul>${obblighi.map((t) => `<li>${esc(t)}</li>`).join('') || '<li>Indica gli agenti per vedere gli obblighi.</li>'}</ul>
+        <p class="doc__nota">Valutazione da ripetere ogni 3 anni e ogni volta che cambiano le lavorazioni in modo significativo (art. 271 c. 3).</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['Il medico competente', a.medico])}`;
+    }
+  },
+  {
+    id: 'valutazione-microclima',
+    titolo: 'Valutazione del microclima',
+    descrizione: 'Calcolo automatico del comfort termico (PMV e PPD, UNI EN ISO 7730) dalle misure di temperatura, umidità e velocità dell\'aria, e dello stress da caldo (WBGT, UNI EN ISO 7243) per i lavori all\'aperto o in ambienti caldi.',
+    ambito: 'impresa',
+    attivaSe: { any: [{ q: 'sede', eq: true }, { q: 'cantiere', eq: true }, { q: 'strada', eq: true }] },
+    opzioni: () => [
+      {
+        id: 'moderati',
+        etichetta: 'Ambienti moderati (uffici, negozi, laboratori)',
+        tipo: 'tabella',
+        aiuto: 'Misure con centralina microclimatica o termoigrometro. Temperatura radiante: dal globotermometro; se non la hai, lascia vuoto e si usa quella dell\'aria. Velocità dell\'aria in m/s (0,1 se ferma).',
+        righe: 3,
+        colonne: [
+          { id: 'ambiente', etichetta: 'Ambiente' },
+          { id: 'ta', etichetta: 'Aria °C', tipo: 'numero' },
+          { id: 'tr', etichetta: 'Radiante °C', tipo: 'numero' },
+          { id: 'ur', etichetta: 'Umidità %', tipo: 'numero' },
+          { id: 'vel', etichetta: 'Aria m/s', tipo: 'numero' },
+          { id: 'met', etichetta: 'Attività', tipo: 'scelta', valori: METABOLISMO.map(([valore, etichetta]) => ({ valore, etichetta })) },
+          { id: 'clo', etichetta: 'Abbigliamento', tipo: 'scelta', valori: ABBIGLIAMENTO.map(([valore, etichetta]) => ({ valore, etichetta })) }
+        ]
+      },
+      {
+        id: 'caldi',
+        etichetta: 'Ambienti caldi e lavori all\'aperto (stress da calore)',
+        tipo: 'tabella',
+        aiuto: 'Misure con il misuratore WBGT: temperatura di bulbo umido naturale (tnw), di globo (tg) e dell\'aria (ta). CAV: correzione per gli indumenti (0 per gli abiti da lavoro normali, più alta per tute impermeabili).',
+        righe: 3,
+        colonne: [
+          { id: 'posto', etichetta: 'Postazione o lavoro' },
+          { id: 'tnw', etichetta: 'tnw °C', tipo: 'numero' },
+          { id: 'tg', etichetta: 'tg °C', tipo: 'numero' },
+          { id: 'ta', etichetta: 'ta °C', tipo: 'numero' },
+          { id: 'sole', etichetta: 'Sole diretto', tipo: 'scelta', valori: [{ valore: 'no', etichetta: 'No' }, { valore: 'si', etichetta: 'Sì' }] },
+          { id: 'classe', etichetta: 'Impegno fisico', tipo: 'scelta', valori: CLASSI_METABOLICHE.map(([valore, etichetta]) => ({ valore, etichetta })) },
+          { id: 'acclimatati', etichetta: 'Acclimatati', tipo: 'scelta', valori: [{ valore: 'no', etichetta: 'No' }, { valore: 'si', etichetta: 'Sì (da almeno una settimana)' }] },
+          { id: 'cav', etichetta: 'CAV °C', tipo: 'numero' }
+        ]
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const n = (x) => (x === null || x === undefined ? '—' : String(x).replace('.', ','));
+      const mod = (o.moderati || []).filter((r) => r.ambiente || r.ta);
+      const cal = (o.caldi || []).filter((r) => r.posto || r.tnw);
+      return `${intestazione(a)}
+        <h1>Valutazione del microclima</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 63 e Allegato IV punto 1.9; UNI EN ISO 7730; UNI EN ISO 7243; UNI EN ISO 7726 (strumenti)</p>
+        <h2>1 · Ambienti moderati: comfort termico</h2>
+        <table class="doc__tabella"><thead><tr><th>Ambiente</th><th>Aria / radiante °C</th><th>Umidità · aria</th><th>met · clo</th><th>PMV</th><th>PPD</th><th>Esito</th></tr></thead><tbody>
+          ${
+            mod
+              .map((r) => {
+                const x = pmvPpd(r);
+                const f = fasciaPmv(x?.pmv);
+                return `<tr><td>${esc(r.ambiente)}</td><td>${esc(r.ta)} / ${esc(r.tr || r.ta)}</td><td>${esc(r.ur || '50')}% · ${esc(r.vel || '0,1')} m/s</td><td>${esc(n(r.met))} · ${esc(n(r.clo))}</td><td><strong>${n(x?.pmv)}</strong></td><td>${x ? `${x.ppd}%` : '—'}</td><td class="doc__esito--${f?.colore || ''}">${esc(f?.testo || 'Dati incompleti')}</td></tr>`;
+              })
+              .join('') || '<tr><td style="height:2em" colspan="7"></td></tr>'
+          }
+        </tbody></table>
+        <p><small>PMV: voto medio previsto da −3 (molto freddo) a +3 (molto caldo); PPD: percentuale prevista di insoddisfatti.</small></p>
+        ${
+          cal.length
+            ? `<h2>2 · Ambienti caldi: stress termico</h2>
+        <table class="doc__tabella"><thead><tr><th>Postazione</th><th>WBGT °C</th><th>Riferimento °C</th><th>Esito</th></tr></thead><tbody>
+          ${cal
+            .map((r) => {
+              const w = wbgt({ ...r, sole: r.sole === 'si' });
+              const rif = wbgtRiferimento(r.classe, r.acclimatati === 'si');
+              const f = fasciaWbgt(w, rif);
+              return `<tr><td>${esc(r.posto)}</td><td><strong>${n(w)}</strong></td><td>${n(rif)} <small>(${r.acclimatati === 'si' ? 'acclimatati' : 'non acclimatati'})</small></td><td class="doc__esito--${f?.colore || ''}">${esc(f?.testo || 'Dati incompleti')}</td></tr>`;
+            })
+            .join('')}
+        </tbody></table>
+        <p><small>WBGT = 0,7·tnw + 0,3·tg (con sole: 0,7·tnw + 0,2·tg + 0,1·ta) + CAV. Riferimento: 56,7 − 11,5·log<sub>10</sub>M per gli acclimatati, 59,9 − 14,1·log<sub>10</sub>M per i non acclimatati.</small></p>`
+            : ''
+        }
+        <h2>Misure</h2>
+        <ul>
+          <li>Regolare riscaldamento, raffrescamento e ricambi d'aria; evitare correnti d'aria sulle postazioni fisse; schermare il sole dalle finestre.</li>
+          <li>Nei periodi caldi: acqua a disposizione, pause all'ombra, lavori pesanti nelle ore fresche, attenzione ai lavoratori non acclimatati e alle ordinanze regionali sul caldo.</li>
+        </ul>
+        <p class="doc__nota">Ripetere le misure in estate e in inverno e quando cambiano impianti o lavorazioni.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp])}`;
+    }
+  },
+  {
+    id: 'valutazione-illuminazione',
+    titolo: 'Verifica dell\'illuminazione dei posti di lavoro',
+    descrizione: 'Confronto automatico tra i lux misurati con il luxmetro e i valori indicati dalla UNI EN 12464-1 per ogni tipo di compito.',
+    ambito: 'impresa',
+    attivaSe: { q: 'sede', eq: true },
+    opzioni: () => [
+      {
+        id: 'zone',
+        etichetta: 'Zone e posti di lavoro',
+        tipo: 'tabella',
+        aiuto: 'Misura con il luxmetro all\'altezza del piano di lavoro, con l\'illuminazione accesa come di solito. Scegli il tipo di compito per avere il valore indicato dalla norma.',
+        righe: 5,
+        colonne: [
+          { id: 'zona', etichetta: 'Zona o postazione' },
+          { id: 'compito', etichetta: 'Compito', tipo: 'scelta', valori: ILLUMINAMENTI.map(([valore, etichetta, lux]) => ({ valore, etichetta: `${etichetta} (${lux} lx)` })) },
+          { id: 'lux', etichetta: 'Lux misurati', tipo: 'numero' }
+        ]
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const zone = (o.zone || []).filter((r) => r.zona || r.lux);
+      return `${intestazione(a)}
+        <h1>Verifica dell'illuminazione dei posti di lavoro</h1>
+        <p class="doc__rif">D.Lgs. 81/2008 Allegato IV punto 1.10; UNI EN 12464-1 (valori indicativi di illuminamento medio mantenuto)</p>
+        <table class="doc__tabella"><thead><tr><th>Zona</th><th>Compito</th><th>Indicati lx</th><th>Misurati lx</th><th>Esito</th></tr></thead><tbody>
+          ${
+            zone
+              .map((r) => {
+                const c = ILLUMINAMENTI.find((x) => x[0] === r.compito);
+                const e = esitoIlluminazione(r.compito, r.lux);
+                return `<tr><td>${esc(r.zona)}</td><td>${esc(c?.[1] || '')}</td><td>${c ? c[2] : ''}</td><td>${esc(r.lux)}</td><td class="doc__esito--${e?.colore || ''}">${esc(e?.testo || '')}</td></tr>`;
+              })
+              .join('') || '<tr><td style="height:2em" colspan="5"></td></tr>'
+          }
+        </tbody></table>
+        <h2>Misure</h2>
+        <ul>
+          <li>Integrare o sostituire le lampade nelle zone insufficienti; pulire regolarmente lampade e finestre.</li>
+          <li>Evitare riflessi e abbagliamenti sugli schermi; verificare l'illuminazione di emergenza lungo le vie di esodo.</li>
+        </ul>
+        ${luogoData(a, oggi)}
+        ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp])}`;
     }
   },
   {
@@ -1839,33 +2195,67 @@ export const MODELLI = [
   {
     id: 'stress-preliminare',
     titolo: 'Valutazione preliminare dello stress lavoro-correlato',
-    descrizione: 'Scheda per raccogliere gli eventi sentinella degli ultimi 3 anni (infortuni già compilati dal registro) e i fattori di contenuto e contesto del lavoro.',
+    descrizione: 'Lista di controllo con calcolo automatico del punteggio secondo la metodologia INAIL: eventi sentinella degli ultimi 3 anni (infortuni dal registro) e indicatori critici di contenuto e contesto del lavoro.',
     ambito: 'impresa',
     attivaSe: { fatto: 'haDipendenti' },
-    genera: ({ anagrafica: a, oggi, perAnno }) => {
+    opzioni: (d) => {
+      const anni = Object.keys(d.perAnno || {}).sort();
+      const nLav = String((d.lavoratori || []).length || '');
+      return [
+        { id: 'gruppo', etichetta: 'Gruppo omogeneo o intera impresa', tipo: 'testo', valore: 'Tutta l\'impresa' },
+        ...anni.map((y, i) => ({ id: `lav${i}`, etichetta: `Lavoratori nel ${y} (media tra 1° gennaio e 31 dicembre)`, tipo: 'numero', valore: i === anni.length - 1 ? nLav : '' })),
+        {
+          id: 'eventi',
+          etichetta: 'Eventi sentinella',
+          tipo: 'tabella',
+          aiuto: 'Numeri di ogni anno. Gli infortuni vengono dal registro di safetyDoc. Per assenze e ferie scrivi la percentuale. L\'ultimo anno si confronta con la media dei tre.',
+          righe: EVENTI_SENTINELLA.length,
+          iniziali: EVENTI_SENTINELLA.map((e) => ({
+            indicatore: e.etichetta,
+            a0: e.id === 'infortuni' && anni[0] ? String(d.perAnno[anni[0]].infortunio) : '',
+            a1: e.id === 'infortuni' && anni[1] ? String(d.perAnno[anni[1]].infortunio) : '',
+            a2: e.id === 'infortuni' && anni[2] ? String(d.perAnno[anni[2]].infortunio) : ''
+          })),
+          colonne: [{ id: 'indicatore', etichetta: 'Indicatore' }, ...anni.map((y, i) => ({ id: `a${i}`, etichetta: y, tipo: 'numero' }))]
+        },
+        { id: 'lamentele', etichetta: 'Ci sono state segnalazioni scritte del medico competente o lamentele formali dei lavoratori', tipo: 'casella' },
+        { id: 'istanze', etichetta: 'Ci sono istanze giudiziarie per molestie morali o sessuali', tipo: 'casella' },
+        ...[...DIMENSIONI_STRESS.contenuto, ...DIMENSIONI_STRESS.contesto].map((x) => ({ id: `crit_${x.id}`, etichetta: `${x.etichetta}: indicatori critici su ${x.n}`, tipo: 'numero' })),
+        { id: 'crit_interfaccia', etichetta: 'Interfaccia casa-lavoro: indicatori critici (0 se tutte le misure di conciliazione ci sono)', tipo: 'numero' }
+      ];
+    },
+    genera: ({ anagrafica: a, oggi, perAnno, opzioni: o = {} }) => {
       const anni = Object.keys(perAnno || {}).sort();
-      const riga = (titolo, valori) => `<tr><td>${esc(titolo)}</td>${anni.map((y) => `<td>${valori ? esc(String(valori[y])) : ''}</td>`).join('')}</tr>`;
-      const inf = Object.fromEntries(anni.map((y) => [y, perAnno[y].infortunio]));
-      const area = (titolo, voci) => `<tr><th colspan="2">${esc(titolo)}</th></tr>${voci.map((x) => `<tr><td>${esc(x)}</td><td style="width:45%"></td></tr>`).join('')}`;
+      const righe = o.eventi || [];
+      const eventi = Object.fromEntries(EVENTI_SENTINELLA.map((e, i) => [e.id, anni.map((_, k) => righe[i]?.[`a${k}`] ?? (e.id === 'infortuni' ? perAnno[anni[k]]?.infortunio : ''))]));
+      const criticita = Object.fromEntries([...DIMENSIONI_STRESS.contenuto, ...DIMENSIONI_STRESS.contesto].map((x) => [x.id, o[`crit_${x.id}`]]));
+      const r = stressInail({ eventi, lavoratori: anni.map((_, k) => o[`lav${k}`]), lamentele: o.lamentele, istanze: o.istanze, criticita, interfaccia: o.crit_interfaccia ?? '' });
+      const f = fasciaStress(r.livello);
+      const n = (x) => (x === null || x === undefined ? '—' : String(x));
+      const ANDAMENTO = { diminuito: 'Diminuito', inalterato: 'Inalterato', aumentato: 'Aumentato' };
+      const dim = (l) => l.map((x) => `<tr><td>${esc(x.etichetta)}</td><td>${n(x.punteggio)}</td><td>${esc(x.livello || '')}</td></tr>`).join('');
       return `${intestazione(a)}
         <h1>Valutazione preliminare del rischio stress lavoro-correlato</h1>
-        <p class="doc__rif">D.Lgs. 81/2008 art. 28 c. 1-bis · indicazioni della Commissione consultiva del 17/11/2010 · BOZZA</p>
-        <p>Valutazione condotta da ${v(titolare(a), 20)} con ${v(a.rspp, 18)} e ${v(a.medico, 18)}, sentiti i lavoratori o l'RLS ${v(a.rls, 16)}.</p>
+        <p class="doc__rif">D.Lgs. 81/2008 art. 28 c. 1-bis · indicazioni della Commissione consultiva del 17/11/2010 · metodologia INAIL 2017 (lista di controllo)</p>
+        <p>Gruppo valutato: ${v(o.gruppo, 20)}. Valutazione condotta da ${v(titolare(a), 20)} con ${v(a.rspp, 18)} e ${v(a.medico, 18)}, sentiti i lavoratori o l'RLS ${v(a.rls, 16)}.</p>
         <h2>A · Eventi sentinella</h2>
-        <table class="doc__tabella"><thead><tr><th>Indicatore</th>${anni.map((y) => `<th>${y}</th>`).join('')}</tr></thead><tbody>
-          ${riga('Infortuni (dal registro di safetyDoc)', inf)}
-          ${['Assenze per malattia (giorni)', 'Assenze dal lavoro (permessi, ritardi)', 'Ferie non godute', 'Trasferimenti interni richiesti', 'Cessazioni e dimissioni (turnover)', 'Procedimenti e sanzioni disciplinari', 'Richieste di visite mediche straordinarie', 'Segnalazioni scritte del medico competente', 'Lamentele formali dei lavoratori'].map((t) => riga(t)).join('')}
+        <table class="doc__tabella"><thead><tr><th>Indicatore</th>${anni.map((y) => `<th>${y}</th>`).join('')}<th>Andamento</th><th>Punti</th></tr></thead><tbody>
+          ${r.righeA.map((x, i) => `<tr><td>${esc(x.etichetta)}${x.perLavoratore ? ' <small>(per lavoratore)</small>' : ''}</td>${anni.map((_, k) => `<td>${esc(eventi[x.id][k] ?? '')}</td>`).join('')}<td>${esc(ANDAMENTO[x.andamento] || '')}</td><td>${n(x.punti)}</td></tr>`).join('')}
+          <tr><td>Segnalazioni del medico competente o lamentele formali</td><td colspan="${anni.length + 1}">${o.lamentele ? 'Sì' : 'No'}</td><td>${o.lamentele ? 4 : 0}</td></tr>
+          <tr><td>Istanze giudiziarie per molestie</td><td colspan="${anni.length + 1}">${o.istanze ? 'Sì' : 'No'}</td><td>${o.istanze ? 4 : 0}</td></tr>
         </tbody></table>
-        <h2>B · Contenuto e contesto del lavoro</h2>
-        <table class="doc__tabella"><thead><tr><th>Fattore</th><th>Osservazioni (criticità rilevate)</th></tr></thead><tbody>
-          ${area('Contenuto del lavoro', ['Ambiente di lavoro e attrezzature', 'Pianificazione dei compiti', 'Carico e ritmo di lavoro', 'Orario di lavoro e turni'])}
-          ${area('Contesto del lavoro', ['Organizzazione e comunicazione', 'Ruoli e responsabilità chiari', 'Possibilità di crescita professionale', 'Autonomia nelle decisioni', 'Rapporti tra colleghi e con i responsabili', 'Conciliazione tra lavoro e famiglia'])}
-        </tbody></table>
-        <h2>C · Esito</h2>
-        <p>☐ Non emergono elementi di rischio: la valutazione si conclude e sarà ripetuta periodicamente o al cambiare dell'organizzazione.</p>
-        <p>☐ Emergono elementi di rischio: si adottano le misure correttive sotto indicate e se ne verifica l'efficacia; se non efficaci si passa alla valutazione approfondita.</p>
-        <p style="min-height:4em">Misure: </p>
-        <p class="doc__nota">Per l'analisi dettagliata si può usare la lista di controllo della metodologia INAIL.</p>
+        <p>Somma ${n(r.sommaA)} → <strong>punteggio area A: ${n(r.areaA)}</strong> <small>(0-10 → 0; 11-20 → 6; 21-40 → 16)</small></p>
+        <h2>B · Contenuto del lavoro</h2>
+        <table class="doc__tabella"><thead><tr><th>Dimensione</th><th>Punteggio (% di indicatori critici)</th><th>Livello</th></tr></thead><tbody>${dim(r.contenuto)}</tbody></table>
+        <p><strong>Punteggio area B: ${n(r.areaB)}</strong>${r.livelloB ? ` · ${esc(r.livelloB)}` : ''}</p>
+        <h2>C · Contesto del lavoro</h2>
+        <table class="doc__tabella"><thead><tr><th>Dimensione</th><th>Punteggio</th><th>Livello</th></tr></thead><tbody>${dim(r.contesto)}
+          <tr><td>Interfaccia casa-lavoro</td><td>${r.valoreInterfaccia}</td><td><small>−4 se tutte le misure di conciliazione sono presenti</small></td></tr></tbody></table>
+        <p><strong>Punteggio area C: ${n(r.areaC)}</strong>${r.livelloC ? ` · ${esc(r.livelloC)}` : ''}</p>
+        <h2>Esito</h2>
+        <p class="doc__esito doc__esito--${f?.colore || 'giallo'}"><strong>Punteggio totale: ${n(r.totale)}</strong> <small>(non rilevante fino a 58, medio 59-90, alto oltre 90)</small>${f ? ` · ${esc(f.testo)}` : ' · Completa i dati per avere il risultato.'}</p>
+        <p style="min-height:4em">Azioni correttive sugli indicatori critici: </p>
+        <p class="doc__nota">Gli indicatori di contenuto e contesto si rilevano con la lista di controllo INAIL, compilata dal gruppo di gestione della valutazione sentiti i lavoratori o l'RLS; qui si riporta quanti sono critici per ogni dimensione. Fino a circa 30 lavoratori la lista si compila una volta per tutta l'impresa.</p>
         ${luogoData(a, oggi)}
         ${firme(['Il datore di lavoro', titolare(a)], ['L\'RSPP', a.rspp], ['L\'RLS, per consultazione', a.rls])}`;
     }
@@ -1983,16 +2373,64 @@ export const MODELLI = [
   {
     id: 'registro-temperature',
     titolo: 'Registro delle temperature (frigoriferi e congelatori)',
-    descrizione: 'Scheda mensile da stampare e appendere vicino ai frigoriferi, come previsto dal piano HACCP.',
+    descrizione: 'Scheda mensile con i tuoi apparecchi e i loro limiti; le letture inserite qui vengono controllate subito contro i limiti.',
     ambito: 'impresa',
     attivaSe: { q: 'alimenti', eq: true },
-    genera: ({ anagrafica: a, oggi }) => `${intestazione(a)}
+    opzioni: () => [
+      {
+        id: 'apparecchi',
+        etichetta: 'Frigoriferi, congelatori e banchi',
+        tipo: 'tabella',
+        aiuto: 'Una riga per apparecchio, con la temperatura massima del tuo piano di autocontrollo (es. 4 per i frigoriferi, −18 per i congelatori).',
+        righe: 4,
+        iniziali: [
+          { nome: 'Frigo 1', max: '4' },
+          { nome: 'Frigo 2', max: '4' },
+          { nome: 'Congelatore', max: '-18' }
+        ],
+        colonne: [
+          { id: 'nome', etichetta: 'Apparecchio' },
+          { id: 'max', etichetta: 'Massimo °C', tipo: 'numero' }
+        ]
+      },
+      {
+        id: 'letture',
+        etichetta: 'Letture (facoltative: puoi anche scriverle a mano sulla scheda stampata)',
+        tipo: 'tabella',
+        righe: 3,
+        colonne: [
+          { id: 'giorno', etichetta: 'Giorno' },
+          { id: 'apparecchio', etichetta: 'Apparecchio' },
+          { id: 'temperatura', etichetta: '°C', tipo: 'numero' },
+          { id: 'azione', etichetta: 'Azione se fuori limite' }
+        ]
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const app = (o.apparecchi || []).filter((x) => x.nome).slice(0, 5);
+      const colonne = app.length ? app : [{ nome: 'Frigo 1', max: '4' }, { nome: 'Frigo 2', max: '4' }, { nome: 'Congelatore', max: '-18' }];
+      const num = (x) => Number(String(x ?? '').replace(',', '.'));
+      const letture = (o.letture || []).filter((x) => x.temperatura !== '' && x.temperatura !== undefined);
+      return `${intestazione(a)}
         <h1>Registro delle temperature</h1>
+        <p class="doc__rif">Reg. CE 852/2004 art. 5 · piano di autocontrollo</p>
         <p>Mese ${v('', 12)} · Anno ${v(oggi.slice(0, 4), 6)}</p>
-        <table class="doc__tabella"><thead><tr><th>Giorno</th><th>Frigo 1 (°C)</th><th>Frigo 2 (°C)</th><th>Congelatore (°C)</th><th>Anomalie e azioni</th><th>Firma</th></tr></thead><tbody>
-          ${Array.from({ length: 31 }, (_, i) => `<tr><td>${i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>`).join('')}
+        <table class="doc__tabella"><thead><tr><th>Giorno</th>${colonne.map((c) => `<th>${esc(c.nome)}<br><small>max ${esc(c.max)} °C</small></th>`).join('')}<th>Anomalie e azioni</th><th>Firma</th></tr></thead><tbody>
+          ${Array.from({ length: 31 }, (_, i) => `<tr><td>${i + 1}</td>${colonne.map(() => '<td></td>').join('')}<td></td><td></td></tr>`).join('')}
         </tbody></table>
-        <p class="doc__nota">Limiti indicativi: frigoriferi 0/+4 °C, congelatori −18 °C o meno. Usa i limiti scritti nel tuo piano di autocontrollo.</p>`
+        ${
+          letture.length
+            ? `<h2>Letture registrate in safetyDoc</h2><table class="doc__tabella"><thead><tr><th>Giorno</th><th>Apparecchio</th><th>°C</th><th>Esito</th><th>Azione</th></tr></thead><tbody>${letture
+                .map((l) => {
+                  const c = colonne.find((x) => x.nome.trim().toLowerCase() === String(l.apparecchio || '').trim().toLowerCase());
+                  const ok = c ? num(l.temperatura) <= num(c.max) : null;
+                  return `<tr><td>${esc(l.giorno)}</td><td>${esc(l.apparecchio)}</td><td>${esc(l.temperatura)}</td><td class="doc__esito--${ok === null ? '' : ok ? 'verde' : 'rosso'}">${ok === null ? 'Apparecchio non in elenco' : ok ? 'Conforme' : 'Fuori limite: spostare i prodotti, valutarli, chiamare l\'assistenza'}</td><td>${esc(l.azione || '')}</td></tr>`;
+                })
+                .join('')}</tbody></table>`
+            : ''
+        }
+        <p class="doc__nota">Leggi i termometri ogni giorno alla stessa ora. Se una temperatura è fuori limite scrivi cosa hai fatto con i prodotti e con l'apparecchio. Usa i limiti scritti nel tuo piano di autocontrollo.</p>`;
+    }
   },
   {
     id: 'cartello-allergeni',
@@ -2009,6 +2447,242 @@ export const MODELLI = [
         <table class="doc__tabella"><thead><tr><th>Piatto o prodotto</th>${ALLERGENI.map((_, i) => `<th>${i + 1}</th>`).join('')}</tr></thead><tbody>
           ${Array.from({ length: 12 }, () => `<tr><td style="height:1.8em"></td>${ALLERGENI.map(() => '<td></td>').join('')}</tr>`).join('')}
         </tbody></table>`
+  },
+  {
+    id: 'piano-haccp',
+    titolo: 'Piano di autocontrollo HACCP semplificato',
+    descrizione: 'Il piano con le fasi della tua attività, i pericoli, i punti critici di controllo con i limiti, il monitoraggio, le azioni correttive e le registrazioni, più i prerequisiti di igiene.',
+    ambito: 'impresa',
+    attivaSe: { q: 'alimenti', eq: true },
+    opzioni: (d) => [
+      { id: 'responsabile', etichetta: 'Responsabile dell\'autocontrollo', tipo: 'testo', valore: d.anagrafica?.titolare || '' },
+      { id: 'prodotti', etichetta: 'Cosa produci, prepari o vendi', tipo: 'area', segnaposto: 'es. pizze, primi piatti, dolci da forno, bevande' },
+      { id: 'registrazione', etichetta: 'Registrazione sanitaria (SUAP/ASL): numero e data', tipo: 'testo' },
+      {
+        id: 'fasi',
+        etichetta: 'Fasi della tua attività',
+        tipo: 'spunte',
+        valori: FASI_HACCP.map((f) => ({ valore: f.id, etichetta: f.fase })),
+        valore: fasiPerAttivita(d.ctx?.risposte?.attivita)
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, ctx, opzioni: o = {} }) => {
+      const scelte = Array.isArray(o.fasi) && o.fasi.length ? o.fasi : fasiPerAttivita(ctx?.risposte?.attivita);
+      const fasi = FASI_HACCP.filter((f) => scelte.includes(f.id));
+      return `${intestazione(a)}
+        <h1>Piano di autocontrollo HACCP</h1>
+        <p class="doc__rif">Reg. CE 852/2004 art. 5 e Allegato II; Reg. CE 178/2002; Reg. UE 2021/382; Comunicazione della Commissione 2022/C 355/01 (semplificazione per le piccole imprese)</p>
+        <h2>1 · Impresa e attività</h2>
+        <table class="doc__tabella doc__tabella--campi"><tbody>
+          <tr><th>Responsabile dell'autocontrollo</th><td>${esc(o.responsabile || titolare(a))}</td></tr>
+          <tr><th>Prodotti</th><td>${esc(o.prodotti || '')}</td></tr>
+          <tr><th>Registrazione sanitaria</th><td>${esc(o.registrazione || '')}</td></tr>
+        </tbody></table>
+        <h2>2 · Diagramma di flusso</h2>
+        <p>${fasi.map((f) => esc(f.fase)).join(' → ') || '&nbsp;'}</p>
+        <h2>3 · Analisi dei pericoli e punti critici di controllo</h2>
+        <table class="doc__tabella"><thead><tr><th>Fase</th><th>Pericolo</th><th>Misura di controllo</th><th>Limite critico</th><th>Azione correttiva e registrazione</th></tr></thead><tbody>
+          ${fasi.map((f) => `<tr><td><strong>${esc(f.fase)}</strong>${f.ccp ? '<br><small>CCP</small>' : ''}</td><td>${esc(f.pericolo)}</td><td>${esc(f.controllo)}</td><td>${esc(f.limite)}</td><td>${esc(f.correttiva)}<br><small>Registra: ${esc(f.registrazione)}</small></td></tr>`).join('') || '<tr><td colspan="5" style="height:2em"></td></tr>'}
+        </tbody></table>
+        <h2>4 · Prerequisiti (buone prassi igieniche)</h2>
+        <table class="doc__tabella"><thead><tr><th>Argomento</th><th>Come si gestisce</th><th>Riferimento</th></tr></thead><tbody>
+          ${PREREQUISITI.map(([t, c, r]) => `<tr><td>${esc(t)}</td><td>${esc(c)}</td><td><small>${esc(r)}</small></td></tr>`).join('')}
+        </tbody></table>
+        <h2>5 · Verifica e revisione</h2>
+        <ul>
+          <li>Il responsabile controlla almeno una volta al mese che le registrazioni siano complete e che le azioni correttive siano state fatte.</li>
+          <li>Il piano si rivede ogni anno e ogni volta che cambiano prodotti, locali, attrezzature o fornitori, o dopo una non conformità grave.</li>
+          <li>Le analisi di laboratorio (criteri microbiologici del Reg. CE 2073/2005) si programmano secondo il tipo di prodotto.</li>
+        </ul>
+        <p class="doc__nota">Piano semplificato generato da safetyDoc: va adattato alla tua attività e verificato con il consulente HACCP. I limiti indicati sono quelli di legge dove esistono e altrimenti quelli tipici dei manuali di corretta prassi.</p>
+        ${luogoData(a, oggi)}
+        ${firme(['Il titolare dell\'impresa alimentare', titolare(a)], ['Il responsabile dell\'autocontrollo', o.responsabile || ''])}`;
+    }
+  },
+  {
+    id: 'registro-ricevimento',
+    titolo: 'Registro del ricevimento merci e della rintracciabilità',
+    descrizione: 'Controllo a ogni consegna di temperatura, etichetta, scadenza e integrità, con esito automatico per categoria di prodotto; serve anche per la rintracciabilità (fornitore e lotto).',
+    ambito: 'impresa',
+    attivaSe: { q: 'alimenti', eq: true },
+    opzioni: () => [
+      {
+        id: 'consegne',
+        etichetta: 'Consegne',
+        tipo: 'tabella',
+        aiuto: 'Misura la temperatura tra due confezioni o con il termometro a sonda. Scegli la categoria: l\'esito si calcola da solo con il limite di legge o di buona prassi.',
+        righe: 6,
+        colonne: [
+          { id: 'data', etichetta: 'Data' },
+          { id: 'fornitore', etichetta: 'Fornitore' },
+          { id: 'prodotto', etichetta: 'Prodotto' },
+          { id: 'lotto', etichetta: 'Lotto' },
+          { id: 'scadenza', etichetta: 'Scadenza' },
+          { id: 'categoria', etichetta: 'Categoria', tipo: 'scelta', valori: CATEGORIE_MERCI.map((c) => ({ valore: c.id, etichetta: `${c.etichetta}${c.max === null ? '' : ` (max ${c.max} °C)`}` })) },
+          { id: 'temperatura', etichetta: '°C', tipo: 'numero' },
+          { id: 'integro', etichetta: 'Integro ed etichettato', tipo: 'scelta', valori: [{ valore: 'si', etichetta: 'Sì' }, { valore: 'no', etichetta: 'No' }] }
+        ]
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const righe = (o.consegne || []).filter((r) => r.prodotto || r.fornitore);
+      const vuote = Math.max(0, 15 - righe.length);
+      return `${intestazione(a)}
+        <h1>Registro del ricevimento merci e della rintracciabilità</h1>
+        <p class="doc__rif">Reg. CE 852/2004 Allegato II cap. IX; Reg. CE 178/2002 artt. 18 e 19; Reg. CE 853/2004 Allegato III; D.Lgs. 110/1992</p>
+        <table class="doc__tabella"><thead><tr><th>Data</th><th>Fornitore</th><th>Prodotto · lotto · scadenza</th><th>°C</th><th>Esito</th><th>Firma</th></tr></thead><tbody>
+          ${righe
+            .map((r) => {
+              let e = esitoTemperatura(r.categoria, r.temperatura);
+              if (r.integro === 'no') e = { colore: 'rosso', testo: 'Confezione danneggiata o senza etichetta: respingere' };
+              return `<tr><td>${esc(r.data)}</td><td>${esc(r.fornitore)}</td><td>${esc([r.prodotto, r.lotto ? `lotto ${r.lotto}` : '', r.scadenza ? `scad. ${r.scadenza}` : ''].filter(Boolean).join(' · '))}</td><td>${esc(r.temperatura || '')}</td><td class="doc__esito--${e?.colore || ''}">${esc(e?.testo || '')}</td><td></td></tr>`;
+            })
+            .join('')}
+          ${Array.from({ length: vuote }, () => '<tr><td style="height:1.6em"></td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}
+        </tbody></table>
+        <h2>Limiti di temperatura al ricevimento</h2>
+        <table class="doc__tabella"><thead><tr><th>Categoria</th><th>Massimo</th><th>Riferimento</th></tr></thead><tbody>
+          ${CATEGORIE_MERCI.map((c) => `<tr><td>${esc(c.etichetta)}</td><td>${c.max === null ? '—' : `${c.max} °C`}</td><td><small>${esc(c.rif)}</small></td></tr>`).join('')}
+        </tbody></table>
+        <p class="doc__nota">Conserva i documenti di trasporto e le fatture: insieme a questo registro permettono di risalire al fornitore di ogni prodotto e di ritirarlo se pericoloso.</p>`;
+    }
+  },
+  {
+    id: 'registro-cotture',
+    titolo: 'Registro di cottura, abbattimento, mantenimento a caldo e oli di frittura',
+    descrizione: 'Registrazione dei punti critici con il termometro a sonda; l\'esito si calcola subito contro i limiti (cottura +75 °C, abbattimento a +3 °C in 90 minuti, mantenimento +60 °C, olio fino al 25% di composti polari).',
+    ambito: 'impresa',
+    attivaSe: { all: [{ q: 'alimenti', eq: true }, { q: 'attivita', in: ['ristorazione', 'alimentare_produzione'] }] },
+    opzioni: () => [
+      {
+        id: 'misure',
+        etichetta: 'Misure',
+        tipo: 'tabella',
+        aiuto: 'Per l\'abbattimento scrivi la temperatura al cuore alla fine e i minuti impiegati; per l\'olio la percentuale di composti polari letta con il tester.',
+        righe: 6,
+        colonne: [
+          { id: 'data', etichetta: 'Data e ora' },
+          { id: 'prodotto', etichetta: 'Prodotto' },
+          {
+            id: 'tipo',
+            etichetta: 'Fase',
+            tipo: 'scelta',
+            valori: [
+              { valore: 'cottura', etichetta: 'Cottura' },
+              { valore: 'abbattimento', etichetta: 'Abbattimento a +3 °C' },
+              { valore: 'surgelazione', etichetta: 'Abbattimento a −18 °C' },
+              { valore: 'mantenimento', etichetta: 'Mantenimento a caldo' },
+              { valore: 'rigenerazione', etichetta: 'Rigenerazione' },
+              { valore: 'olio', etichetta: 'Olio di frittura (% composti polari)' }
+            ]
+          },
+          { id: 'temperatura', etichetta: '°C o %', tipo: 'numero' },
+          { id: 'minuti', etichetta: 'Minuti (abbattimento)', tipo: 'numero' }
+        ]
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const righe = (o.misure || []).filter((r) => r.prodotto || r.temperatura);
+      const FASE = { cottura: 'Cottura', abbattimento: 'Abbattimento +3 °C', surgelazione: 'Abbattimento −18 °C', mantenimento: 'Mantenimento a caldo', rigenerazione: 'Rigenerazione', olio: 'Olio di frittura' };
+      return `${intestazione(a)}
+        <h1>Registro di cottura, abbattimento e mantenimento</h1>
+        <p class="doc__rif">Reg. CE 852/2004 art. 5 · punti critici del piano di autocontrollo</p>
+        <table class="doc__tabella"><thead><tr><th>Data</th><th>Prodotto</th><th>Fase</th><th>Valore</th><th>Esito</th><th>Firma</th></tr></thead><tbody>
+          ${righe
+            .map((r) => {
+              const e = esitoProcesso(r.tipo, r);
+              return `<tr><td>${esc(r.data)}</td><td>${esc(r.prodotto)}</td><td>${esc(FASE[r.tipo] || '')}</td><td>${esc(r.temperatura || '')}${r.tipo === 'olio' ? '%' : ' °C'}${r.minuti ? ` in ${esc(r.minuti)} min` : ''}</td><td class="doc__esito--${e?.colore || ''}">${esc(e?.testo || '')}</td><td></td></tr>`;
+            })
+            .join('')}
+          ${Array.from({ length: Math.max(0, 15 - righe.length) }, () => '<tr><td style="height:1.6em"></td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}
+        </tbody></table>
+        <h2>Limiti</h2>
+        <ul>${Object.entries(LIMITI_PROCESSO).map(([k, l]) => `<li><strong>${esc(FASE[k] || k)}</strong>: ${esc(l.testo)}</li>`).join('')}</ul>
+        <p class="doc__nota">Limiti tipici dei manuali di corretta prassi (il 25% di composti polari è indicato dalla circolare del Ministero della Sanità n. 1 dell'11/1/1991): se il tuo piano ne indica altri, valgono quelli. Tara periodicamente il termometro a sonda.</p>`;
+    }
+  },
+  {
+    id: 'registro-pulizie',
+    titolo: 'Piano e registro delle pulizie e sanificazioni',
+    descrizione: 'Cosa pulire, con quale frequenza, prodotto e metodo, con la scheda mensile da firmare.',
+    ambito: 'impresa',
+    attivaSe: { q: 'alimenti', eq: true },
+    opzioni: () => [
+      {
+        id: 'piano',
+        etichetta: 'Piano delle pulizie',
+        tipo: 'tabella',
+        righe: 6,
+        iniziali: [
+          { cosa: 'Piani di lavoro e taglieri', frequenza: 'Dopo ogni uso', prodotto: 'Detergente e sanificante per alimenti', metodo: 'Lavare, risciacquare, sanificare, risciacquare se richiesto' },
+          { cosa: 'Pavimenti', frequenza: 'Ogni giorno', prodotto: 'Detergente sgrassante', metodo: 'Spazzare e lavare' },
+          { cosa: 'Frigoriferi e congelatori', frequenza: 'Ogni settimana / ogni 3 mesi', prodotto: 'Detergente e sanificante', metodo: 'Svuotare, lavare, sanificare' },
+          { cosa: 'Cappa e filtri', frequenza: 'Ogni mese', prodotto: 'Sgrassante', metodo: 'Smontare e lavare i filtri' },
+          { cosa: 'Servizi igienici e spogliatoi', frequenza: 'Ogni giorno', prodotto: 'Detergente e disinfettante', metodo: 'Lavare e disinfettare' }
+        ],
+        colonne: [
+          { id: 'cosa', etichetta: 'Area o attrezzatura' },
+          { id: 'frequenza', etichetta: 'Frequenza' },
+          { id: 'prodotto', etichetta: 'Prodotto' },
+          { id: 'metodo', etichetta: 'Metodo' }
+        ]
+      }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => {
+      const piano = (o.piano || []).filter((r) => r.cosa);
+      return `${intestazione(a)}
+        <h1>Piano e registro delle pulizie e sanificazioni</h1>
+        <p class="doc__rif">Reg. CE 852/2004 Allegato II cap. I, II e V</p>
+        <table class="doc__tabella"><thead><tr><th>Area o attrezzatura</th><th>Frequenza</th><th>Prodotto</th><th>Metodo</th></tr></thead><tbody>
+          ${piano.map((r) => `<tr><td>${esc(r.cosa)}</td><td>${esc(r.frequenza)}</td><td>${esc(r.prodotto)}</td><td>${esc(r.metodo)}</td></tr>`).join('') || '<tr><td colspan="4" style="height:2em"></td></tr>'}
+        </tbody></table>
+        <h2>Registro del mese ${v('', 12)}</h2>
+        <table class="doc__tabella"><thead><tr><th>Giorno</th><th>Pulizie fatte</th><th>Anomalie</th><th>Firma</th></tr></thead><tbody>
+          ${Array.from({ length: 31 }, (_, i) => `<tr><td>${i + 1}</td><td></td><td></td><td></td></tr>`).join('')}
+        </tbody></table>
+        <p class="doc__nota">Tieni le schede tecniche e di sicurezza dei prodotti per la pulizia; conserva i prodotti lontano dagli alimenti.</p>`;
+    }
+  },
+  {
+    id: 'registro-infestanti',
+    titolo: 'Registro del controllo degli infestanti',
+    descrizione: 'Planimetria delle trappole e scheda dei controlli periodici, interni o della ditta di disinfestazione.',
+    ambito: 'impresa',
+    attivaSe: { q: 'alimenti', eq: true },
+    opzioni: () => [
+      { id: 'ditta', etichetta: 'Ditta di disinfestazione (se c\'è)', tipo: 'testo' },
+      { id: 'frequenza', etichetta: 'Frequenza dei controlli', tipo: 'testo', valore: 'Ogni mese' },
+      { id: 'trappole', etichetta: 'Numero di trappole o erogatori', tipo: 'numero' }
+    ],
+    genera: ({ anagrafica: a, oggi, opzioni: o = {} }) => `${intestazione(a)}
+        <h1>Registro del controllo degli infestanti</h1>
+        <p class="doc__rif">Reg. CE 852/2004 Allegato II cap. I p. 2 e cap. IX p. 4</p>
+        <p>Ditta: ${v(o.ditta, 24)} · Frequenza: ${v(o.frequenza, 14)} · Trappole: ${v(o.trappole, 4)} (posizioni sulla planimetria allegata)</p>
+        <table class="doc__tabella"><thead><tr><th>Data</th><th>Trappole controllate</th><th>Catture o tracce</th><th>Interventi</th><th>Firma</th></tr></thead><tbody>
+          ${Array.from({ length: 12 }, () => '<tr><td style="height:1.6em"></td><td></td><td></td><td></td><td></td></tr>').join('')}
+        </tbody></table>
+        <p class="doc__nota">Usa trappole ed esche fuori dalle zone di lavorazione degli alimenti; tieni le schede dei prodotti usati. Reti alle finestre e porte chiuse sono la prima difesa.</p>`
+  },
+  {
+    id: 'registro-non-conformita',
+    titolo: 'Registro delle non conformità e dei ritiri di prodotto',
+    descrizione: 'Problemi trovati (merci, temperature, pulizie, reclami), azioni fatte e, per i prodotti pericolosi, ritiro, richiamo e comunicazione all\'ASL.',
+    ambito: 'impresa',
+    attivaSe: { q: 'alimenti', eq: true },
+    genera: ({ anagrafica: a, oggi }) => `${intestazione(a)}
+        <h1>Registro delle non conformità e dei ritiri di prodotto</h1>
+        <p class="doc__rif">Reg. CE 852/2004 art. 5; Reg. CE 178/2002 artt. 19 e 20</p>
+        <table class="doc__tabella"><thead><tr><th>Data</th><th>Cosa è successo</th><th>Prodotti e lotti coinvolti</th><th>Azione correttiva</th><th>Ritiro o richiamo</th><th>Firma</th></tr></thead><tbody>
+          ${Array.from({ length: 10 }, () => '<tr><td style="height:2em"></td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}
+        </tbody></table>
+        <h2>Se un prodotto può essere pericoloso</h2>
+        <ol>
+          <li>Togli subito il prodotto dalla vendita e tienilo separato e segnalato.</li>
+          <li>Avvisa il fornitore e, se il prodotto è già arrivato ai clienti, informa l'ASL competente (art. 19 Reg. CE 178/2002).</li>
+          <li>Se serve, informa i consumatori (cartello in negozio) e collabora al richiamo.</li>
+          <li>Registra qui cosa hai fatto e conserva i documenti.</li>
+        </ol>
+        ${luogoData(a, oggi)}`
   }
 ];
 
