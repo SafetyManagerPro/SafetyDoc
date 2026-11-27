@@ -50,8 +50,11 @@ body {
   background: var(--sfondo);
   color: var(--testo);
   font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
+body.con-nav { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+
+[hidden] { display: none !important; }
 
 main { outline: none; }
 
@@ -189,15 +192,13 @@ label small { font-weight: 400; color: var(--testo-2); }
   padding-bottom: env(safe-area-inset-bottom);
 }
 .nav[hidden] { display: none; }
-.nav a { flex: 1; display: grid; place-items: center; min-height: 60px; padding: 0 2px; font-size: 0.74rem; font-weight: 600; text-decoration: none; color: var(--testo-2); }
+.nav a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 60px; padding: 0 2px; font-size: 0.74rem; font-weight: 600; text-decoration: none; color: var(--testo-2); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.nav__icona { width: 24px; height: 24px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav .nav__marchio, .nav .nav__cerca { display: none; }
+.nav kbd { display: none; }
 .nav a[hidden] { display: none; }
 .nav a[aria-current="page"] { color: var(--primario); box-shadow: inset 0 3px 0 var(--primario); }
 .nav { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); z-index: 20; }
-/* computer e tablet in orizzontale: le voci non si allargano su tutto lo schermo */
-@media (min-width: 900px) {
-  .nav { justify-content: center; }
-  .nav a { flex: 0 1 140px; font-size: 0.85rem; }
-}
 
 /* Barra dell'amministratore: Home (l'app delle imprese) | Admin */
 .barra-admin {
@@ -486,3 +487,160 @@ body.senza-guida abbr.sigla { text-decoration: none; cursor: auto; }
 .riga-campi[hidden] { display: none; }
 .riepilogo-emissioni { margin: 4px 0 12px; padding: 10px 12px 10px 28px; border-radius: var(--raggio); background: var(--superficie); }
 .tabella-campi td .campo { min-width: 6.5em; }
+
+/* =====================================================================
+   Impaginazione per schermo, apparecchio e sistema operativo
+   - telefono (fino a 599 px): barra in basso con icone, una colonna
+   - telefono in orizzontale (altezza fino a 520 px): barra verticale a sinistra
+   - tablet (600-999 px): colonna più larga, liste e spunte su due colonne
+   - notebook e computer (da 1000 px): menu laterale, pulsanti non a tutta larghezza
+   - schermi larghi (da 1280 px): documenti con i campi a sinistra e l'anteprima A4 a destra
+   - mouse o touch, Windows, macOS, iOS/iPadOS, Android: dettagli in fondo
+   Gli attributi data-os, data-dispositivo, data-formato, data-input, data-installata
+   su <html> li scrive js/dispositivo.js.
+   ===================================================================== */
+
+/* ---------- tablet (verticale) e finestre medie ---------- */
+@media (min-width: 600px) {
+  .pagina { max-width: 760px; padding-top: 32px; padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+  h1 { font-size: 1.85rem; }
+  .contatori { gap: 12px; }
+  .contatore { padding: 16px 10px; }
+  .nav { justify-content: center; }
+  .nav a { flex: 0 1 150px; flex-direction: row; gap: 8px; font-size: 0.88rem; }
+  .dettagli { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spunte:not(.spunte--compatte) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spunte--compatte { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+  .spunte > legend { grid-column: 1 / -1; }
+  .avviso { max-width: 520px; }
+  .aiuto-box__azioni .btn { flex: 0 1 200px; }
+}
+@media (min-width: 760px) {
+  .lista { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .lista > :not(.voce):not(a) { grid-column: 1 / -1; }
+}
+
+/* ---------- notebook e computer: menu laterale ---------- */
+@media (min-width: 1000px) {
+  body.con-nav { padding-bottom: 24px; padding-left: 232px; }
+  .nav {
+    top: 0; bottom: 0; right: auto; width: 232px; flex-direction: column; justify-content: flex-start; gap: 2px;
+    padding: 16px 12px; border-top: 0; border-right: 1px solid var(--bordo); overflow-y: auto;
+  }
+  .nav a { flex: none; flex-direction: row; justify-content: flex-start; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; font-size: 0.95rem; }
+  .nav a[aria-current="page"] { background: var(--sfondo); box-shadow: inset 3px 0 0 var(--primario); }
+  .nav .nav__marchio { display: flex; gap: 10px; min-height: 52px; margin-bottom: 12px; font-size: 1.15rem; font-weight: 800; color: var(--testo); }
+  .nav .nav__cerca { display: flex; margin-top: auto; border: 1px solid var(--bordo); }
+  .nav kbd { display: inline; margin-left: auto; padding: 1px 6px; border: 1px solid var(--bordo); border-radius: 6px; font: 600 0.75rem system-ui, sans-serif; color: var(--testo-2); }
+  .pagina { max-width: 880px; padding: 40px 40px 48px; }
+  .pagina > .btn, .pagina > form > .btn, .pagina > a.btn, .registra > .btn { display: inline-flex; width: auto; min-width: 240px; margin-right: 8px; }
+  .avviso { left: 256px; right: 24px; bottom: 24px; }
+  .aggiornamento { left: auto; right: 24px; bottom: 24px; max-width: 520px; }
+  .barra-firma { bottom: 12px; }
+  .pagina.admin { max-width: 1100px; }
+}
+@media (min-width: 1400px) {
+  body.con-nav { padding-left: 260px; }
+  .nav { width: 260px; padding: 20px 16px; }
+  .pagina { max-width: 1000px; }
+  .avviso { left: 284px; }
+  .pagina.admin { max-width: 1280px; }
+}
+
+/* ---------- documenti su schermi larghi: campi a sinistra, anteprima A4 a destra ---------- */
+@media (min-width: 1280px) {
+  .pagina.pagina--doc {
+    max-width: 1560px; display: grid; grid-template-columns: minmax(360px, 1fr) minmax(520px, 820px);
+    column-gap: 32px; align-items: start;
+  }
+  .pagina--doc > * { grid-column: 1 / -1; }
+  .pagina--doc > .solo-schermo:first-child {
+    grid-column: 1; grid-row: 1 / span 3; position: sticky; top: 16px;
+    max-height: calc(100vh - 32px); overflow-y: auto; padding-right: 8px; overscroll-behavior: contain;
+  }
+  .pagina--doc > .barra-firma { grid-column: 2; grid-row: 1; }
+  .pagina--doc > .doc { grid-column: 2; grid-row: 2; margin-top: 0; padding: 48px 56px; min-height: 60vh; }
+  .pagina--doc > .nota { grid-column: 2; grid-row: 3; }
+  .pagina--doc .solo-schermo > .btn { display: flex; width: 100%; }
+  body.con-barra-admin .pagina--doc > .solo-schermo:first-child { top: 72px; max-height: calc(100vh - 88px); }
+}
+
+/* ---------- telefono in orizzontale: barra verticale a sinistra, più spazio in altezza ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.con-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); padding-left: calc(84px + env(safe-area-inset-left)); }
+  .nav {
+    top: 0; bottom: 0; right: auto; width: calc(84px + env(safe-area-inset-left)); flex-direction: column; justify-content: center; gap: 0;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) env(safe-area-inset-left); border-top: 0; border-right: 1px solid var(--bordo); overflow-y: auto;
+  }
+  .nav a { flex: 1 1 0; flex-direction: column; justify-content: center; gap: 0; min-height: 44px; max-height: 64px; padding: 0 2px; border-radius: 0; font-size: 0.68rem; }
+  .nav a[aria-current="page"] { background: none; box-shadow: inset 3px 0 0 var(--primario); }
+  .nav .nav__icona { width: 22px; height: 22px; }
+  .nav .nav__marchio, .nav .nav__cerca { display: none; }
+  .pagina { max-width: 820px; padding-top: 12px; padding-left: 20px; padding-right: max(20px, env(safe-area-inset-right)); }
+  h1 { font-size: 1.4rem; }
+  .btn { min-height: 46px; }
+  .btn--grande { min-height: 50px; }
+  .avviso { left: calc(100px + env(safe-area-inset-left)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .aggiornamento { left: calc(96px + env(safe-area-inset-left)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .barra-firma { bottom: 8px; }
+  .barra-admin { padding-top: 4px; }
+}
+
+/* ---------- tastiera sullo schermo aperta (telefoni e tablet): via le barre fisse in basso ---------- */
+@media (max-width: 999px) {
+  html.tastiera-aperta .nav, html.tastiera-aperta .aggiornamento { display: none; }
+  html.tastiera-aperta body.con-nav { padding-bottom: 16px; }
+  html.tastiera-aperta .barra-firma { bottom: 8px; }
+  html.tastiera-aperta .avviso { bottom: 8px; }
+}
+
+/* ---------- mouse e touchpad (computer): elementi più compatti e reazione al passaggio ---------- */
+@media (hover: hover) and (pointer: fine) {
+  body { font-size: 17px; }
+  .btn, .campo { min-height: 46px; }
+  .btn--grande { min-height: 52px; }
+  .voce { min-height: 56px; transition: border-color 0.15s, box-shadow 0.15s; }
+  .voce:hover, .scelta:hover, .spunta:hover, label.spunta:hover { border-color: var(--primario); }
+  .voce:hover { box-shadow: 0 2px 12px rgb(0 0 0 / 0.08); }
+  .btn--primario:hover { filter: brightness(1.08); }
+  .btn--secondario:hover { background: var(--sfondo); }
+  .nav a:hover { color: var(--primario); }
+  .contatore:hover { filter: brightness(0.97); }
+}
+
+/* ---------- touch (telefoni e tablet) ---------- */
+@media (pointer: coarse) {
+  /* iOS ingrandisce la pagina se un campo ha il testo sotto i 16 px */
+  input, select, textarea, .tabella-campi .campo { font-size: max(16px, 1em); }
+  .tabella-campi .campo { min-height: 44px; }
+}
+
+/* ---------- sistemi operativi ---------- */
+html[data-os="ios"], html[data-os="ipados"] { -webkit-tap-highlight-color: transparent; }
+html[data-os="ios"] .nav, html[data-os="ipados"] .nav { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+html[data-os="ios"] body, html[data-os="ipados"] body, html[data-os="macos"] body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+html[data-os="android"] { -webkit-tap-highlight-color: rgb(31 95 74 / 0.15); }
+html[data-os="android"] body { font-family: Roboto, system-ui, sans-serif; }
+html[data-os="windows"] body { font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+html[data-os="windows"], html[data-os="linux"], html[data-os="chromeos"] { scrollbar-color: var(--bordo) transparent; }
+html[data-os="windows"] .nav, html[data-os="windows"] .tabella-campi__scorri, html[data-os="windows"] .doc, html[data-os="windows"] .tabella-admin,
+html[data-os="windows"] .pagina--doc > .solo-schermo { scrollbar-width: thin; }
+/* App installata: niente «tira per aggiornare» che può far perdere un modulo a metà (Android, Chrome) */
+html[data-installata="true"] body { overscroll-behavior-y: contain; }
+/* App installata su iPhone/iPad: la barra di stato non copre il contenuto in alto */
+html[data-installata="true"][data-os="ios"] .pagina, html[data-installata="true"][data-os="ipados"] .pagina { padding-top: max(24px, calc(env(safe-area-inset-top) + 8px)); }
+html[data-installata="true"] body.con-barra-admin .pagina { padding-top: 24px; }
+
+/* ---------- Windows a contrasto elevato e colori forzati ---------- */
+@media (forced-colors: active) {
+  .voce, .controllo, .contatore, .pill, .doc__esito, .riquadro, .banner { border: 1px solid CanvasText; }
+  .nav a[aria-current="page"] { outline: 2px solid Highlight; outline-offset: -2px; }
+  .nav__icona { stroke: CanvasText; }
+  .btn--primario { border-color: ButtonText; }
+}
+
+@media print {
+  body.con-nav { padding: 0 !important; }
+  .pagina.pagina--doc { display: block; max-width: none; }
+  .pagina--doc > .doc { padding: 0; min-height: 0; }
+}

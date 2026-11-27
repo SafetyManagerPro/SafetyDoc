@@ -55,10 +55,11 @@ import { unisciCollezione, unisciDocumenti, creaExport, validaExport, FORMATO_CI
 import { cifra, decifra } from './cifratura.js';
 import { modelliDisponibili, modelloPerLavoratore, generaDocumento, MODELLI, livelloRischio } from './modelli.js';
 import { generaIcs } from './calendario.js';
+import { descriviDispositivo, scorciatoia, tastieraAperta, istruzioniInstallazione, nomeDispositivo } from './dispositivo.js';
 import { riepilogoEmissioni, vibrazioneDaLibretto } from './calcoli.js';
 import * as store from './store.js';
 
-export const VERSIONE_APP = '0.24.0';
+export const VERSIONE_APP = '0.25.0';
 const GIORNI_PROMEMORIA_BACKUP = 7;
 
 // Documenti utili da mostrare in fondo a ogni scheda.
@@ -406,6 +407,66 @@ function bloccoAiuto(argomento) {
     <p class="nota">Il messaggio è già scritto e indica solo l'argomento, senza dati dei lavoratori.</p></div>`;
 }
 
+// ---------- dispositivo, sistema operativo e formato dello schermo ----------
+
+/** La barra di navigazione (in basso sul telefono, a sinistra sul computer) e lo spazio che occupa. */
+function mostraNav(visibile) {
+  document.querySelector('.nav').hidden = !visibile;
+  document.body.classList.toggle('con-nav', visibile);
+}
+
+let dispositivo = null;
+
+/** Scrive su <html> sistema, tipo di apparecchio, formato e input: il foglio di stile si adatta. */
+function aggiornaDispositivo() {
+  const radice = document.documentElement;
+  dispositivo = descriviDispositivo({
+    ua: navigator.userAgent,
+    platform: navigator.userAgentData?.platform || navigator.platform || '',
+    maxTouchPoints: navigator.maxTouchPoints || 0,
+    larghezza: innerWidth,
+    altezza: innerHeight,
+    schermoL: screen.width,
+    schermoA: screen.height,
+    puntatoreGrossolano: matchMedia('(pointer: coarse)').matches,
+    installata: installata()
+  });
+  for (const [k, v] of Object.entries(dispositivo)) radice.dataset[k] = String(v);
+  for (const k of document.querySelectorAll('kbd[data-scorciatoia]')) k.textContent = scorciatoia(dispositivo.os, k.dataset.scorciatoia);
+}
+
+/** Con la tastiera sullo schermo aperta, barre fisse e pulsanti in basso si nascondono per lasciare spazio al campo. */
+function controllaTastiera() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const aperta = tastieraAperta({ altezzaFinestra: innerHeight, altezzaVisibile: vv.height, touch: dispositivo?.input === 'touch' });
+  document.documentElement.classList.toggle('tastiera-aperta', aperta);
+}
+
+function attivaDispositivo() {
+  aggiornaDispositivo();
+  let attesa;
+  const ricalcola = () => {
+    clearTimeout(attesa);
+    attesa = setTimeout(aggiornaDispositivo, 120);
+  };
+  addEventListener('resize', ricalcola);
+  addEventListener('orientationchange', ricalcola);
+  matchMedia('(display-mode: standalone)').addEventListener?.('change', ricalcola);
+  window.visualViewport?.addEventListener('resize', controllaTastiera);
+  // Scorciatoie da tastiera sul computer: Ctrl+K (⌘K sul Mac) o «/» per cercare.
+  document.addEventListener('keydown', (ev) => {
+    const inCampo = ev.target.closest?.('input, textarea, select, [contenteditable="true"]');
+    if ((ev.ctrlKey || ev.metaKey) && !ev.altKey && ev.key.toLowerCase() === 'k') {
+      ev.preventDefault();
+      location.hash = '#/cerca';
+    } else if (ev.key === '/' && !inCampo && !ev.ctrlKey && !ev.metaKey) {
+      ev.preventDefault();
+      location.hash = '#/cerca';
+    }
+  });
+}
+
 // ---------- installazione come app ----------
 
 let richiestaInstallazione = null;
@@ -418,7 +479,6 @@ addEventListener('appinstalled', () => {
   avviso('App installata.');
 });
 const installata = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-const suIphone = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 function bloccoInstallazione() {
   if (installata()) return `<p class="riquadro">safetyDoc è installato su questo dispositivo.</p>`;
@@ -426,12 +486,10 @@ function bloccoInstallazione() {
     return `<p>Mettila tra le app del telefono o del computer: si apre con un tocco, anche senza internet.</p>
       <button class="btn btn--primario" id="installa">Installa l'app</button>`;
   }
-  if (suIphone()) {
-    return `<p>Su iPhone e iPad, con Safari:</p>
-      <ol class="passi"><li>Tocca il pulsante <strong>Condividi</strong> (il quadrato con la freccia in su).</li>
-      <li>Scorri e tocca <strong>Aggiungi alla schermata Home</strong>.</li><li>Tocca <strong>Aggiungi</strong>.</li></ol>`;
-  }
-  return `<p>Apri il menu del browser (i tre puntini) e scegli <strong>Installa app</strong> o <strong>Aggiungi a schermata Home</strong>.</p>`;
+  const istr = istruzioniInstallazione(dispositivo?.os, dispositivo?.browser);
+  return `<p>Stai usando ${esc(nomeDispositivo(dispositivo || {}))}. Installato, safetyDoc si apre con un tocco o un clic, a tutto schermo e anche senza internet.</p>
+    <p><strong>${esc(istr.titolo)}</strong></p>
+    ${istr.passi ? `<ol class="passi">${istr.passi.map((x) => `<li>${x}</li>`).join('')}</ol>` : `<p class="riquadro">${esc(istr.nota)}</p>`}`;
 }
 
 function attivaInstallazione() {
@@ -463,7 +521,7 @@ function aggiornaNav(rotta) {
   for (const a of document.querySelectorAll('.nav a')) {
     a.setAttribute('aria-current', a.dataset.rotta === sezione ? 'page' : 'false');
   }
-  document.querySelector('.nav').hidden = rotta === 'admin' || !questionarioCompletato();
+  mostraNav(rotta !== 'admin' && questionarioCompletato());
   aggiornaBarraAdmin(rotta);
   const linkLav = document.querySelector('.nav a[data-rotta="lavoratori"]');
   if (linkLav) linkLav.hidden = !haDipendenti();
@@ -2880,7 +2938,7 @@ async function controllaAccesso({ forza = false } = {}) {
 }
 
 function schermataAccessoNegato(decisione) {
-  document.querySelector('.nav').hidden = true;
+  mostraNav(false);
   const testi = {
     attivazione: `<h1>Attiva safetyDoc</h1>
       <p class="lead">Per usare safetyDoc serve il <strong>link di attivazione</strong> che ti è stato mandato su WhatsApp.</p>
@@ -2914,7 +2972,7 @@ function schermataAccessoNegato(decisione) {
 }
 
 async function schermataInvito(token) {
-  document.querySelector('.nav').hidden = true;
+  mostraNav(false);
   app.innerHTML = '<section class="pagina"><h1>Attivazione</h1><p>Controllo il link…</p></section>';
   let info = null;
   try {
@@ -4425,6 +4483,7 @@ async function avvia() {
     const inizio = rottaIniziale({ hash: location.hash, adminCollegato: Boolean(sessioneAdmin?.refreshToken), vista: vistaAdmin });
     if (inizio) history.replaceState(null, '', inizio);
     guidaNascosta = Boolean(await store.leggiMeta('guida:nascosta'));
+    attivaDispositivo();
     inizializzaGuida();
     store.chiediMemoriaPersistente();
     addEventListener('hashchange', instrada);
